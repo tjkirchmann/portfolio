@@ -1,0 +1,6 @@
+.claude/worktrees/
+node_modules/
+dist/
+.astro/
+art/.cache/
+.DS_Store
