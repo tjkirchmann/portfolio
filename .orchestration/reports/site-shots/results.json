@@ -1,0 +1,446 @@
+[
+  {
+    "id": "AC-13",
+    "name": "broken frontmatter fails the build",
+    "ok": true,
+    "detail": "exit 1"
+  },
+  {
+    "id": "AC-13",
+    "name": "build error names the file",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-13",
+    "name": "broken fixture removed",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-13",
+    "name": "draft build exits 0",
+    "ok": true,
+    "detail": "exit 0"
+  },
+  {
+    "id": "AC-13",
+    "name": "draft post has no page in production",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-13",
+    "name": "draft post not listed on /blog/",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-14",
+    "name": "new-post creates <slug>/index.md",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-14",
+    "name": "frontmatter has title, today's date, art: _placeholder",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-14",
+    "name": "second run refuses (non-zero exit)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-14",
+    "name": "existing file untouched",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-1",
+    "name": "production build exits 0",
+    "ok": true,
+    "detail": "exit 0"
+  },
+  {
+    "id": "AC-1",
+    "name": "dist has /, /blog/, /blocks/",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-1",
+    "name": "one page per sample post",
+    "ok": true,
+    "detail": "first-post, second-post"
+  },
+  {
+    "id": "AC-11",
+    "name": "post image has srcset",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-11",
+    "name": "post image is lazy with width and height",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-11",
+    "name": "titled image gets alt as figcaption",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-11",
+    "name": "image sits between paragraphs",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-2",
+    "name": "home: text pane left, art pane right",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-2",
+    "name": "home: name and role from site.yaml",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-2",
+    "name": "home: entry rows from site.yaml",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-2",
+    "name": "home: link row from site.yaml, at the bottom",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "POLISH",
+    "name": "keyboard focus is visible (Tab on home)",
+    "ok": true,
+    "detail": "Project one2026: solid 2px rgb(118, 200, 165)"
+  },
+  {
+    "id": "AC-8",
+    "name": "dither canvas sized at device pixel ratio",
+    "ok": true,
+    "detail": "1466x1744 for 732.765625x872 @2x"
+  },
+  {
+    "id": "AC-8",
+    "name": "dither has several palette colours",
+    "ok": true,
+    "detail": "6 colours sampled"
+  },
+  {
+    "id": "AC-8",
+    "name": "no animation loop while idle (0 rAF calls in 1.2s)",
+    "ok": true,
+    "detail": "0 calls"
+  },
+  {
+    "id": "AC-6",
+    "name": "video uses mix-blend-mode: screen",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-6",
+    "name": "dither shows through the black matte inside the art box",
+    "ok": true,
+    "detail": "mean green 167 in the art box top band"
+  },
+  {
+    "id": "AC-5",
+    "name": "missing art folder falls back to _placeholder",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-12",
+    "name": "no monospace outside pre/code (5 pages walked)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-12",
+    "name": "pre/code text is monospace",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-3",
+    "name": "blog index: art left, text right",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-3",
+    "name": "blog index: back arrow in art pane goes to /",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-3",
+    "name": "post: art left, text right",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-3",
+    "name": "post: back arrow goes to /blog/",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-3",
+    "name": "post: art pane fixed while text scrolls",
+    "ok": true,
+    "detail": "art top 0->0, title 53->-347"
+  },
+  {
+    "id": "AC-9",
+    "name": "body text is --ink",
+    "ok": true,
+    "detail": "rgb(233, 236, 232)"
+  },
+  {
+    "id": "AC-9",
+    "name": "bold is --emerald",
+    "ok": true,
+    "detail": "rgb(118, 200, 165)"
+  },
+  {
+    "id": "AC-9",
+    "name": "links use a palette accent (underline --teal)",
+    "ok": true,
+    "detail": "color rgb(233, 236, 232), underline rgb(87, 157, 135)"
+  },
+  {
+    "id": "AC-9",
+    "name": "footnote marks use --gold",
+    "ok": true,
+    "detail": "rgb(187, 195, 104)"
+  },
+  {
+    "id": "AC-9",
+    "name": "footnote back-arrows use --gold",
+    "ok": true,
+    "detail": "rgb(187, 195, 104)"
+  },
+  {
+    "id": "AC-10",
+    "name": "footnote list is numbered at the end",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-10",
+    "name": "ref jumps to the footnote",
+    "ok": true,
+    "detail": "{\"hash\":\"#user-content-fn-1\",\"tag\":\"LI\",\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.159185)\",\"inView\":true}"
+  },
+  {
+    "id": "AC-10",
+    "name": "footnote target is highlighted",
+    "ok": true,
+    "detail": "oklab(0.79124 -0.0454688 0.106368 / 0.159185)"
+  },
+  {
+    "id": "AC-10",
+    "name": "back-arrow jumps to the reference, highlighted",
+    "ok": true,
+    "detail": "{\"hash\":\"#user-content-fnref-1\",\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"inView\":true}"
+  },
+  {
+    "id": "AC-11",
+    "name": "image renders at text-column width",
+    "ok": true,
+    "detail": "576px in 576px column, loaded wireframe.CSe5DZOb_rX4Dn.webp"
+  },
+  {
+    "id": "AC-11",
+    "name": "no layout shift on the post (CLS < 0.01)",
+    "ok": true,
+    "detail": "CLS 0.0000"
+  },
+  {
+    "id": "AC-16",
+    "name": "no console errors on desktop pages",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-5",
+    "name": "before video: inline blurred still visible, video hidden",
+    "ok": true,
+    "detail": "{\"state\":\"loading\",\"blurOpacity\":\"1\",\"blurSrc\":\"data:image/webp;base64\",\"videoOpacity\":\"0\"}"
+  },
+  {
+    "id": "AC-5",
+    "name": "after canplay: video visible, blur at 0, still faded",
+    "ok": true,
+    "detail": "{\"state\":\"ready\",\"videoOpacity\":\"1\",\"videoFilter\":\"blur(0px)\",\"blurOpacity\":\"0\",\"playing\":true}"
+  },
+  {
+    "id": "AC-5",
+    "name": "throttled load crossfades (not instant)",
+    "ok": true,
+    "detail": "2019ms"
+  },
+  {
+    "id": "AC-5",
+    "name": "cached video: swap with no blur-in (instant)",
+    "ok": true,
+    "detail": "29.2ms to playable"
+  },
+  {
+    "id": "AC-7",
+    "name": "reduced motion: still poster shown",
+    "ok": true,
+    "detail": "{\"state\":\"still\",\"posterShown\":true,\"videoShown\":false,\"paused\":true}"
+  },
+  {
+    "id": "AC-7",
+    "name": "reduced motion: video never plays or loads",
+    "ok": true,
+    "detail": "0 video requests"
+  },
+  {
+    "id": "AC-7",
+    "name": "reduced motion: page transitions disabled",
+    "ok": true,
+    "detail": "startViewTransition calls: 1; view-transition animation durations: []"
+  },
+  {
+    "id": "AC-15",
+    "name": "navigation uses a view transition",
+    "ok": true,
+    "detail": "::view-transition-group(root) ::view-transition-new(root) ::view-transition-old(root) ::view-transition-old(text-left) ::view-transition-old(art-right) ::view-transition-new(art-left) ::view-transition-new(text-right)"
+  },
+  {
+    "id": "AC-15",
+    "name": "no white flash in captured frames",
+    "ok": true,
+    "detail": "23, 13, 19"
+  },
+  {
+    "id": "AC-15",
+    "name": "no blank black frame (content visible in each)",
+    "ok": true,
+    "detail": "29.7, 8.4, 25.0"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile home: art fills top, text starts under it",
+    "ok": true,
+    "detail": "art 523px, text at 523px"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile home: no horizontal scroll",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile home: half dissolved at 60px",
+    "ok": true,
+    "detail": "opacity 0.5, blur 7px"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile home: gone at 200px, video paused",
+    "ok": true,
+    "detail": "{\"opacity\":0,\"blur\":14,\"visibility\":\"hidden\",\"paused\":true,\"scrollY\":200,\"hscroll\":false,\"cls\":0}"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile home: restored at top, video playing again",
+    "ok": true,
+    "detail": "{\"opacity\":1,\"blur\":0,\"visibility\":\"visible\",\"paused\":false,\"scrollY\":0,\"hscroll\":false,\"cls\":0}"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile home: no layout shift (CLS < 0.01)",
+    "ok": true,
+    "detail": "CLS 0.0000"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile post: art fills top, text starts under it",
+    "ok": true,
+    "detail": "art 523px, text at 523px"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile post: no horizontal scroll",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile post: half dissolved at 60px",
+    "ok": true,
+    "detail": "opacity 0.5, blur 7px"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile post: gone at 200px, video paused",
+    "ok": true,
+    "detail": "{\"opacity\":0,\"blur\":14,\"visibility\":\"hidden\",\"paused\":true,\"scrollY\":200,\"hscroll\":false,\"cls\":0}"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile post: restored at top, video playing again",
+    "ok": true,
+    "detail": "{\"opacity\":1,\"blur\":0,\"visibility\":\"visible\",\"paused\":false,\"scrollY\":0,\"hscroll\":false,\"cls\":0}"
+  },
+  {
+    "id": "AC-4",
+    "name": "mobile post: no layout shift (CLS < 0.01)",
+    "ok": true,
+    "detail": "CLS 0.0000"
+  },
+  {
+    "id": "AC-4",
+    "name": "script fallback (simulated): 1 -> mid -> 0 (paused) -> 1 (playing)",
+    "ok": true,
+    "detail": "1 / 0.5 / 0 / 1"
+  },
+  {
+    "id": "AC-4",
+    "name": "firefox: dissolve (CSS) 1 -> mid -> 0 -> 1",
+    "ok": true,
+    "detail": "1 / 0.5 / 0 / 1"
+  },
+  {
+    "id": "AC-6",
+    "name": "firefox: art blends with mix-blend-mode screen",
+    "ok": true,
+    "detail": "{\"state\":\"ready\",\"mode\":\"screen\"}"
+  },
+  {
+    "id": "AC-4",
+    "name": "webkit: dissolve (CSS) 1 -> mid -> 0 -> 1",
+    "ok": true,
+    "detail": "1 / 0.5 / 0 / 1"
+  },
+  {
+    "id": "AC-6",
+    "name": "webkit: art blends with mix-blend-mode screen",
+    "ok": true,
+    "detail": "{\"state\":\"ready\",\"mode\":\"screen\"}"
+  }
+]

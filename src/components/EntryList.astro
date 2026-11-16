@@ -1,0 +1,34 @@
+---
+/** Rows on the home page: a label, an optional detail on the right, optionally a link. */
+interface Entry {
+  label: string;
+  detail?: string;
+  href?: string;
+}
+interface Props {
+  entries: Entry[];
+  label?: string;
+}
+const { entries, label } = Astro.props;
+const external = (href: string) => /^https?:/.test(href);
+---
+
+<ul class="rows" aria-label={label}>
+  {
+    entries.map((e) => (
+      <li>
+        {e.href ? (
+          <a class="row row-link" href={e.href} {...(external(e.href) ? { rel: 'noopener' } : {})}>
+            <span class="row-label">{e.label}</span>
+            {e.detail && <span class="row-detail">{e.detail}</span>}
+          </a>
+        ) : (
+          <div class="row">
+            <span class="row-label">{e.label}</span>
+            {e.detail && <span class="row-detail">{e.detail}</span>}
+          </div>
+        )}
+      </li>
+    ))
+  }
+</ul>

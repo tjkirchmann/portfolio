@@ -1,0 +1,44 @@
+---
+/** A row of plain links, used along the bottom of the home text pane. */
+interface Props {
+  links: { label: string; href: string }[];
+  label?: string;
+}
+const { links, label = 'Links' } = Astro.props;
+const external = (href: string) => /^https?:/.test(href);
+---
+
+<nav class="linkrow" aria-label={label}>
+  <ul>
+    {
+      links.map((l) => (
+        <li>
+          <a href={l.href} {...(external(l.href) ? { rel: 'noopener' } : {})}>
+            {l.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .linkrow ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .linkrow a {
+    display: inline-block;
+    padding: var(--space-1) 0;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    transition: color var(--dur-1) var(--ease);
+  }
+  .linkrow a:hover {
+    color: var(--emerald);
+  }
+</style>

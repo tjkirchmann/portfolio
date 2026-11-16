@@ -1,0 +1,33 @@
+$ astro build   # with src/content/blog/zz-broken-fixture/index.md (bad date, no art)
+exit 1
+[InvalidContentEntryDataError] blog → zz-broken-fixture data does not match collection schema.
+  date**: **date: Expected type `"date"`, received `"object"`
+  art**: **art: Required
+    /Users/ty/repos/portfolio/.claude/worktrees/site/src/content/blog/zz-broken-fixture/index.md:0:0
+$ pnpm new-post "Zz Scaffold Fixture"
+Created src/content/blog/zz-scaffold-fixture/index.md
+---
+title: "Zz Scaffold Fixture"
+date: 2026-11-16
+art: _placeholder
+---
+$ pnpm new-post "Zz Scaffold Fixture"   # again
+exit 1
+src/content/blog/zz-scaffold-fixture already exists. Pick another title or edit that post.
+$ ls dist
+_astro  art  blocks  blog  favicon.svg  index.html
+pages: /blocks/  /blog/first-post/  /blog/  /blog/second-post/  /
+built <figure> in dist/blog/first-post/index.html:
+<figure><img alt="A wireframe sphere inside a ring" title="Wireframe" loading="lazy" decoding="async" sizes="(min-width: 1440px) 1440px, 100vw" data-astro-image="constrained" data-astro-image-pos="center" width="1440" height="900" src="/_astro/wireframe.CSe5DZOb_rX4Dn.webp" srcset="/_astro/wireframe.CSe5DZOb_1chzzK.webp 360w, /_astro/wireframe.CSe5DZOb_cY40L.webp 480w, /_astro/wireframe.CSe5DZOb_5PtqD.webp 640w, /_astro/wireframe.CSe5DZOb_ZPQprQ.webp 960w, /_astro/wireframe.CSe5DZOb_22JTof.webp 1280w, /_astro/wireframe.CSe5DZOb_rX4Dn.webp 1440w"><figcaption>A wireframe sphere inside a ring</figcaption></figure>
+computed colours on /blog/first-post/: {"body":"rgb(233, 236, 232)","bold":"rgb(118, 200, 165)","link":"rgb(233, 236, 232)","linkDeco":"rgb(87, 157, 135)","ref":"rgb(187, 195, 104)","back":"rgb(187, 195, 104)"}
+throttled video (2s delay): before {"state":"loading","blurOpacity":"1","blurSrc":"data:image/webp;base64","videoOpacity":"0"}
+after {"state":"ready","videoOpacity":"1","videoFilter":"blur(0px)","blurOpacity":"0","playing":true,"log":[{"state":"loading","t":92.90000000596046,"instant":false},{"state":"ready","t":2112.0999999940395,"instant":false}]}
+cached revisit art log: [{"state":"loading","t":26,"instant":false},{"state":"ready","t":55.20000001788139,"instant":true}]
+transition frames (mean, stdev of RGB): 23.3/29.7  13.0/8.4  19.3/25.0
+view transition calls: 1
+view-transition pseudo animations mid-navigation: ::view-transition-group(root) ::view-transition-new(root) ::view-transition-old(root) ::view-transition-old(text-left) ::view-transition-old(art-right) ::view-transition-new(art-left) ::view-transition-new(text-right)
+mobile home: {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false,"cls":0},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false,"cls":0},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0}}
+mobile post: {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false,"cls":0},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false,"cls":0},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0}}
+script fallback (simulated): {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false,"cls":0},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false,"cls":0},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0}}
+firefox (scroll timeline native): {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false}}
+webkit (scroll timeline native): {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false}}

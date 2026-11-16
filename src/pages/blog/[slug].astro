@@ -1,0 +1,51 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Split from '../../components/Split.astro';
+import Art from '../../components/Art.astro';
+import Dither from '../../components/Dither.astro';
+import BackLink from '../../components/BackLink.astro';
+import Prose from '../../components/Prose.astro';
+import { formatDate, getPosts, postSlug, type Post } from '../../lib/posts';
+import { loadSite } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: postSlug(post) }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: Post };
+const { Content } = await render(post);
+const site = loadSite();
+---
+
+<Base title={`${post.data.title} · ${site.name}`} description={post.data.summary}>
+  <Split mirror label="Animation">
+    <BackLink slot="art-top" href="/blog/" label="Blog" />
+    <Fragment slot="art">
+      <Dither />
+      <Art slug={post.data.art} />
+    </Fragment>
+
+    <article>
+      <header class="page-head post-head">
+        <h1 class="page-title">{post.data.title}</h1>
+        <p class="page-meta">
+          <time datetime={post.data.date.toISOString().slice(0, 10)}>{formatDate(post.data.date)}</time>
+        </p>
+      </header>
+      <Prose>
+        <Content />
+      </Prose>
+    </article>
+  </Split>
+</Base>
+
+<style>
+  article {
+    max-width: 36rem;
+  }
+  .post-head {
+    margin-bottom: var(--space-6);
+  }
+</style>

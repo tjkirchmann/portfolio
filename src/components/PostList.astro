@@ -1,0 +1,28 @@
+---
+/** Blog index rows: title and date, newest first. Same row rhythm as EntryList. */
+import { formatDate, postSlug, type Post } from '../lib/posts';
+
+interface Props {
+  posts: Post[];
+}
+const { posts } = Astro.props;
+---
+
+{
+  posts.length ? (
+    <ul class="rows" aria-label="Posts">
+      {posts.map((p) => (
+        <li>
+          <a class="row row-link" href={`/blog/${postSlug(p)}/`}>
+            <span class="row-label">{p.data.title}</span>
+            <time class="row-detail" datetime={p.data.date.toISOString().slice(0, 10)}>
+              {formatDate(p.data.date)}
+            </time>
+          </a>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p class="rows-empty">No posts yet.</p>
+  )
+}

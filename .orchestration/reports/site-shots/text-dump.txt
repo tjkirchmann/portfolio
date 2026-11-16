@@ -1,0 +1,78 @@
+===== /
+Your Name
+
+Your role
+
+Project one
+2026
+Project two
+2025
+Project three
+2024
+Blog
+GitHub
+Email
+
+===== /blog/
+Home
+Blog
+First post
+10 Nov 2026
+Second post
+2 Oct 2026
+
+===== /blocks/
+Home
+Blocks
+Palette
+bg
+ink
+emerald
+teal
+deep
+leaf
+gold
+copper
+bronze
+Dither
+Art over Dither
+EntryList
+Project one
+2026
+Project two
+2025
+Project three
+2024
+PostList
+First post
+10 Nov 2026
+Second post
+2 Oct 2026
+LinkRow
+Blog
+GitHub
+Email
+BackLink
+Blog
+Prose
+Heading two
+Heading three
+
+Body text with bold, italic, a link, inline code and a footnote.1
+
+A wireframe sphere inside a ring
+
+A blockquote.
+
+Unordered item
+Unordered item
+Ordered item
+Ordered item
+Column	Value
+One	1
+Two	2
+// A code block
+export const add = (a: number, b: number) => a + b;
+Footnotes
+
+A footnote with a back arrow. ↩

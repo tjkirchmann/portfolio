@@ -1,0 +1,190 @@
+---
+/**
+ * Two-pane page shell. Default: text left, art right. `mirror`: art left, text right.
+ * Desktop: the art pane is sticky at full viewport height while the text pane scrolls with the page.
+ * Below 800px: the art fills the top of the screen, fixed behind the content, and dissolves over
+ * the first --dissolve px of scroll (CSS scroll-driven animation, script fallback).
+ */
+import { fade } from 'astro:transitions';
+
+interface Props {
+  mirror?: boolean;
+  label?: string;
+}
+const { mirror = false, label } = Astro.props;
+const side = mirror ? 'left' : 'right';
+const textSide = mirror ? 'right' : 'left';
+---
+
+<div class="split" data-mirror={mirror ? '' : undefined}>
+  <aside
+    class="split-art"
+    aria-label={label}
+    data-split-art
+    transition:name={`art-${side}`}
+    transition:animate={fade({ duration: '400ms' })}
+  >
+    <div class="split-art-inner">
+      <slot name="art" />
+    </div>
+    <div class="split-art-top">
+      <slot name="art-top" />
+    </div>
+  </aside>
+  <main
+    class="split-text"
+    id="main"
+    transition:name={`text-${textSide}`}
+    transition:animate={fade({ duration: '260ms' })}
+  >
+    <slot />
+  </main>
+</div>
+
+<style>
+  .split {
+    --cols: minmax(0, 1fr) minmax(0, 1.12fr);
+    display: grid;
+    grid-template-columns: var(--cols);
+    min-height: 100dvh;
+  }
+  .split[data-mirror] {
+    --cols: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  }
+  .split:not([data-mirror]) .split-art { order: 2; }
+  .split:not([data-mirror]) .split-text { order: 1; }
+
+  .split-art {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    padding: var(--pane-inset);
+  }
+  .split-art-inner {
+    position: relative;
+    height: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #0c0f0e;
+    display: grid;
+    place-items: center;
+    container-type: size;
+  }
+  .split-art-top {
+    position: absolute;
+    /* lines the back link up with the first line of the text pane */
+    top: calc(var(--gutter) - var(--space-2));
+    left: calc(var(--gutter) - var(--space-3));
+  }
+  .split-art-top:empty { display: none; }
+
+  .split-text {
+    min-width: 0;
+    padding: var(--gutter);
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+  .split-text > :global(*) {
+    width: 100%;
+    max-width: 36rem;
+  }
+
+  @media (max-width: 799.98px) {
+    .split {
+      display: block;
+      --art-h: 62svh;
+    }
+    .split-art {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: var(--art-h);
+      z-index: 0;
+      opacity: calc(1 - var(--dissolve-p, 0));
+      filter: blur(calc(var(--dissolve-p, 0) * 14px));
+      visibility: var(--dissolve-vis, visible);
+    }
+    .split-art-top {
+      top: calc(var(--pane-inset) + var(--space-3));
+      left: calc(var(--pane-inset) + var(--space-3));
+    }
+    .split-text {
+      position: relative;
+      z-index: 1;
+      margin-top: var(--art-h);
+      min-height: calc(100svh - var(--art-h) + var(--dissolve));
+      padding: var(--space-6) var(--gutter) var(--space-7);
+    }
+    @supports (animation-timeline: scroll()) {
+      .split-art {
+        opacity: 1;
+        filter: none;
+        visibility: visible;
+        animation: split-dissolve linear both;
+      }
+      /* separate rule: keeps the minifier from folding the timeline into the shorthand,
+         which Chrome rejects */
+      .split > .split-art {
+        animation-timeline: scroll(root block);
+        animation-range: 0 var(--dissolve);
+      }
+    }
+  }
+
+  @keyframes split-dissolve {
+    from { opacity: 1; filter: blur(0); visibility: visible; }
+    to { opacity: 0; filter: blur(14px); visibility: hidden; }
+  }
+
+  @media (max-width: 799.98px) and (prefers-reduced-motion: reduce) {
+    @supports (animation-timeline: scroll()) {
+      /* scroll-linked, not timed: keep it, but the global reduce rule must not shorten it */
+      .split-art { animation-duration: auto !important; }
+    }
+  }
+</style>
+
+<script>
+  // Fallback for browsers without scroll-driven animations, and video pause when dissolved.
+  const mq = window.matchMedia('(max-width: 799.98px)');
+  const supportsTimeline = CSS.supports('animation-timeline: scroll()');
+  let ticking = false;
+
+  function dissolveDistance() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--dissolve');
+    return parseFloat(v) || 120;
+  }
+
+  function update() {
+    ticking = false;
+    const pane = document.querySelector<HTMLElement>('[data-split-art]');
+    if (!pane) return;
+    const d = dissolveDistance();
+    const p = mq.matches ? Math.min(1, Math.max(0, window.scrollY / d)) : 0;
+    if (!supportsTimeline) {
+      pane.style.setProperty('--dissolve-p', p.toFixed(3));
+      pane.style.setProperty('--dissolve-vis', p >= 1 ? 'hidden' : 'visible');
+    }
+    const hidden = p >= 1;
+    pane.toggleAttribute('data-dissolved', hidden);
+    pane.querySelectorAll<HTMLVideoElement>('video[data-art-video]').forEach((v) => {
+      if (hidden) {
+        if (!v.paused) v.pause();
+      } else if (v.dataset.wantsPlay === 'true' && v.paused) {
+        v.play().catch(() => {});
+      }
+    });
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  mq.addEventListener('change', update);
+  document.addEventListener('astro:page-load', update);
+  document.addEventListener('art:ready', update);
+</script>

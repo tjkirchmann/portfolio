@@ -1,0 +1,21 @@
+# Home page content. Edit freely; the build validates the shape.
+name: Your Name
+role: Your role
+art: _placeholder
+
+entries:
+  - label: Project one
+    detail: "2026"
+    href: /blog/first-post/
+  - label: Project two
+    detail: "2025"
+  - label: Project three
+    detail: "2024"
+
+links:
+  - label: Blog
+    href: /blog/
+  - label: GitHub
+    href: https://github.com/
+  - label: Email
+    href: mailto:you@example.com

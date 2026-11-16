@@ -1,0 +1,11 @@
+---
+/** Markdown wrapper: typography plugin base, palette overrides in styles/prose.css. */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<div class:list={['prose', 'prose-chafer', className]}>
+  <slot />
+</div>

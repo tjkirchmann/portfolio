@@ -1,0 +1,168 @@
+---
+/**
+ * Loop player. Reads public/art/<slug>/meta.json at build (falls back to _placeholder).
+ * Shows the inline blurred still at once; when the video can play it crossfades in and the blur
+ * animates to 0. Reduced motion: the still poster only, the video never loads.
+ * The media is black-matte; mix-blend-mode: screen leaves only the light lines over what is behind.
+ */
+import { resolveArt } from '../lib/art';
+
+interface Props {
+  slug?: string;
+  class?: string;
+}
+const { slug, class: className } = Astro.props;
+const art = resolveArt(slug);
+const ratio = `${art.width} / ${art.height}`;
+---
+
+<div
+  class:list={['art', className]}
+  data-art={art.slug}
+  style={`--art-ratio: ${art.width / art.height}; aspect-ratio: ${ratio};`}
+>
+  <img class="art-blur" src={art.blurDataUrl} alt="" aria-hidden="true" width={art.width} height={art.height} decoding="sync" />
+  <img
+    class="art-poster"
+    src={`${art.base}poster.png`}
+    alt=""
+    aria-hidden="true"
+    width={art.width}
+    height={art.height}
+    loading="lazy"
+    decoding="async"
+  />
+  <video
+    class="art-video"
+    data-art-video
+    muted
+    loop
+    playsinline
+    disablepictureinpicture
+    disableremoteplayback
+    preload="none"
+    aria-hidden="true"
+    tabindex="-1"
+    width={art.width}
+    height={art.height}
+  >
+    {art.hasWebm && <source data-src={`${art.base}loop.webm`} type="video/webm" />}
+    {art.hasMp4 && <source data-src={`${art.base}loop.mp4`} type="video/mp4" />}
+  </video>
+</div>
+
+<style>
+  .art {
+    position: relative;
+    width: min(84cqw, calc(80cqh * var(--art-ratio)));
+    max-width: 100%;
+    /* no filter/opacity/transform here: children must blend with what is behind the pane */
+  }
+  .art > * {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  .art-blur {
+    filter: blur(18px);
+    transform: scale(1.04);
+    transition: opacity var(--dur-3) var(--ease);
+  }
+  .art-poster {
+    display: none;
+  }
+  .art-video {
+    opacity: 0;
+    filter: blur(18px);
+    transition:
+      opacity var(--dur-3) var(--ease),
+      filter var(--dur-3) var(--ease);
+  }
+  .art[data-state='ready'] .art-video {
+    opacity: 1;
+    filter: blur(0);
+  }
+  .art[data-state='ready'] .art-blur {
+    opacity: 0;
+  }
+  .art[data-instant] > * {
+    transition: none !important;
+  }
+
+  /* Still poster: reduced motion, or no script */
+  .art[data-state='still'] .art-poster {
+    display: block;
+  }
+  .art[data-state='still'] .art-blur,
+  .art[data-state='still'] .art-video {
+    display: none;
+  }
+  @media (scripting: none) {
+    .art .art-poster { display: block; }
+    .art .art-blur, .art .art-video { display: none; }
+  }
+</style>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // If the video becomes playable this fast it was cached: swap with no blur-in at all.
+  const INSTANT_MS = 50;
+
+  function markReady(root: HTMLElement, video: HTMLVideoElement, startedAt: number) {
+    if (root.dataset.state === 'ready') return;
+    if (performance.now() - startedAt < INSTANT_MS) {
+      root.setAttribute('data-instant', '');
+      requestAnimationFrame(() => requestAnimationFrame(() => root.removeAttribute('data-instant')));
+    }
+    root.dataset.state = 'ready';
+    video.dispatchEvent(new CustomEvent('art:ready', { bubbles: true }));
+  }
+
+  function setup(root: HTMLElement) {
+    if (root.dataset.state) return;
+    const video = root.querySelector<HTMLVideoElement>('video[data-art-video]');
+    if (!video) return;
+
+    if (reduce.matches) {
+      root.dataset.state = 'still';
+      video.removeAttribute('autoplay');
+      video.preload = 'none';
+      return;
+    }
+
+    root.dataset.state = 'loading';
+    const startedAt = performance.now();
+    video.querySelectorAll<HTMLSourceElement>('source[data-src]').forEach((s) => {
+      s.src = s.dataset.src!;
+    });
+    video.dataset.wantsPlay = 'true';
+    const ready = () => markReady(root, video, startedAt);
+    video.addEventListener('playing', ready, { once: true });
+    video.addEventListener('canplay', () => {
+      if (video.dataset.wantsPlay === 'true' && !video.closest('[data-dissolved]')) video.play().catch(() => {});
+    });
+    video.preload = 'auto';
+    video.load();
+    video.play().catch(() => {});
+  }
+
+  function init() {
+    document.querySelectorAll<HTMLElement>('[data-art]').forEach(setup);
+  }
+
+  reduce.addEventListener('change', () => {
+    if (!reduce.matches) return;
+    document.querySelectorAll<HTMLElement>('[data-art]').forEach((root) => {
+      const v = root.querySelector('video');
+      v?.pause();
+      if (v) v.dataset.wantsPlay = 'false';
+      root.dataset.state = 'still';
+    });
+  });
+
+  document.addEventListener('astro:page-load', init);
+</script>

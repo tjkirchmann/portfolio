@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+import Split from '../components/Split.astro';
+import Art from '../components/Art.astro';
+import Dither from '../components/Dither.astro';
+import EntryList from '../components/EntryList.astro';
+import LinkRow from '../components/LinkRow.astro';
+import { loadSite } from '../lib/site';
+
+const site = loadSite();
+---
+
+<Base title={site.name} description={`${site.name}, ${site.role}`}>
+  <Split label="Animation">
+    <Fragment slot="art">
+      <Dither
+        stops={[
+          { color: '#0a0c0b', at: 0 },
+          { color: '#0c1311', at: 0.3 },
+          { color: '#11231b', at: 0.58 },
+          { color: '#1a3b2c', at: 0.8 },
+          { color: '#285a45', at: 0.94 },
+          { color: '#326e54', at: 1 },
+        ]}
+        direction="to bottom"
+      />
+      <Art slug={site.art} />
+    </Fragment>
+
+    <header class="page-head">
+      <h1 class="page-title">{site.name}</h1>
+      <p class="page-sub">{site.role}</p>
+    </header>
+
+    <EntryList entries={site.entries} label="Work" />
+
+    <footer class="home-foot">
+      <LinkRow links={site.links} />
+    </footer>
+  </Split>
+</Base>
+
+<style>
+  .home-foot {
+    margin-top: auto;
+    padding-top: var(--space-8);
+  }
+</style>

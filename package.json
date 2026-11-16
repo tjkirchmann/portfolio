@@ -1,0 +1,31 @@
+{
+  "name": "portfolio",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev --port 4321",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "node tests/run.mjs",
+    "new-post": "node scripts/new-post.mjs",
+    "art": "python3 art/cli.py",
+    "lighthouse": "node tests/lighthouse.mjs"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "0.4.10",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@tailwindcss/typography": "^0.5.20",
+    "@tailwindcss/vite": "^4.3.5",
+    "astro": "^7.4.12",
+    "cookie": "^2.0.2",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4.3.5",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "lighthouse": "^13.6.0",
+    "playwright": "^1.65.1"
+  }
+}
