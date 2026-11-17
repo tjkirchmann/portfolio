@@ -1,7 +1,7 @@
 ---
 title: First post
 date: 2026-11-10
-art: _placeholder
+art: spikeball
 summary: A sample post.
 ---
 
