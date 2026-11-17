@@ -29,7 +29,16 @@ Light process, as asked: no evidence tables, crops or measurements.
   spike ball's breathing and crawl; all terms whole cycles per loop.
 - Subjects `spikeball-life` (the plain spike ball's builder and motion, 14 s) and
   `waveball-life` (14 s), 2.8 MiB cap per file.
-- Outputs: `public/art/spikeball-life/` and `public/art/waveball-life/`.
+- Outputs: `public/art/spikeball-life/` and `public/art/waveball-life/` (both rendered with
+  `python3 art/cli.py <slug>`, loop check MAD 0.0000/255; mp4 ~2.66 MB, webm ~2.82 MB).
+- Parallel renders: `art/cli.py` now splits final renders over `--workers 5` Blender
+  processes by frame range (a `prepare` step builds the subject once and caches the Life
+  history in `art/.cache/<slug>/`, then workers render, then a `finish` step loop-checks from
+  the files and encodes). `--resume` keeps frames already on disk. Throughput about 2.7x
+  (each worker slows from ~13 to ~24 s/frame under contention). Profile of one life frame:
+  depth pass 1.7 s, tile pass 3.9 s, line geometry build 0.24 s, line render 3.4 s, so the
+  Python geometry is not the bottleneck; no per-frame shortcut was taken. VP9 now goes
+  straight to an average bitrate (constant quality overshot to 20+ MB and cost a re-encode).
 
 **Not checked**: no `--check`, no measurements of tile coverage, motion speed or line widths
 for these two; looked at stills and a few frames only. `spikeball-zoom` is not rendered (see
@@ -41,8 +50,11 @@ below).
 - Colour regions are assigned by smooth fields; the aqua/blue share is approximate.
 - Spikeball-life loops over 14 s, so its motion runs a little slower than the plain 12 s
   spike ball.
-- The `spikeball-zoom` final render was stopped at frame 191/480 to make room for these
-  pieces; `public/art/spikeball-zoom/` does not exist yet.
+- `spikeball-zoom` is not rendered: stopped at 191/480 frames. The remaining ~290 frames
+  include the dive (up to 8 motion-blur sub-frames each, ~48 s/frame single-process), about
+  1.5-2 hours of wall time even with 5 workers, so it was not started. `python3 art/cli.py
+  spikeball-zoom --resume` would continue it; the 191 existing frames predate small framework
+  edits that should not change the image, but that was not verified.
 
 ## Round 2 note (Amendment 1)
 
