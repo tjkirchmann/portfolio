@@ -250,3 +250,30 @@ export function draw(l: Life, cols: number, rows: number, pal: Uint8Array, out: 
   }
   return empty / (cols * rows);
 }
+
+/** Per-cell classification for the WebGL renderer: RGBA bytes per cell,
+ *  R = 255 live, 150 fresh trail, 90 old trail, 0 empty (after the same Bayer thinning as draw());
+ *  G = hue family * 127. Returns the empty fraction. */
+export function classify(l: Life, cols: number, rows: number, out: Uint8Array): number {
+  const { ox, oy } = windowOrigin(l, cols, rows);
+  let empty = 0;
+  for (let y = 0; y < rows; y++) {
+    const ty = (oy + y) % l.h;
+    for (let x = 0; x < cols; x++) {
+      const i = ty * l.w + ((ox + x) % l.w);
+      const o = (y * cols + x) * 4;
+      let v = 0;
+      if (l.alive[i]) v = 255;
+      else {
+        const t = l.trail[i];
+        if (t * 0.9 > BAYER[((y & 7) << 3) | (x & 7)]) v = t > 0.35 + 0.3 * BAYER[(((x + 4) & 7) << 3) | ((y + 2) & 7)] ? 150 : 90;
+      }
+      if (!v) empty++;
+      out[o] = v;
+      out[o + 1] = l.hue[i] * 127;
+      out[o + 2] = 0;
+      out[o + 3] = 255;
+    }
+  }
+  return empty / (cols * rows);
+}

@@ -59,7 +59,8 @@ const state = encodeState(life);
 </style>
 
 <script>
-  import { createLife, decodeState, draw, colours, type Life } from '../lib/dither-sim';
+  import { createLife, decodeState, draw, classify, colours, type Life } from '../lib/dither-sim';
+  import { createMetal, type Metal } from '../lib/metal';
 
   interface Inst {
     canvas: HTMLCanvasElement;
@@ -67,7 +68,9 @@ const state = encodeState(life);
     cols: number;
     rows: number;
     img?: ImageData;
-    ctx: CanvasRenderingContext2D;
+    ctx?: CanvasRenderingContext2D;
+    metal?: Metal | null;
+    cells?: Uint8Array;
     pal: Uint8Array;
     inView: boolean;
     steps: number;
@@ -92,26 +95,55 @@ const state = encodeState(life);
     const cellCss = cellDev / dpr;
     const cols = Math.min(it.life.w, Math.floor(r.width / cellCss));
     const rows = Math.min(it.life.h, Math.floor(r.height / cellCss));
-    if (it.img && it.cols === cols && it.rows === rows) return true;
+    if ((it.img || it.cells) && it.cols === cols && it.rows === rows) return true;
     it.cols = cols;
     it.rows = rows;
-    it.canvas.width = cols;
-    it.canvas.height = rows;
+    if (it.metal) {
+      it.metal.resize(cols, rows, cellDev);
+      it.cells = new Uint8Array(cols * rows * 4);
+    } else {
+      it.canvas.width = cols;
+      it.canvas.height = rows;
+    }
     it.canvas.style.width = `${cols * cellCss}px`;
     it.canvas.style.height = `${rows * cellCss}px`;
     // centre the grid, then land its edges on whole device pixels
     const left = Math.round((r.left + (r.width - cols * cellCss) / 2) * dpr) / dpr - r.left;
     const top = Math.round((r.top + (r.height - rows * cellCss) / 2) * dpr) / dpr - r.top;
     it.canvas.style.transform = `translate(${left}px, ${top}px)`;
-    it.img = it.ctx.createImageData(cols, rows);
+    if (!it.metal) it.img = it.ctx!.createImageData(cols, rows);
     return true;
   }
 
+  // the light's clock: real time while live, frozen (band mid-pane) under reduced motion
+  const lightTime = () => (reduce.matches ? 9 : performance.now() / 1000);
+
   function render(it: Inst) {
-    if (!it.img && !layout(it)) return;
-    const empty = draw(it.life, it.cols, it.rows, it.pal, it.img!.data);
-    it.ctx.putImageData(it.img!, 0, 0);
+    if (!it.img && !it.cells && !layout(it)) return;
+    let empty: number;
+    if (it.metal) {
+      empty = classify(it.life, it.cols, it.rows, it.cells!);
+      it.metal.upload(it.cells!);
+      it.metal.draw(lightTime());
+    } else {
+      empty = draw(it.life, it.cols, it.rows, it.pal, it.img!.data);
+      it.ctx!.putImageData(it.img!, 0, 0);
+    }
     it.canvas.dataset.empty = empty.toFixed(3);
+  }
+
+  // the shared light moves at frame rate, but only while a metal field is live
+  let raf = 0;
+  function frame() {
+    raf = 0;
+    const live = insts.filter((it) => it.metal && running(it));
+    if (!live.length) return;
+    const t = lightTime();
+    for (const it of live) it.metal!.draw(t);
+    raf = requestAnimationFrame(frame);
+  }
+  function wakeLight() {
+    if (!raf && insts.some((it) => it.metal && running(it))) raf = requestAnimationFrame(frame);
   }
 
   const running = (it: Inst) =>
@@ -140,15 +172,18 @@ const state = encodeState(life);
   function schedule() {
     const live = insts.filter(running);
     const rate = live.length ? Math.max(...live.map((it) => Number(it.canvas.dataset.rate || 10))) : 0;
-    if (rate === timerRate) return;
+    if (rate === timerRate) return wakeLight();
     clearInterval(timer);
     timerRate = rate;
     if (rate) timer = window.setInterval(tick, 1000 / rate);
     document.documentElement.dataset.ditherLive = String(live.length);
+    wakeLight();
   }
 
   function teardown() {
     clearInterval(timer);
+    cancelAnimationFrame(raf);
+    raf = 0;
     timerRate = 0;
     io?.disconnect();
     ro?.disconnect();
@@ -173,13 +208,23 @@ const state = encodeState(life);
     document.querySelectorAll<HTMLCanvasElement>('canvas[data-dither]').forEach((canvas) => {
       const life = createLife(canvas.dataset.seed || '/', undefined, undefined, false);
       decodeState(life, canvas.dataset.state || '');
+      const intensity = Number(canvas.dataset.intensity || 1);
+      // WebGL metal if available; otherwise the flat 2D look
+      let metal: Metal | null = null;
+      try {
+        metal = createMetal(canvas, intensity);
+      } catch {
+        metal = null;
+      }
+      canvas.dataset.renderer = metal ? 'webgl' : '2d';
       const it: Inst = {
         canvas,
         life,
         cols: 0,
         rows: 0,
-        ctx: canvas.getContext('2d')!,
-        pal: colours(Number(canvas.dataset.intensity || 1)),
+        metal,
+        ctx: metal ? undefined : canvas.getContext('2d')!,
+        pal: colours(intensity),
         inView: false,
         steps: 0,
         ms: 0,

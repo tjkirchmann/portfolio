@@ -4,7 +4,16 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 4 (Amendment 4: AC-32, AC-33). Round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 5 (Amendment 5: AC-34). Round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 5 (Amendment 5, no test run by request)
+
+- **AC-34:** the simulation now draws through a raw WebGL 1 fragment shader (`src/lib/metal.ts`, no package added). The CPU still decides which cells are on; the shader decides how they look:
+  - **One shared light:** a normal per cell, worked out from which neighbours are filled, catches a slowly swinging light. A narrow specular band drifts across the pane about every 16s.
+  - **Tiles:** each cell is a bevelled tile with four hard-stepped tones. Joined cells read as one plate: bevels only on outer edges, with a faint seam inside, plus hot corner glints where lit.
+  - **Colour:** hue slides emerald → aqua → blue with position against the band. Highlights mix toward a white-green, never warm. Trails are the same, dimmer.
+  - **Manners:** the light animates at frame rate only while the field is live, and freezes under reduced motion. The flat canvas-2D look remains as the fallback.
+- Checked by eye in Chromium with GPU at 100% and zoomed; `pnpm build` passes and 4321 serves. It reads as glossy metallic plates that flash as the band passes, rather than flat paint. Life's sparse, broken structures limit how often a large continuous lacquered surface appears. Not run: `pnpm test`, Lighthouse, screenshot set.
 
 ## Round 4 (Amendment 4, no test run by request)
 
