@@ -20,7 +20,7 @@ from framework.render import Renderer  # noqa: E402
 def parse():
     argv = sys.argv[sys.argv.index("--") + 1:]
     p = argparse.ArgumentParser()
-    p.add_argument("mode", choices=["still", "render", "check", "encode"])
+    p.add_argument("mode", choices=["still", "render", "check", "encode", "prepare", "finish"])
     p.add_argument("subject")
     p.add_argument("--slug", required=True)
     p.add_argument("--quality", default="final")
@@ -28,6 +28,10 @@ def parse():
     p.add_argument("--out", default=None)
     p.add_argument("--no-back-dim", action="store_true")
     p.add_argument("--public", default=None)
+    p.add_argument("--frames", type=int, nargs=2, default=None, help="render frames [A, B) only")
+    p.add_argument("--no-deliver", action="store_true")
+    p.add_argument("--loopcheck", action="store_true")
+    p.add_argument("--resume", action="store_true")
     return p.parse_args(argv)
 
 
@@ -37,7 +41,14 @@ def main():
     if a.public is None:
         a.public = os.path.join(os.path.dirname(ART), "public", "art", a.slug)
     os.makedirs(cache, exist_ok=True)
+    os.environ["ART_CACHE_DIR"] = cache  # shared precomputed data (Life history) lives here
     stage = scenemod.Stage(a.subject)
+    if a.mode == "prepare":
+        print(f"PREPARED {a.slug}: {stage.frames} frames")
+        sys.exit(0)
+    if a.mode == "finish":
+        from framework import pipeline
+        sys.exit(pipeline.finish(stage, a, cache))
     if a.mode == "still":
         r = Renderer(stage, a.quality, os.path.join(cache, "tmp"), back_dim=not a.no_back_dim)
         out = a.out or os.path.join(cache, "stills")

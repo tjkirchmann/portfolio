@@ -116,6 +116,13 @@ level L should be fully in by the zoom where level L-1's spacing reaches ~50 px
 (z = 50 * 2^(L-1) / s0) and start fading in at ~34 px. For a new subject, reuse the `LOD`
 class and register per-edge weights in `builders.spikeball.WEIGHTS[obj.name]`.
 
+## 3c. Life tiles (colour pieces only)
+
+`from framework.life import attach` then `attach(obj, int(LOOP_SECONDS * 30), seed=...)`
+in `build()` runs Conway's Life on that mesh's quads and draws live cells as metallic tiles
+under the wire (emerald/teal/deep with aqua and blue patches). It is the only colour in the
+art; use it only when asked. Set `MAX_MB = 2.8`. See `spikeball-life.py`, `waveball-life.py`.
+
 ## 4. Preview, then look
 
 ```bash
@@ -144,7 +151,9 @@ Iterate on the subject (and builders, if a form needs a new one) until it holds 
 ```bash
 python3 art/cli.py --check <slug>     # camera, topology, density, motion, framing, loop, widths
                                       # (+ zoom timeline and visible spacing for zoom subjects)
-python3 art/cli.py <slug>             # final: 1200 px, 64 samples at 2x, ~3-4 s/frame; run in the background
+python3 art/cli.py <slug>             # final: 1200 px, 64 samples at 2x; run in the background
+                                      # renders split over --workers 5 Blender processes (frame ranges),
+                                      # --resume keeps frames already on disk
 python3 art/cli.py --check <slug>     # now also verifies the four delivered files
 ```
 

@@ -78,12 +78,21 @@ class Stage:
         self.X, self.Y, self.Z = (np.array(v) for v in cammod.basis(self.cam))
         self.fill = float(getattr(s, "FILL", FILL))
         self.view_fn = getattr(s, "view", None)
+        from . import life as lifemod
+        self.life = [o for o in self.objects if o.name in lifemod.REGISTRY]
+        if self.life:
+            lifemod.setup_lighting(self.scene)
+            self.scene.render.film_transparent = True
         self.cam_home = self.cam.location.copy()
         self.view = (1.0, 0.0, 0.0)
         self.frame_to_bounds()
 
     def pose(self, t):
         self.subject.animate(t)
+        if self.life:
+            from . import life as lifemod
+            for o in self.life:
+                lifemod.update(o, t)
         bpy.context.view_layer.update()
         self.view = self.view_at(t)
         z, cx, cy = self.view

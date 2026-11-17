@@ -4,7 +4,57 @@
 - **Branch:** `ai-feat/art`
 - **Head commit:** see the commit that adds this file (`git log -1 ai-feat/art`)
 - **Pushed to origin:** yes
-- **Round:** 2 (round 1 text kept below the round 2 note)
+- **Round:** 3 (round 2 and round 1 text kept below)
+
+## Round 3 note (Amendment 2: life on the surface)
+
+Light process, as asked: no evidence tables, crops or measurements.
+
+**Built**
+- `art/framework/life.py`: Conway's Life (B3/S23) on any mesh's own quads (neighbours share
+  an edge or a corner), 10 steps a second, small seeds planted when the live share drops
+  below 10%. Cells brighten in ~0.15 s and fade over ~1 s in their own hue. Seam: the
+  simulation runs 1.5 s past the loop and the first 1.5 s of the loop cross-fades from that
+  overrun into the start, so frame 0 follows the last frame. A subject switches it on with
+  `attach(obj, frames, seed=...)`.
+- Tiles are a separate EEVEE pass of the subject's own mesh: Principled metallic 1,
+  roughness 0.2, flat shaded, back faces culled, dead faces held out (transparent but still
+  hiding what is behind), a fixed green-white key light and a dark environment with a bright
+  band for the metal to reflect. Colour by surface region (smooth random fields): emerald,
+  teal, deep, with aqua and blue patches; slight shift toward aqua at grazing angles. The
+  wire pass is composited over the tiles in display space; frames and videos are now RGB
+  on black for these subjects only (gyroscope, knot, spikeball unchanged).
+- `art/builders/waveball.py`: all-quad cube-sphere (32x32 per face), four Gerstner wave
+  trains of different wavelength and direction (crests sharpen, troughs flatten), plus the
+  spike ball's breathing and crawl; all terms whole cycles per loop.
+- Subjects `spikeball-life` (the plain spike ball's builder and motion, 14 s) and
+  `waveball-life` (14 s), 2.8 MiB cap per file.
+- Outputs: `public/art/spikeball-life/` and `public/art/waveball-life/` (both rendered with
+  `python3 art/cli.py <slug>`, loop check MAD 0.0000/255; mp4 ~2.66 MB, webm ~2.82 MB).
+- Parallel renders: `art/cli.py` now splits final renders over `--workers 5` Blender
+  processes by frame range (a `prepare` step builds the subject once and caches the Life
+  history in `art/.cache/<slug>/`, then workers render, then a `finish` step loop-checks from
+  the files and encodes). `--resume` keeps frames already on disk. Throughput about 2.7x
+  (each worker slows from ~13 to ~24 s/frame under contention). Profile of one life frame:
+  depth pass 1.7 s, tile pass 3.9 s, line geometry build 0.24 s, line render 3.4 s, so the
+  Python geometry is not the bottleneck; no per-frame shortcut was taken. VP9 now goes
+  straight to an average bitrate (constant quality overshot to 20+ MB and cost a re-encode).
+
+**Not checked**: no `--check`, no measurements of tile coverage, motion speed or line widths
+for these two; looked at stills and a few frames only. `spikeball-zoom` is not rendered (see
+below).
+
+**Known issues**
+- Coverage is roughly 10-15% of the image as tiles; not measured against the 70-85% empty
+  target on the surface.
+- Colour regions are assigned by smooth fields; the aqua/blue share is approximate.
+- Spikeball-life loops over 14 s, so its motion runs a little slower than the plain 12 s
+  spike ball.
+- `spikeball-zoom` is not rendered: stopped at 191/480 frames. The remaining ~290 frames
+  include the dive (up to 8 motion-blur sub-frames each, ~48 s/frame single-process), about
+  1.5-2 hours of wall time even with 5 workers, so it was not started. `python3 art/cli.py
+  spikeball-zoom --resume` would continue it; the 191 existing frames predate small framework
+  edits that should not change the image, but that was not verified.
 
 ## Round 2 note (Amendment 1)
 

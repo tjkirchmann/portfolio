@@ -10,7 +10,7 @@ import os
 import bpy
 import numpy as np
 
-from .lines import COLOR_DISPLAY, linear_to_srgb
+from .lines import COLOR_DISPLAY, linear_to_srgb  # noqa: F401
 
 
 def lanczos_weights(a=3):
@@ -44,6 +44,15 @@ def load_exr(path):
     img.pixels.foreach_get(px)
     bpy.data.images.remove(img)
     return px.reshape(h, w, 4)[::-1, :, 0].astype(np.float64)  # top row first, R channel
+
+
+def load_exr_rgba(path):
+    img = bpy.data.images.load(path, check_existing=False)
+    w, h = img.size
+    px = np.empty(w * h * 4, np.float32)
+    img.pixels.foreach_get(px)
+    bpy.data.images.remove(img)
+    return px.reshape(h, w, 4)[::-1].astype(np.float64)
 
 
 def to_display(lin):
@@ -84,13 +93,34 @@ def load_png(path):
     return px.reshape(h, w, 4)[::-1]
 
 
-def finish_frame(lin2x, master_path, black_path):
-    """2x linear render -> master RGBA + over-black PNG. Returns display (H, W) and stats."""
+def finish_frame(lin2x, master_path, black_path, tiles2x=None):
+    """2x linear render -> master RGBA + over-black PNG. Returns display (H, W) and stats.
+    With `tiles2x` (2x premultiplied linear RGBA of the life tiles) the wire is composited
+    over the tiles and the frames are colour."""
     lin = downscale2(lin2x)
     disp = to_display(lin)
     alpha = np.clip(disp / COLOR_DISPLAY, 0, 1)
     disp = alpha * COLOR_DISPLAY
     h, w = alpha.shape
+    if tiles2x is not None:
+        t = np.stack([downscale2(tiles2x[:, :, k]) for k in range(4)], 2)
+        t = np.clip(t, 0, None)
+        ta = np.clip(t[:, :, 3], 0, 1)
+        tdisp = linear_to_srgb(np.clip(t[:, :, :3], 0, 1))  # premultiplied over black
+        out = alpha[:, :, None] * COLOR_DISPLAY + tdisp * (1 - alpha[:, :, None])
+        a_all = 1 - (1 - alpha) * (1 - ta)
+        if master_path:
+            rgba = np.empty((h, w, 4))
+            rgba[:, :, :3] = np.where(a_all[:, :, None] > 1e-6, out / np.maximum(a_all, 1e-6)[:, :, None], 0)
+            rgba[:, :, 3] = a_all
+            save_png(master_path, np.clip(rgba, 0, 1), "RGBA")
+        if black_path:
+            save_png(black_path, np.clip(out, 0, 1), "RGB")
+        ys, xs = np.nonzero(a_all > 2.5 / 255)
+        stats = dict(bbox=[int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())] if len(xs) else None,
+                     alpha_zero=float((np.round(a_all * 255) == 0).mean()),
+                     tiles=float((ta > 0.5).mean()))
+        return out.mean(2), stats
     if master_path:
         rgba = np.empty((h, w, 4))
         rgba[:, :, :3] = COLOR_DISPLAY

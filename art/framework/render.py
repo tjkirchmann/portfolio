@@ -97,23 +97,50 @@ class Renderer:
         r.filter_size, sc.eevee.taa_render_samples = old_f, old_s
         self.lines.set_depth_map(D)
 
+    def tiles_pass(self, samples):
+        """Life tiles: the subject's own meshes with their metallic material, RGBA."""
+        sc = self.stage.scene
+        r = sc.render
+        for o in self.stage.objects:
+            o.hide_render = False
+        self.lines.obj.hide_render = True
+        r.image_settings.color_mode = "RGBA"
+        sc.eevee.taa_render_samples = samples
+        exr = os.path.join(self.tmp, "tiles.exr")
+        r.filepath = exr
+        bpy.ops.render.render(write_still=True)
+        for o in self.stage.objects:
+            o.hide_render = True
+        self.lines.obj.hide_render = False
+        r.image_settings.color_mode = "RGB"
+        return post.load_exr_rgba(exr)
+
     def render_linear(self, t, samples=None):
-        """One pose at phase t -> 2x linear image."""
+        """One pose at phase t -> 2x linear image (and life tiles if any)."""
         self.stage.pose(t)
         self.lines.view = self.stage.view
         sc = self.stage.scene
         sc.render.image_settings.file_format = "OPEN_EXR"
         sc.render.image_settings.color_mode = "RGB"
         sc.render.image_settings.color_depth = "32"
+        tm = [time.time()]
         if self.back_dim:
             self.depth_pass()
+        tm.append(time.time())
+        self.tiles = self.tiles_pass(samples or self.q["samples"]) if self.stage.life else None
+        tm.append(time.time())
         info = self.lines.update(back_dim=self.back_dim)
+        tm.append(time.time())
         sc.eevee.taa_render_samples = samples or self.q["samples"]
         exr = os.path.join(self.tmp, "render.exr")
         sc.render.filepath = exr
         bpy.ops.render.render(write_still=True)
         sc.eevee.taa_render_samples = self.q["samples"]
-        return post.load_exr(exr), info
+        img = post.load_exr(exr)
+        tm.append(time.time())
+        info["timing"] = dict(zip(("depth", "tiles", "lines_build", "lines_render"),
+                                  [round(b - a, 2) for a, b in zip(tm, tm[1:])]))
+        return img, info
 
     def render(self, t, master_path=None, black_path=None, sub=1, shutter=0.0):
         """Render phase t. With sub > 1, average `sub` poses spread over `shutter` (in t
@@ -122,7 +149,9 @@ class Renderer:
         t0 = time.time()
         if sub <= 1:
             lin, info = self.render_linear(t)
+            tiles = self.tiles
         else:
+            tiles = None
             per = max(8, self.q["samples"] // sub)
             lin = None
             for k in range(sub):
@@ -131,7 +160,7 @@ class Renderer:
                 lin = img if lin is None else lin + img
             lin /= sub
             self.stage.pose(t)
-        disp, stats = post.finish_frame(lin, master_path, black_path)
+        disp, stats = post.finish_frame(lin, master_path, black_path, tiles)
         stats.update(info)
         stats["sub"] = sub
         stats["zoom"] = round(self.stage.view[0], 4)
