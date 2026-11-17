@@ -13,6 +13,7 @@ import Prose from '../components/Prose.astro';
 import { Content as Sample } from '../blocks/sample.md';
 import { getPosts } from '../lib/posts';
 import { loadSite } from '../lib/site';
+import { artList } from '../lib/art-set';
 
 const site = loadSite();
 const posts = await getPosts();
@@ -33,7 +34,7 @@ const many = Array.from({ length: 12 }, (_, i) => ({
     <BackLink slot="art-top" href="/" label="Home" />
     <Fragment slot="art">
       <Dither />
-      <ArtSet art={site.art} />
+      <ArtSet art={[...artList(site.art), { slug: '_placeholder-stacked', icon: 'circle', label: 'Opaque placeholder', backdrop: true }]} />
     </Fragment>
 
     <header class="page-head">
@@ -66,6 +67,14 @@ const many = Array.from({ length: 12 }, (_, i) => ({
       <div class="stage" data-test="art-over-dither">
         <Dither seed="blocks-art" intensity={0.7} />
         <Art slug="does-not-exist" />
+      </div>
+    </section>
+
+    <section aria-labelledby="b-opaque">
+      <h2 id="b-opaque">Opaque art over Dither</h2>
+      <div class="stage" data-test="opaque-over-dither">
+        <Dither seed="blocks-opaque" intensity={0.7} />
+        <Art slug="_placeholder-stacked" />
       </div>
     </section>
 

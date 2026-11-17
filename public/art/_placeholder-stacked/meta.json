@@ -1,0 +1,11 @@
+{
+  "slug": "_placeholder-stacked",
+  "subject": "placeholder (stacked alpha)",
+  "width": 480,
+  "height": 480,
+  "fps": 24,
+  "frames": 96,
+  "duration": 4,
+  "alpha": "stacked",
+  "blurDataUrl": "data:image/webp;base64,UklGRmoCAABXRUJQVlA4WAoAAAAQAAAAFwAAFwAAQUxQSAoBAAARkKPtnyFIX/3/PVqFNkObR7Ci3RMo28hWOptPPs8ewNYNjIiRWV1Vv2H3HiEiJoBRKwOsCrT0AJMndQHujYxxu65++fquf99YCA2Mrc9UJBU9P7fKwyjOSZUUc84xqaiPMIKzS6kuI6eYtRsHAnM+KpWGSe+mEcDoVSyNa/VhGEt+KTfL+jobqziourSsdRav2N8u6XHA2a7c7tGwPUrt7kHFYcU2ta6B0/s/+gnG+m/KrY7gOKcUm2V9nkHAWPhDqdE/XcaBwFHlmIflXHLU7fEEAGPvD5WUUiwlZ92eiDGis+jKexWpFMUTHQRGtcCEQ2+eHt+0dvNKLNDQHLqc4RZoHhwqNzdGBlZQOCA6AQAAMAYAnQEqGAAYAD61UqNNJySjIigIAOAWiWkABPs+e1zT/R/na+sz1EAUPxKzGrGk/EbQ3by/lzJEAAD+b8prFAwbOhn/DzrL/fYoQlq7y9cBuKBzlxE5NeQB5f3+3KSdVzVyJYUivay/GJnWvfIG0r6bkgyLWnc/kUknySe+iOtZPHmbiUs7XOmxgAo73Aoi1WYCflXrb6zvr2dB9ou39tp8eNTb46oLqvv83S8v2DDfbIiSBMOnKrfERXE/w3C+loLmsSDTP0hq4GNTUrZX12v8GvYlYxXq0doJE9ghW5AO5d/zEko39/9SXBbx6kCwY/GkF+Gv99uG7p/BofFXPQtPp53apihpRXR9OJScG8qGQyvlUfql4v163Rmn+i2RL7jbMuLiB9K/2WCfWW9T3q2xJ3QM0nEAAAA="
+}

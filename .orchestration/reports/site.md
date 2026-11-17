@@ -4,7 +4,22 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 7 (Amendment 7: AC-36 to AC-38). Round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 8 (Amendment 8: AC-39, AC-40). Round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 8 (Amendment 8, no test run by request)
+
+- **AC-39 / AC-40:** `Art` now plays `meta.alpha: "stacked"` pieces. The video plays hidden, and a WebGL canvas composites each decoded frame (`requestVideoFrameCallback`, falling back to `requestAnimationFrame`).
+  - **Compositing:** colour `L + (1 − L)·bg` with `bg` read from `--bg`, alpha `max(m, L)`, premultiplied, no blend mode.
+  - **Unchanged behaviour:** blur-in from the RGBA poster, crossfade, pause, reduced-motion still, unloading when hidden, and the switcher all still apply. Without WebGL it shows the poster.
+  - **Test clip:** a throwaway stacked clip lives in `public/art/_placeholder-stacked/` (480×960, made by `scripts/placeholder-stacked.py` and `placeholder-stacked-meta.mjs`). `/blocks` shows it in an "Opaque art over Dither" stage and as a fourth piece in the pane's switcher; `site.yaml` is untouched.
+  - **Switcher fix:** when a pane has a menu, the art now sits higher and smaller (3.25rem reserved), so the icons stay clear of the subject. Art bottom vs menu top: 607 / 659 at 1280×720, 615 / 842 at 900×900, 393 / 467 at 390×844.
+- Tried in Chromium with the GPU on:
+  - The solid ball in `--bg` hides the life cells behind it.
+  - At 4x zoom the silhouette cuts the cells cleanly, with no dark or light fringe.
+  - The canvas updates per decoded frame.
+  - Switching to and from the opaque piece starts and stops the right video.
+  - `pnpm build` passes and 4321 serves.
+  - Not run: `pnpm test`, Lighthouse, screenshot set.
 
 ## Round 7 (Amendment 7, no test run by request)
 

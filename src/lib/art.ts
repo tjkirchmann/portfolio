@@ -10,6 +10,8 @@ export interface ArtMeta {
   frames: number;
   duration: number;
   blurDataUrl: string;
+  /** "stacked": video is width x 2*height, picture on top, matte below (opaque pieces) */
+  alpha?: 'stacked';
 }
 
 export interface ResolvedArt extends ArtMeta {

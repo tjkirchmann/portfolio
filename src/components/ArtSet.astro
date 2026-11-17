@@ -16,7 +16,7 @@ const pieces = artList(Astro.props.art);
 const multi = pieces.length > 1;
 ---
 
-<div class="art-set" data-art-set data-default={pieces[0].slug}>
+<div class="art-set" data-art-set data-default={pieces[0].slug} data-multi={multi ? '' : undefined}>
   {
     pieces.map((p, i) => (
       <div
@@ -98,10 +98,21 @@ const multi = pieces.length > 1;
       visibility 0s linear var(--dur-3);
   }
 
+  /* with a menu, the art sits a little higher and smaller so the icons never cover the subject */
+  .art-set[data-multi] .art-piece {
+    padding-bottom: var(--menu-room);
+    box-sizing: border-box;
+  }
+  .art-set[data-multi] {
+    --menu-room: 3.25rem;
+  }
+  .art-set[data-multi] :global(.art) {
+    width: min(84cqw, calc((100cqh - 2 * var(--menu-room)) * var(--art-ratio)));
+  }
   .art-menu {
     position: absolute;
     left: 50%;
-    bottom: var(--space-5);
+    bottom: var(--space-3);
     transform: translateX(-50%);
     display: flex;
     gap: var(--space-1);

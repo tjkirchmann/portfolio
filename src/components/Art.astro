@@ -4,6 +4,8 @@
  * Shows the inline blurred still at once; when the video can play it crossfades in and the blur
  * animates to 0. Reduced motion: the still poster only, the video never loads.
  * The media is black-matte; mix-blend-mode: screen leaves only the light lines over what is behind.
+ * Opaque pieces (meta.alpha "stacked") play hidden and are composited per video frame to a WebGL
+ * canvas: a solid shape in --bg with light lines on it, covering what is behind, no blend mode.
  */
 import { resolveArt } from '../lib/art';
 
@@ -19,6 +21,7 @@ const ratio = `${art.width} / ${art.height}`;
 <div
   class:list={['art', className]}
   data-art={art.slug}
+  data-alpha={art.alpha}
   style={`--art-ratio: ${art.width / art.height}; aspect-ratio: ${ratio};`}
 >
   <img class="art-blur" src={art.blurDataUrl} alt="" aria-hidden="true" width={art.width} height={art.height} decoding="sync" />
@@ -49,6 +52,7 @@ const ratio = `${art.width} / ${art.height}`;
     {art.hasWebm && <source data-src={`${art.base}loop.webm`} type="video/webm" />}
     {art.hasMp4 && <source data-src={`${art.base}loop.mp4`} type="video/mp4" />}
   </video>
+  {art.alpha === 'stacked' && <canvas class="art-gl" aria-hidden="true" width={art.width} height={art.height} />}
 </div>
 
 <style>
@@ -101,6 +105,28 @@ const ratio = `${art.width} / ${art.height}`;
   .art[data-state='still'] .art-video {
     display: none;
   }
+  /* opaque pieces: no blending, the hidden video only feeds the canvas */
+  .art[data-alpha='stacked'] > * {
+    mix-blend-mode: normal;
+  }
+  .art[data-alpha='stacked'] .art-video {
+    opacity: 0 !important;
+    filter: none !important;
+  }
+  .art-gl {
+    opacity: 0;
+    filter: blur(18px);
+    transition:
+      opacity var(--dur-3) var(--ease),
+      filter var(--dur-3) var(--ease);
+  }
+  .art[data-state='ready'] .art-gl {
+    opacity: 1;
+    filter: blur(0);
+  }
+  .art[data-state='still'] .art-gl {
+    display: none;
+  }
   @media (scripting: none) {
     .art .art-poster { display: block; }
     .art .art-blur, .art .art-video { display: none; }
@@ -122,6 +148,97 @@ const ratio = `${art.width} / ${art.height}`;
     video.dispatchEvent(new CustomEvent('art:ready', { bubbles: true }));
   }
 
+  // ---- opaque pieces: stacked-alpha video -> WebGL canvas, once per decoded frame
+  const COMPOSITE_VERT = `attribute vec2 p; varying vec2 uv;
+    void main() { uv = vec2((p.x + 1.0) * 0.5, (1.0 - p.y) * 0.5); gl_Position = vec4(p, 0.0, 1.0); }`;
+  const COMPOSITE_FRAG = `precision mediump float; uniform sampler2D v; uniform vec3 bg; varying vec2 uv;
+    void main() {
+      vec3 L = texture2D(v, vec2(uv.x, uv.y * 0.5)).rgb;
+      float m = texture2D(v, vec2(uv.x, 0.5 + uv.y * 0.5)).r;
+      vec3 c = L + (1.0 - L) * bg;
+      float a = max(m, max(L.r, max(L.g, L.b)));
+      gl_FragColor = vec4(c * a, a);
+    }`;
+
+  function pageBg(): [number, number, number] {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0a0c0b';
+    const h = v.replace('#', '');
+    return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255) as [number, number, number];
+  }
+
+  /** returns a draw() that uploads the current video frame and composites it, or null without WebGL */
+  function compositor(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
+    const gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
+    if (!gl) return null;
+    const mk = (t: number, src: string) => {
+      const sh = gl.createShader(t)!;
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null;
+    };
+    const vs = mk(gl.VERTEX_SHADER, COMPOSITE_VERT), fs = mk(gl.FRAGMENT_SHADER, COMPOSITE_FRAG);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.uniform1i(gl.getUniformLocation(prog, 'v'), 0);
+    gl.uniform3fv(gl.getUniformLocation(prog, 'bg'), pageBg());
+    gl.clearColor(0, 0, 0, 0);
+    return () => {
+      if (video.readyState < 2 || !video.videoWidth) return false;
+      // render at displayed size (device px), never above the logical size
+      const r = canvas.getBoundingClientRect();
+      const want = Math.min(video.videoWidth, Math.round(r.width * (window.devicePixelRatio || 1))) || canvas.width;
+      if (canvas.width !== want) {
+        canvas.width = want;
+        canvas.height = Math.round((want * video.videoHeight) / 2 / video.videoWidth);
+      }
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      return true;
+    };
+  }
+
+  function startStacked(root: HTMLElement, video: HTMLVideoElement, onFirst: () => void) {
+    const canvas = root.querySelector<HTMLCanvasElement>('canvas.art-gl');
+    const draw = canvas && compositor(canvas, video);
+    if (!draw) return false;
+    let first = true;
+    const once = () => {
+      if (draw() && first) {
+        first = false;
+        onFirst();
+      }
+    };
+    const rvfc = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+    const loop = () => {
+      if (!video.isConnected || root.dataset.state === undefined) return; // deactivated or swapped out
+      once();
+      if (rvfc) (video as any).requestVideoFrameCallback(loop);
+      else requestAnimationFrame(loop);
+    };
+    if (rvfc) (video as any).requestVideoFrameCallback(loop);
+    else requestAnimationFrame(loop);
+    // a frame that arrives while paused still needs to land on the canvas
+    video.addEventListener('loadeddata', once, { once: true });
+    return true;
+  }
+
   function setup(root: HTMLElement) {
     if (root.dataset.state) return;
     // pieces hidden by an art switcher wait until they are chosen
@@ -138,12 +255,23 @@ const ratio = `${art.width} / ${art.height}`;
 
     root.dataset.state = 'loading';
     const startedAt = performance.now();
+    const stacked = root.dataset.alpha === 'stacked';
     video.querySelectorAll<HTMLSourceElement>('source[data-src]').forEach((s) => {
       s.src = s.dataset.src!;
     });
     video.dataset.wantsPlay = 'true';
     const ready = () => markReady(root, video, startedAt);
-    video.addEventListener('playing', ready, { once: true });
+    if (stacked) {
+      // ready once the first composited frame is on the canvas; no WebGL: the still poster
+      if (!startStacked(root, video, ready)) {
+        root.dataset.state = 'still';
+        video.dataset.wantsPlay = 'false';
+        video.querySelectorAll('source').forEach((x) => x.removeAttribute('src'));
+        return;
+      }
+    } else {
+      video.addEventListener('playing', ready, { once: true });
+    }
     video.addEventListener('canplay', () => {
       if (video.dataset.wantsPlay === 'true' && !video.closest('[data-dissolved]')) video.play().catch(() => {});
     });
