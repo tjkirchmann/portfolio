@@ -248,3 +248,36 @@ screenshots that changed.
   `document.scrollingElement.scrollHeight === innerHeight` on the post at 1440x900 and
   1280x720, scrolls the pane with wheel and keyboard, repeats the footnote round trip, and
   checks back/forward restoration; screenshots at pane top, middle and end.
+
+## Amendment 3 (2026-11-16, from the owner after seeing round 2)
+
+The owner's words: "the game of life patch is too splotchy and i want you to remove the
+orange and yellow as design elements."
+
+- **AC-28 greens only, site-wide.** Gold, copper, bronze and the yellow-green `leaf` are
+  removed as design elements everywhere: tokens, simulation, footnote marks and
+  back-arrows, footnote target highlight, code theme, timeline accents, focus rings,
+  anything else. The accent palette is `--emerald #76c8a5`, `--teal #579d87`,
+  `--deep #326e54`, on `--bg` and `--ink`. Delete the unused tokens rather than leaving
+  them. This overrides the palette table in `CLAUDE.md` (do not edit that file; the
+  orchestrator will). Evidence: a test that walks every built page and every canvas frame
+  and fails on any pixel or computed colour whose hue is outside the green-teal band
+  (allowing neutrals), plus a grep of the source for the removed hex values.
+- **AC-29 not splotchy (amends AC-19 to AC-21).** Round 2 ran the automaton on a 20-28 cell
+  grid, then upscaled and blurred it into big soft blobs. Remove that. The automaton now
+  runs at display-cell resolution, one automaton cell per drawn square, with no blur and no
+  upscale, so what is on screen is the actual structure of the simulation: gliders, still
+  lifes, oscillators, fronts, fine filigree. Live cells are solid emerald squares. A cell
+  that dies leaves a trail that thins out through the Bayer dither over a second or two
+  (teal, then deep, then gone), which is where the halftone texture comes from. Overall it
+  should read as fine, crisp and sparse: a living texture, not coloured clouds. Keep at
+  least 60% of the pane pure `--bg`, keep activity from clumping into filled regions, and
+  keep it quiet enough that the wireframe is plainly the subject. Re-check the cost limit
+  of AC-22 at the larger grid (use typed arrays; a worker is allowed if needed).
+- **AC-30:** remove the `smooth` and `flow` modes and their code. One simulation.
+- **AC-31:** no simulation cell may draw outside the art panel's rounded bounds (round 2
+  had stray cells past the left and right edges on the home page).
+- Leave everything else from round 2 as it is: timelines, the 50/50 split, the locked blog
+  shell.
+
+Report as round 3.
