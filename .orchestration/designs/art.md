@@ -244,3 +244,46 @@ framework API. Line width stays constant in pixels at every zoom level.
 
 Report as round 2 in `.orchestration/reports/art.md`: add rows for AC-20 to AC-25, mark the
 dropped criteria as dropped, and keep the earlier rows.
+
+## Amendment 2 (2026-11-16, from the owner)
+
+The owner's words: "can i get an alternative front page art piece that puts the life
+simulation as metallic colors on the spikeball's surface. I also want a waveball with the
+same effects." Light process: no evidence tables, crops or measurements. Build it, look at
+it, make sure `python3 art/cli.py <slug>` runs and the loop closes, short note in the report.
+
+This is the one place colour is allowed in the art. The plain `spikeball` stays as it is.
+
+- **AC-26 life on the surface.** A framework feature any subject can switch on: Conway's
+  Life runs on the mesh's own quads (each face is a cell, neighbours are the faces sharing
+  an edge or corner), stepping about 10 times a second, kept alive by planting small
+  long-lived seeds when activity drops. It rides the deforming surface, so cells stretch
+  and crawl with the skin and climb the spikes.
+- **AC-27 metallic cells.** A live face is a filled, flat-shaded, metallic tile: real
+  glossy shading from a fixed key light so tiles flash as the surface turns and breathes
+  under it, dark saturated base, small hot highlights, slight hue shift with angle. Colours
+  are the site's: emerald `#76c8a5`, teal `#579d87`, deep `#326e54`, with patches (about a
+  tenth each) of aqua `#58b3b3` and metallic blue `#4a86c8`, assigned by surface region, not
+  per cell. Highlights go toward white-green. No yellow, gold or orange. A face that dies
+  fades out over a second or so in its own hue. Dead faces are fully transparent. Faces on
+  the far side are hidden or much dimmer so the front reads cleanly. Keep most of the
+  surface empty (roughly 70-85%) so it is wire first, jewels second.
+- **AC-28 wire stays.** The same light wireframe lines are drawn over the tiles, unchanged
+  in width and brightness rules. Delivery is still video on pure black for screen blending,
+  now with colour. Size limit for these pieces: 3 MB per file; raise the bitrate enough
+  that the tiles do not smear.
+- **AC-29 loop.** The clip must still loop seamlessly, surface motion and Life both. Life
+  is not periodic, so engineer the seam (for example let activity ebb to nothing just
+  before the loop point and seed in just after, or blend the last second of cell
+  brightness into the first). No visible pop or cut. Loop length 12-20s.
+- **AC-30 `spikeball-life`:** the existing spike ball, same living motion, with AC-26 to
+  AC-28 on its surface.
+- **AC-31 `waveball-life`:** a new form, a sphere with no spikes whose surface carries
+  rolling waves: several wave trains of different wavelength travelling across it in
+  different directions, crests sharpening and troughs flattening like a liquid planet,
+  plus the same slow breathing and under-the-skin crawl. All-quad cube-sphere, even
+  density, exactly periodic. With AC-26 to AC-28 on its surface. Same isometric camera.
+- Finish the `spikeball-zoom` render already in progress first if it is close; otherwise
+  these two take priority and the zoom clip follows. One final render at a time.
+
+Output contract unchanged: `public/art/<slug>/{loop.webm,loop.mp4,poster.png,meta.json}`.
