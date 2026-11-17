@@ -191,3 +191,56 @@ python3 art/cli.py --check gears     # loop, size and contract checks only
 
 Passing: all exit 0 for all three subjects, the checks print their measured values, and the
 report includes stills and zoomed crops.
+
+## Amendment 1 (2026-11-16, from the owner after watching the loops)
+
+The owner dropped the gears and asked for two new subjects. Where this amendment conflicts
+with the text above, the amendment wins.
+
+**Dropped:** the `gears` subject and its output. Delete `art/subjects/gears.py` and
+`public/art/gears/`. AC-11's gear clause, AC-16 and AC-17 no longer apply. The gear builder
+may stay if it is clean; nothing needs to use it. The bake-off report stays as it is.
+`gyroscope` and `knot` are accepted as they are: do not change their look.
+
+**Camera rule (replaces the last two sentences of AC-19):** the projection and the
+isometric angles stay fixed for every subject. A subject may animate the orthographic
+scale (zoom) and the camera's pan in the view plane, both periodic in `t`, through a
+framework API. Line width stays constant in pixels at every zoom level.
+
+- **AC-20 `spikeball`:** a sphere covered in soft rounded spikes, like a child's sensory
+  toy ball: 60-120 stubby tapered nubs with rounded tips, evenly spread (no pole pinching:
+  cube-sphere or similar all-quad base, spikes grown from quad patches with clean support
+  loops at the base). Evidence: still, and a 300% crop of three neighbouring spikes.
+- **AC-21 `spikeball` motion:** the surface looks alive. Three layered motions, all exactly
+  periodic over the loop: a slow breathing of the whole radius; waves that travel across
+  the surface so spikes lengthen, shorten and lean in sequence rather than in unison; and
+  a crawl, where the surface between spikes slides and bulges as if something moves under
+  the skin (looped noise sampled on a closed path, displacing along the normal and
+  tangent). No rigid turntable as the main motion; a slow drift in orientation is allowed
+  if it closes. It must read as organic, not as a sine wobble: at least two noise
+  octaves, no visible mirror symmetry, no moment where everything is at rest. Evidence:
+  six evenly spaced frames, the loop check, and the motion formula in the report.
+- **AC-22 `spikeball-zoom`:** a second clip, same ball and same living motion throughout.
+  Timeline: hold on the whole ball for roughly the first quarter; then zoom into one
+  region the way a satellite view dives into a city map, to at least 12x; hold briefly on
+  the close view; then pull back out to the exact starting framing so it loops. Ease in
+  and out; no linear zoom, no cut. Zoom exponentially (constant apparent speed).
+  Evidence: frames at the start, mid-dive, closest, mid-return, and the loop check.
+- **AC-23 detail on the way in:** the dive must reveal structure, not just enlarge a coarse
+  grid. As the zoom passes each level, finer wire detail fades in inside the target region
+  (finer subdivision of the same surface, then a surface micro-structure at the closest
+  level, for example smaller nubs, pores or ridges between the spikes, still crawling) and
+  fades out again on the way back. On-screen edge spacing stays between 5 and 60px at every
+  zoom level. Fades are by brightness, never pops. Evidence: a 5-frame strip through the
+  dive with measured spacing at each.
+- **AC-24:** AC-3, AC-4, AC-6, AC-7, AC-13, AC-14, AC-15 and AC-18 apply to both new
+  subjects (AC-18's fill rule applies to the wide framing only). AC-5's 2px-per-frame limit
+  applies to `spikeball` and to the held parts of `spikeball-zoom`; during the dive use
+  motion blur or enough frames that lines do not strobe. AC-8 applies with these changes:
+  `spikeball` loop 8-12s; `spikeball-zoom` loop 16-24s and each file under 3 MB. AC-10's
+  80-line limit is relaxed to 150 lines for these two; shared code goes in builders.
+- **AC-25:** update `SKILL.md` for the zoom and pan API and the level-of-detail fade, and
+  remove gears from its examples.
+
+Report as round 2 in `.orchestration/reports/art.md`: add rows for AC-20 to AC-25, mark the
+dropped criteria as dropped, and keep the earlier rows.
