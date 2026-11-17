@@ -14,7 +14,7 @@ from .render import Renderer
 MAX_MOVE_PX = 2.0
 MIN_SPACING, MAX_SPACING = 5.0, 60.0
 FILL_RANGE = (0.70, 0.85)
-MAX_BYTES = 1.5 * 1024 * 1024
+MAX_BYTES = 1_500_000  # decimal MB, the stricter reading
 
 
 class Report:
@@ -51,15 +51,31 @@ def topology(stage, rep):
                          f"{len(o.data.edges)} edges", tris == 0)
 
 
+def lod_provider(o):
+    try:
+        from builders.spikeball import WEIGHTS
+    except ImportError:
+        return None
+    fn = WEIGHTS.get(o.name)
+    return fn.__self__ if fn else None
+
+
 def density(stage, rep, size):
-    """In-surface spacing between opposite edges of every quad, in delivery px."""
+    """In-surface spacing between opposite edges of every quad, in delivery px, at the wide
+    framing. For level-of-detail meshes the base level is measured (finer levels are only
+    visible when zoomed: see the AC-23 strip)."""
+    stage.pose(0.0)
     ppu = stage.px_per_unit(size)
     lo_all, hi_all = 1e9, 0
     for o in stage.objects:
         P, lt, lv = object_arrays(o)
-        starts = np.concatenate([[0], np.cumsum(lt)[:-1]])
-        q = starts[lt == 4]
-        a, b, c, d = (P[lv[q + k]] for k in range(4))
+        prov = lod_provider(o)
+        if prov is not None:
+            a, b, c, d = (P[prov.base_faces[:, k]] for k in range(4))
+        else:
+            starts = np.concatenate([[0], np.cumsum(lt)[:-1]])
+            q = starts[lt == 4]
+            a, b, c, d = (P[lv[q + k]] for k in range(4))
         s1 = np.linalg.norm((a + b) / 2 - (d + c) / 2, axis=1)
         s2 = np.linalg.norm((b + c) / 2 - (a + d) / 2, axis=1)
         s = np.concatenate([s1, s2]) * ppu
@@ -72,26 +88,47 @@ def density(stage, rep, size):
 
 
 def motion_and_framing(stage, rep, size):
+    """Screen displacement per frame of on-screen vertices, under the camera of each frame.
+    For zooming subjects the 2 px limit applies to frames where the camera holds; during
+    camera moves the renderer adds motion-blur sub-frames instead (reported)."""
     n = stage.frames
     prev = None
     worst = (0, 0)
+    moving = (0, 0)
     fills = []
     clip = False
+    held_frames = 0
     for i in range(n + 1):
-        stage.pose(i / n)
+        t = i / n
+        stage.pose(t)
+        view = stage.view
         px = stage.to_px(stage.world_points(), size)
         if prev is not None:
-            dmax = float(np.linalg.norm(px - prev, axis=1).max())
-            if dmax > worst[0]:
-                worst = (dmax, i)
-        prev = px
-        w = px[:, 0].max() - px[:, 0].min()
-        h = px[:, 1].max() - px[:, 1].min()
-        fills.append(max(w, h) / size)
-        if px.min() < 0 or px.max() > size:
-            clip = True
-    rep.line("AC-5", f"max vertex displacement {worst[0]:.3f}px/frame (frame {worst[1]})",
-             worst[0] <= MAX_MOVE_PX)
+            on = ((px >= 0) & (px <= size)).all(1)
+            d = np.linalg.norm(px - prev, axis=1)
+            dmax = float(d[on].max()) if on.any() else 0.0
+            held = abs(view[0] - prev_view[0]) < 1e-9  # zoom holding (pan may track the focus)
+            if held:
+                held_frames += 1
+                if dmax > worst[0]:
+                    worst = (dmax, i)
+            elif dmax > moving[0]:
+                moving = (dmax, i)
+        prev, prev_view = px, view
+        if view[0] == 1.0:
+            w = px[:, 0].max() - px[:, 0].min()
+            h = px[:, 1].max() - px[:, 1].min()
+            fills.append(max(w, h) / size)
+            if px.min() < 0 or px.max() > size:
+                clip = True
+    rep.line("AC-5", f"max vertex displacement {worst[0]:.3f}px/frame (frame {worst[1]}) over "
+                     f"{held_frames} frames with the zoom holding", worst[0] <= MAX_MOVE_PX)
+    if moving[0]:
+        from .pipeline import motion_blur_subframes
+        subs = [motion_blur_subframes(stage, i / n, n, size) for i in range(n)]
+        rep.line("AC-5", f"camera moving on {n - held_frames} frames: max on-screen displacement "
+                         f"{moving[0]:.1f}px/frame (frame {moving[1]}); motion-blur sub-frames per "
+                         f"frame {min(subs)}-{max(subs)} (camera <= ~1.5px between sub-frames)")
     rep.line("AC-18", f"geometry bounds fill {min(fills):.3f}-{max(fills):.3f} of frame, "
                       f"clips edge: {clip}", FILL_RANGE[0] <= min(fills) and max(fills) <= FILL_RANGE[1] and not clip)
     return worst, (min(fills), max(fills))
@@ -102,11 +139,11 @@ def rendered_framing(stats_path, size, rep):
         rep.line("AC-18", f"no render stats at {stats_path} (run a final render first)", None)
         return
     st = json.load(open(stats_path))
-    boxes = [s["bbox"] for s in st["stats"] if s.get("bbox")]
+    boxes = [s["bbox"] for s in st["stats"] if s.get("bbox") and s.get("zoom", 1.0) == 1.0]
     fills = [max(b[2] - b[0] + 1, b[3] - b[1] + 1) / size for b in boxes]
     clip = any(b[0] <= 0 or b[1] <= 0 or b[2] >= size - 1 or b[3] >= size - 1 for b in boxes)
-    az = [s["alpha_zero"] for s in st["stats"]]
-    rep.line("AC-18", f"rendered bbox fill per frame {min(fills):.3f}-{max(fills):.3f}; first {boxes[0]}, "
+    az = [s["alpha_zero"] for s in st["stats"] if s.get("zoom", 1.0) == 1.0]
+    rep.line("AC-18", f"rendered bbox fill per wide frame ({len(boxes)} frames) {min(fills):.3f}-{max(fills):.3f}; first {boxes[0]}, "
                       f"middle {boxes[len(boxes) // 2]}, last {boxes[-1]}; touches edge: {clip}",
              FILL_RANGE[0] <= min(fills) and max(fills) <= FILL_RANGE[1] and not clip)
     rep.line("AC-3", f"alpha==0 fraction per frame {min(az):.3f}-{max(az):.3f}", min(az) > 0.5)
@@ -254,6 +291,86 @@ def line_measure(stage, r, disp, rep, size):
     return found
 
 
+# ---------------------------------------------------------------- level of detail (zoom)
+
+def visible_spacing(stage, prov, size):
+    """In-surface spacing (x current px per unit) of the wire actually visible: for each
+    level, its faces where that level is at least half faded in and the next level is not,
+    front-facing, centre on screen. The far side of the ball seen dimly through the skin
+    (faces more than a quarter of the depth range behind the nearest visible face) is left
+    out. Returns (min, 1st percentile, max, count, levels used)."""
+    lod = prov.lod
+    P = stage.world_points()
+    z = stage.view[0]
+    ppu = stage.px_per_unit(size)
+    cand = []
+    for L, F in enumerate(lod.level_faces):
+        if not len(F):
+            continue
+        ang = lod.ang[F].mean(1)
+        aL = lod.alpha(L, ang, z)
+        an = lod.alpha(L + 1, ang, z) if L < lod.L else np.zeros(len(F))
+        a, b, c, d = (P[F[:, k]] for k in range(4))
+        ctr = stage.to_px((a + b + c + d) / 4, size)
+        nrm = np.cross(c - a, d - b)
+        sel = (aL >= 0.5) & (an < 0.5) & ((ctr >= 0) & (ctr <= size)).all(1) & (nrm @ stage.Z > 0)
+        if sel.any():
+            depth = ((a + b + c + d) / 4)[sel] @ stage.Z
+            s1 = np.linalg.norm((a + b) / 2 - (d + c) / 2, axis=1)[sel]
+            s2 = np.linalg.norm((b + c) / 2 - (a + d) / 2, axis=1)[sel]
+            cand.append((L, depth, np.minimum(s1, s2) * ppu, np.maximum(s1, s2) * ppu))
+    near = max(c[1].max() for c in cand)
+    span = stage.depth_range[1] - stage.depth_range[0]
+    lo, hi, vals, used = [], [], [], []
+    for L, depth, smin, smax in cand:
+        keep = depth > near - 0.25 * span
+        if keep.any():
+            vals.append(np.concatenate([smin[keep], smax[keep]]))
+            used.append(L)
+    v = np.concatenate(vals)
+    return float(v.min()), float(np.percentile(v, 1)), float(v.max()), len(v) // 2, used
+
+
+def lod_checks(stage, r, rep, size, cache):
+    prov = next((lod_provider(o) for o in stage.objects if lod_provider(o)), None)
+    if prov is None or stage.view_fn is None:
+        return
+    ts = np.linspace(0, 1, 4001)[:-1]
+    zs = np.array([stage.view_at(t)[0] for t in ts])
+    zmax = zs.max()
+    rep.line("AC-22", f"zoom 1.0 for t in [0, {ts[np.argmax(zs > 1.0001)]:.3f}), max zoom {zmax:.2f}x "
+                      f"held for t in [{ts[np.argmax(zs >= zmax - 1e-6)]:.3f}, "
+                      f"{ts[len(zs) - 1 - np.argmax(zs[::-1] >= zmax - 1e-6)]:.3f}], zoom at t=0 "
+                      f"{zs[0]:.3f} and t=1 {stage.view_at(1.0)[0]:.3f}", zmax >= 12 and abs(stage.view_at(1.0)[0] - 1) < 1e-9)
+    rising = np.nonzero((np.diff(zs) > 0))[0]
+    strip = [("start", 0.0)]
+    for target in (3.0, 6.0, 10.0):
+        k = rising[np.argmax(zs[rising + 1] >= target)] + 1
+        strip.append((f"dive {target:.0f}x", float(ts[k])))
+    close = ts[zs >= zmax - 1e-6]
+    strip.append(("closest", float(close[len(close) // 2])))
+    falling = np.nonzero(np.diff(zs) < 0)[0]
+    strip.append(("mid-return", float(ts[falling[len(falling) // 2]])))
+    sdir = os.path.join(cache, "strip")
+    os.makedirs(sdir, exist_ok=True)
+    for name, t in strip:
+        r.render(t, None, os.path.join(sdir, f"{name.replace(' ', '_')}.png"),
+                 sub=1, shutter=0.0)
+        lo, p1, hi, n, used = visible_spacing(stage, prov, size)
+        rep.line("AC-23", f"{name}: t={t:.4f} zoom {stage.view[0]:.2f}x, visible levels {used}, "
+                          f"spacing min {lo:.1f} (1st pct {p1:.1f}) max {hi:.1f} px over {n} quads",
+                 lo >= MIN_SPACING and hi <= MAX_SPACING)
+    worst_lo, worst_hi = 1e9, 0
+    n = stage.frames
+    for i in range(0, n, 5):
+        t = i / n
+        stage.pose(t)
+        lo, p1, hi, _, _ = visible_spacing(stage, prov, size)
+        worst_lo, worst_hi = min(worst_lo, lo), max(worst_hi, hi)
+    rep.line("AC-23", f"every 5th frame of the loop: visible spacing {worst_lo:.1f}-{worst_hi:.1f} px",
+             worst_lo >= MIN_SPACING and worst_hi <= MAX_SPACING)
+
+
 # ---------------------------------------------------------------- outputs
 
 def outputs(rep, public, slug, stage):
@@ -272,13 +389,15 @@ def outputs(rep, public, slug, stage):
     bw, bh = struct.unpack(">II", raw[16:24])
     rep.line("AC-2", f"blurDataUrl {bw}x{bh} PNG, {len(raw)} bytes, data URL {len(blur)} chars",
              bw <= 32 and len(blur) < 2048 and raw[:8] == b"\x89PNG\r\n\x1a\n")
+    lo_s, hi_s = (16, 24) if stage.view_fn is not None else (6, 12)
     rep.line("AC-8", f"meta {meta['width']}x{meta['height']} {meta['fps']}fps {meta['frames']} frames "
-                     f"{meta['duration']}s", meta["width"] == meta["height"] == 1200 and meta["fps"] == 30
-             and 6 <= meta["duration"] <= 12)
+                     f"{meta['duration']}s (allowed {lo_s}-{hi_s}s)",
+             meta["width"] == meta["height"] == 1200 and meta["fps"] == 30 and lo_s <= meta["duration"] <= hi_s)
     for f in ("loop.mp4", "loop.webm"):
         sz = os.path.getsize(os.path.join(public, f))
         info = mp4.probe_mp4(os.path.join(public, f)) if f.endswith("mp4") else mp4.probe_webm(os.path.join(public, f))
-        ok = sz < MAX_BYTES and info.get("width") == 1200 and info.get("height") == 1200 \
+        cap = 3_000_000 if stage.view_fn is not None else MAX_BYTES
+        ok = sz < cap and info.get("width") == 1200 and info.get("height") == 1200 \
             and info.get("frames") == meta["frames"]
         if f.endswith("mp4"):
             ok = ok and info["codec"] == "avc1" and info["faststart"] and info["chroma"].startswith("4:2:0")
@@ -306,6 +425,13 @@ def run(stage, a, cache):
              mad < LOOP_MAD_LIMIT)
     rep.line("AC-3", f"check frame alpha==0 fraction {st['alpha_zero']:.3f}", st["alpha_zero"] > 0.5)
     line_measure(stage, r, first, rep, size)
+    lod_checks(stage, r, rep, size, cache)
+    if stage.view_fn is not None:  # widths at the closest zoom too: constant in pixels
+        ts = np.linspace(0, 1, 2001)[:-1]
+        tz = ts[int(np.argmax([stage.view_at(t)[0] for t in ts]))]
+        close, _ = r.render(float(tz))
+        print(f"[AC-4] at zoom {stage.view[0]:.2f}x:")
+        line_measure(stage, r, close, rep, size)
     rendered_framing(os.path.join(cache, "render_stats.json"), size, rep)
     outputs(rep, a.public, a.slug, stage)
     print(f"CHECK {a.slug}: {'FAIL ' + ', '.join(sorted(set(rep.fails))) if rep.fails else 'all checks passed'}")

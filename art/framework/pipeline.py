@@ -1,6 +1,7 @@
 """Full render: every frame -> loop check -> encode -> poster, blur, meta.json."""
 import glob
 import json
+import math
 import os
 import shutil
 import time
@@ -11,18 +12,18 @@ from . import encode, post
 from .render import Renderer
 
 LOOP_MAD_LIMIT = 0.5  # mean absolute difference, 0-255 scale (AC-6)
-MAX_BYTES = int(1.45 * 1024 * 1024)  # AC-8: each video under 1.5 MB, with a little margin
+MAX_BYTES = int(1.40 * 1024 * 1024)  # AC-8: under 1.5 MB (decimal) with a margin
 # Encode at constant quality first; if that is too big, re-encode at an average bitrate that
 # fits a 10-12 s loop under MAX_BYTES (detailed subjects like gears need this).
 CRF = {"h264": 23, "vp9": 32}
 PRESET = {"h264": "BEST", "vp9": "GOOD"}
 
 
-def encode_capped(src, dst, fps, profile, seconds):
+def encode_capped(src, dst, fps, profile, seconds, max_bytes=MAX_BYTES):
     n = encode.encode(src, dst, fps, profile, CRF[profile], PRESET[profile])
     mode = f"crf {CRF[profile]}"
-    kbps = int(MAX_BYTES * 8 / 1000 / seconds * 0.92)
-    while n > MAX_BYTES and kbps > 200:
+    kbps = int(max_bytes * 8 / 1000 / seconds * 0.92)
+    while n > max_bytes and kbps > 200:
         n = encode.encode(src, dst, fps, profile, CRF[profile], PRESET[profile], kbps=kbps)
         mode = f"{kbps} kbps"
         kbps = int(kbps * 0.88)
@@ -37,6 +38,13 @@ def _clean(d):
 
 def loop_mad(a, b):
     return float(np.abs(np.round(a * 255) - np.round(b * 255)).mean())
+
+
+def motion_blur_subframes(stage, t, n, size):
+    """Sub-frames for camera moves: enough that the camera moves at most ~1.5 px between
+    them, so fine lines blur along the move instead of strobing (1 when the camera holds)."""
+    v = stage.view_speed(t, 1.0 / n, size)
+    return int(min(8, max(1, math.ceil(v * 0.75 / 1.5))))
 
 
 def render_all(stage, a, cache):
@@ -54,7 +62,9 @@ def render_all(stage, a, cache):
     first = None
     for i in range(n):
         name = f"f_{i + 1:04d}.png"
-        disp, st = r.render(i / n, os.path.join(frames_dir, name), os.path.join(black_dir, name))
+        sub = motion_blur_subframes(stage, i / n, n, r.size)
+        disp, st = r.render(i / n, os.path.join(frames_dir, name), os.path.join(black_dir, name),
+                            sub=sub, shutter=0.75 / n)
         if i == 0:
             first = disp
         st["t"] = i / n
@@ -91,9 +101,10 @@ def deliver(stage, a, cache, first=None, size=None):
     os.makedirs(out, exist_ok=True)
     sizes = {}
     secs = n / stage.fps
-    sizes["loop.mp4"] = encode_capped(black_dir, os.path.join(out, "loop.mp4"), stage.fps, "h264", secs)
+    cap = int(float(getattr(stage.subject, "MAX_MB", 1.40)) * 1024 * 1024)
+    sizes["loop.mp4"] = encode_capped(black_dir, os.path.join(out, "loop.mp4"), stage.fps, "h264", secs, cap)
     if not preview:
-        sizes["loop.webm"] = encode_capped(black_dir, os.path.join(out, "loop.webm"), stage.fps, "vp9", secs)
+        sizes["loop.webm"] = encode_capped(black_dir, os.path.join(out, "loop.webm"), stage.fps, "vp9", secs, cap)
     shutil.copyfile(os.path.join(black_dir, "f_0001.png"), os.path.join(out, "poster.png"))
     blur = post.blur_data_url(first, os.path.join(cache, "tmp", "blur.png"))
     meta = dict(slug=a.slug, subject=getattr(stage.subject, "TITLE", a.slug), width=size, height=size,

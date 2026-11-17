@@ -77,11 +77,33 @@ class Stage:
             o.hide_render = True
         self.X, self.Y, self.Z = (np.array(v) for v in cammod.basis(self.cam))
         self.fill = float(getattr(s, "FILL", FILL))
+        self.view_fn = getattr(s, "view", None)
+        self.cam_home = self.cam.location.copy()
+        self.view = (1.0, 0.0, 0.0)
         self.frame_to_bounds()
 
     def pose(self, t):
         self.subject.animate(t)
         bpy.context.view_layer.update()
+        self.view = self.view_at(t)
+        z, cx, cy = self.view
+        # zoom and pan only: same orthographic projection, same isometric angles
+        self.cam.data.ortho_scale = cammod.ORTHO_SCALE / z
+        self.cam.location = self.cam_home + Vector(cx * self.X + cy * self.Y)
+        bpy.context.view_layer.update()
+
+    def view_at(self, t):
+        """(zoom, pan x, pan y) for phase t. A subject's `view(t)` returns (zoom, focus):
+        the framework zooms about the focus point (subject space), so it drifts to the frame
+        centre as the zoom grows, like a satellite view diving onto a map."""
+        if self.view_fn is None:
+            return (1.0, 0.0, 0.0)
+        z, focus = self.view_fn(t)
+        if focus is None or z == 1.0:
+            return (float(z), 0.0, 0.0)
+        Fw = np.array(self.root.matrix_world @ Vector(focus))
+        k = 1.0 - 1.0 / z
+        return (float(z), float(Fw @ self.X) * k, float(Fw @ self.Y) * k)
 
     def world_points(self):
         out = []
@@ -115,14 +137,30 @@ class Stage:
         d = np.concatenate(ds)
         self.depth_range = (float(d.min()), float(d.max()))
 
-    def to_px(self, P, size):
-        """World points -> delivery pixel coords (x right, y down)."""
-        sx = P @ self.X / cammod.ORTHO_SCALE * size + size / 2
-        sy = size / 2 - P @ self.Y / cammod.ORTHO_SCALE * size
+    def view_speed(self, t, dt, size):
+        """Largest screen motion (delivery px per frame) caused by the camera's zoom and pan
+        alone, measured at the frame corners and centre."""
+        if self.view_fn is None:
+            return 0.0
+        z0, cx0, cy0 = self.view_at(t)
+        z1, cx1, cy1 = self.view_at(t + dt)
+        k = cammod.ORTHO_SCALE
+        best = 0.0
+        for sx, sy in ((0, 0), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)):
+            wx, wy = cx0 + sx * k / z0, cy0 + sy * k / z0  # world point under this screen spot
+            nx, ny = (wx - cx1) * z1 / k, (wy - cy1) * z1 / k
+            best = max(best, math.hypot(nx - sx, ny - sy) * size)
+        return best
+
+    def to_px(self, P, size, view=None):
+        """World points -> delivery pixel coords (x right, y down) under the current view."""
+        z, cx, cy = view or self.view
+        sx = (P @ self.X - cx) * z / cammod.ORTHO_SCALE * size + size / 2
+        sy = size / 2 - (P @ self.Y - cy) * z / cammod.ORTHO_SCALE * size
         return np.stack([sx, sy], 1)
 
     def px_per_unit(self, size):
-        return size / cammod.ORTHO_SCALE
+        return size / cammod.ORTHO_SCALE * self.view[0]
 
 
 def render_settings(scene, res, samples, filter_px):

@@ -63,6 +63,15 @@ class _Topo:
         nxt[last] = ls
         self.lv, self.le, self.ls, self.poly_of_loop, self.nxt = lv, le, ls, poly_of_loop, nxt
         self.has_face = np.bincount(le, minlength=len(self.edges)) > 0
+        # optional per-edge brightness weights (level-of-detail fades), set by a builder
+        try:
+            from builders.spikeball import WEIGHTS
+        except ImportError:
+            WEIGHTS = {}
+        self.weight_fn = WEIGHTS.get(obj.name)
+
+    def weights(self):
+        return self.weight_fn(self.edges) if self.weight_fn else None
 
     def world_verts(self):
         me = self.obj.data
@@ -104,7 +113,8 @@ class LineRenderer:
         self.scene = scene
         self.X, self.Y, self.Z = (np.array(v, dtype=np.float64) for v in cammod.basis(cam))
         self.topos = [_Topo(o) for o in objects]
-        self.hw = (line_px / 2) * cammod.ORTHO_SCALE / render_res
+        self.line_px, self.render_res = line_px, render_res
+        self.view = (1.0, 0.0, 0.0)  # zoom, pan x, pan y (world units in the view plane)
         self.mat = make_material()
         self.obj = bpy.data.objects.new("lines", bpy.data.meshes.new("lines"))
         scene.collection.objects.link(self.obj)
@@ -116,9 +126,19 @@ class LineRenderer:
         ang = np.linspace(0, 2 * np.pi, JOIN_SEGS, endpoint=False)
         self.circle = np.stack([np.cos(ang), np.sin(ang)], 1)
 
+    @property
+    def hw(self):
+        """Half line width in world units: constant in pixels at every zoom."""
+        return (self.line_px / 2) * cammod.ORTHO_SCALE / self.view[0] / self.render_res
+
+    def view_xy(self, Q):
+        """Points -> view coordinates in [-0.5, 0.5] across the frame."""
+        z, cx, cy = self.view
+        return ((Q @ self.X - cx) * z / cammod.ORTHO_SCALE, (Q @ self.Y - cy) * z / cammod.ORTHO_SCALE)
+
     def gather(self):
-        """World vertices, global edges and per-edge front flags for the current pose."""
-        Ps, Es, Fs = [], [], []
+        """World vertices, global edges, per-edge front flags and weights for the pose."""
+        Ps, Es, Fs, Ws = [], [], [], []
         off = 0
         toward = self.Z
         for t in self.topos:
@@ -126,8 +146,20 @@ class LineRenderer:
             Ps.append(P)
             Es.append(t.edges + off)
             Fs.append(t.facing(P, toward))
+            w = t.weights()
+            Ws.append(np.ones(len(t.edges)) if w is None else w)
             off += len(P)
-        return np.concatenate(Ps), np.concatenate(Es), np.concatenate(Fs)
+        P, E, F, W = (np.concatenate(x) for x in (Ps, Es, Fs, Ws))
+        # drop fully faded edges and edges entirely outside the view
+        vx, vy = self.view_xy(P)
+        m = 0.52
+        e0, e1 = E[:, 0], E[:, 1]
+        # outside only if both ends lie beyond the same side of the frame
+        out = ((vx[e0] > m) & (vx[e1] > m)) | ((vx[e0] < -m) & (vx[e1] < -m)) \
+            | ((vy[e0] > m) & (vy[e1] > m)) | ((vy[e0] < -m) & (vy[e1] < -m))
+        keep = (W > 0.004) & ~out
+        self.weights_kept = W[keep]
+        return P, E[keep], F[keep]
 
     def set_depth_map(self, D):
         """D: (R, R) distance from the camera of the nearest surface, top row first; 0 = none."""
@@ -139,14 +171,15 @@ class LineRenderer:
             for dx in range(3):
                 m = np.maximum(m, pad[dy:dy + R, dx:dx + R])
         self.depth_max = m  # farthest surface in each 3x3 neighbourhood
-        self.eps = 1.5 * cammod.ORTHO_SCALE / R
+        self.eps = 1.5 * cammod.ORTHO_SCALE / self.view[0] / R
 
     def occluded(self, Q):
         if self.depth_max is None:
             return np.zeros(len(Q), bool)
         R = self.depth_max.shape[0]
-        ix = np.floor((Q @ self.X / cammod.ORTHO_SCALE + 0.5) * R).astype(int)
-        iy = np.floor((0.5 - Q @ self.Y / cammod.ORTHO_SCALE) * R).astype(int)
+        vx, vy = self.view_xy(Q)
+        ix = np.floor((vx + 0.5) * R).astype(int)
+        iy = np.floor((0.5 - vy) * R).astype(int)
         inside = (ix >= 0) & (ix < R) & (iy >= 0) & (iy < R)
         out = np.zeros(len(Q), bool)
         dist = cammod.DISTANCE - Q @ self.Z
@@ -180,7 +213,8 @@ class LineRenderer:
         else:
             k0 = k1 = km = k
         fv, fm = self.fade(P), self.fade(M)
-        b0, b1, bm = fv[E[:, 0]] * k0, fv[E[:, 1]] * k1, fm * km
+        w = self.weights_kept
+        b0, b1, bm = fv[E[:, 0]] * k0 * w, fv[E[:, 1]] * k1 * w, fm * km * w
         A = np.concatenate([P[E[:, 0]], M])
         B = np.concatenate([M, P[E[:, 1]]])
         bA = np.concatenate([b0, bm])

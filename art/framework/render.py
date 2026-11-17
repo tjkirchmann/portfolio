@@ -4,8 +4,9 @@ import os
 import time
 
 import bpy
+import numpy as np
 
-from . import post, scene as scenemod
+from . import camera as cammod, post, scene as scenemod
 from .lines import LineRenderer
 
 QUALITY = {
@@ -16,7 +17,8 @@ QUALITY = {
 
 
 def depth_material():
-    """Emission = distance from the camera / 100, for the depth pass."""
+    """Emission = (distance from the camera - d0) * k, for the depth pass. EEVEE's film is
+    half float, so d0 and k are set per frame to spread the visible depth range over [0, 1]."""
     mat = bpy.data.materials.new("depth")
     mat.use_nodes = True
     nt = mat.node_tree
@@ -24,10 +26,14 @@ def depth_material():
     out = nt.nodes.new("ShaderNodeOutputMaterial")
     em = nt.nodes.new("ShaderNodeEmission")
     cd = nt.nodes.new("ShaderNodeCameraData")
+    sub = nt.nodes.new("ShaderNodeMath")
+    sub.operation = "SUBTRACT"
+    sub.name = "d0"
     mul = nt.nodes.new("ShaderNodeMath")
     mul.operation = "MULTIPLY"
-    mul.inputs[1].default_value = 0.01
-    nt.links.new(cd.outputs["View Z Depth"], mul.inputs[0])
+    mul.name = "k"
+    nt.links.new(cd.outputs["View Z Depth"], sub.inputs[0])
+    nt.links.new(sub.outputs[0], mul.inputs[0])
     nt.links.new(mul.outputs[0], em.inputs["Strength"])
     em.inputs["Color"].default_value = (1, 1, 1, 1)
     nt.links.new(em.outputs[0], out.inputs["Surface"])
@@ -67,8 +73,22 @@ class Renderer:
         sc.eevee.taa_render_samples = 1
         exr = os.path.join(self.tmp, "depth.exr")
         r.filepath = exr
+        r.image_settings.file_format = "OPEN_EXR"
+        r.image_settings.color_depth = "32"
+        r.image_settings.exr_codec = "ZIP"
+        # visible depth range -> [0, 1]
+        P = self.stage.world_points()
+        vx, vy = self.lines.view_xy(P)
+        vis = (np.abs(vx) < 0.6) & (np.abs(vy) < 0.6)
+        dist = cammod.DISTANCE - P[vis] @ self.lines.Z if vis.any() else np.array([40.0, 60.0])
+        d0 = float(dist.min()) - 0.05
+        span = float(dist.max() - dist.min()) + 0.1
+        nt = self.depth_mat.node_tree
+        nt.nodes["d0"].inputs[1].default_value = d0
+        nt.nodes["k"].inputs[1].default_value = 1.0 / span
         bpy.ops.render.render(write_still=True)
-        D = post.load_exr(exr) * 100.0
+        raw = post.load_exr(exr)
+        D = np.where(raw > 0, raw * span + d0, 0.0)
         for o in self.stage.objects:
             o.hide_render = True
         self.lines.obj.hide_render = False
@@ -77,9 +97,10 @@ class Renderer:
         r.filter_size, sc.eevee.taa_render_samples = old_f, old_s
         self.lines.set_depth_map(D)
 
-    def render(self, t, master_path=None, black_path=None):
-        t0 = time.time()
+    def render_linear(self, t, samples=None):
+        """One pose at phase t -> 2x linear image."""
         self.stage.pose(t)
+        self.lines.view = self.stage.view
         sc = self.stage.scene
         sc.render.image_settings.file_format = "OPEN_EXR"
         sc.render.image_settings.color_mode = "RGB"
@@ -87,11 +108,32 @@ class Renderer:
         if self.back_dim:
             self.depth_pass()
         info = self.lines.update(back_dim=self.back_dim)
+        sc.eevee.taa_render_samples = samples or self.q["samples"]
         exr = os.path.join(self.tmp, "render.exr")
         sc.render.filepath = exr
         bpy.ops.render.render(write_still=True)
-        lin = post.load_exr(exr)
+        sc.eevee.taa_render_samples = self.q["samples"]
+        return post.load_exr(exr), info
+
+    def render(self, t, master_path=None, black_path=None, sub=1, shutter=0.0):
+        """Render phase t. With sub > 1, average `sub` poses spread over `shutter` (in t
+        units) in linear light: motion blur for fast camera moves. The samples are split
+        across the sub-frames so the total stays about the same."""
+        t0 = time.time()
+        if sub <= 1:
+            lin, info = self.render_linear(t)
+        else:
+            per = max(8, self.q["samples"] // sub)
+            lin = None
+            for k in range(sub):
+                tk = t + shutter * ((k + 0.5) / sub - 0.5)
+                img, info = self.render_linear(tk, per)
+                lin = img if lin is None else lin + img
+            lin /= sub
+            self.stage.pose(t)
         disp, stats = post.finish_frame(lin, master_path, black_path)
         stats.update(info)
+        stats["sub"] = sub
+        stats["zoom"] = round(self.stage.view[0], 4)
         stats["secs"] = round(time.time() - t0, 2)
         return disp, stats

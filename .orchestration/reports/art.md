@@ -4,7 +4,55 @@
 - **Branch:** `ai-feat/art`
 - **Head commit:** see the commit that adds this file (`git log -1 ai-feat/art`)
 - **Pushed to origin:** yes
-- **Round:** 1
+- **Round:** 2 (round 1 text kept below the round 2 note)
+
+## Round 2 note (Amendment 1)
+
+The owner asked to stop testing and evidence-gathering this round, so this is a short note,
+not a per-criterion evidence table for AC-20 to AC-25.
+
+**Built**
+- `gears` removed (`art/subjects/gears.py`, `public/art/gears/`). AC-11's gear clause,
+  AC-16 and AC-17 are dropped; their round 1 rows below are history. The gear builder stays.
+- Camera API: a subject may define `view(t)` returning `(zoom, focus)`; the framework zooms
+  the orthographic scale about the focus point and pans in the view plane, same projection
+  and angles, line width constant in pixels at every zoom (`framework/scene.py`,
+  `framework/lines.py`). Fast camera moves get motion-blur sub-frames (up to 8, samples split
+  between them) in `framework/render.py` / `pipeline.py`. The depth pass now normalises the
+  visible depth range per frame (EEVEE's film is half float, which broke hidden-line
+  dimming at high zoom). Edge culling outside the view, per-subject size cap (`MAX_MB`).
+- `builders/spikeball.py`: equal-angle cube-sphere skin (all quads), 96 spikes grown from 4x4
+  quad patches with a support loop, square-to-round taper and a 2:1 reduced rounded tip.
+  Motion is a pure function of rest position and phase: breathing; three travelling waves
+  that set each spike's length and lean; a crawl of two octaves of looped spectral noise plus
+  five bulges travelling closed loops under the skin (normal and tangential); every term in
+  whole cycles, so it loops exactly. Level of detail: nested 1->4 subdivisions (level 1
+  everywhere, deeper levels in caps around the target), each level's new edges fade in by
+  brightness and its new vertices morph from coarse to true positions; a nub micro-relief
+  fades in at the closest zoom.
+- `builders/moves.py`: `Dive` (eased exponential zoom in, hold, out; 18x) and a motion time
+  warp so on-screen motion keeps its speed while zoomed.
+- Subjects `spikeball` (12 s) and `spikeball-zoom` (16 s: wide hold to t=0.25, dive to 18x,
+  hold, return, wide hold). `SKILL.md` updated for zoom/pan and the level-of-detail fade;
+  gears removed from its examples.
+- Outputs: `public/art/spikeball/` and `public/art/spikeball-zoom/`
+  (`loop.webm`, `loop.mp4`, `poster.png`, `meta.json`), rendered with
+  `python3 art/cli.py spikeball` and `python3 art/cli.py spikeball-zoom`, which ran end to end
+  with the built-in loop check passing (values in the commit's render logs; see hand-back).
+
+**Not checked** (by instruction): no `--check` run on the final outputs, no crops, strips,
+measurements or comparison images for AC-20 to AC-25; gyroscope and knot were not
+re-checked or re-rendered. During development, an earlier `--check` of the zoom clip showed
+the held-zoom motion under 2 px/frame and the loop closing, but the level-of-detail spacing
+then exceeded the 5-60 px band; the fade windows and target were changed afterwards and not
+re-measured.
+
+**Known issues**
+- The cube-sphere layout shows: straight "streets" between spike rows and visible cube edges.
+- Close-up micro-relief is subtle; the closest view reads mostly as a fine, gently rumpled grid.
+- The hidden far side of the ball shows faintly through the skin at high zoom.
+- gyroscope `loop.webm` is 1,501,881 bytes, just over 1.5 MB if MB is read as decimal
+  (1.43 MiB); not re-encoded this round.
 
 ## Summary of changes
 
@@ -55,7 +103,7 @@ finished subjects and a project skill.
 | AC-5 | met | Rendered at 2400 px, 64 TAA samples, Lanczos-3 to 1200 (`art/framework/post.py`). Max vertex displacement per frame over the whole loop, delivery px: gears 1.423, gyroscope 1.813, knot 1.322. Crops: `art-shots/<slug>-consecutive-400pct.png` (frames 150-152 at 400%). |
 | AC-6 | met | Render-time check renders frame N+1 (t = 1.0, not wrapped) and compares with frame 1: gears MAD 0.0024/255, gyroscope 0.0183/255, knot 0.0000/255 (limit 0.5). `pipeline.py` returns exit 1 and writes no outputs if it fails. `--check` repeats it. |
 | AC-7 | met | `--check`: every object 0 triangles, 0 n-gons (gears 8 gears, 1806-3432 quads each; gyroscope rotor 1674 quads, rings 512 each, stand 762; knot 2880). Stills: `art-shots/gears-still.png`, `gyroscope-still.png`, `knot-still.png`. Teeth are one quad column following the flank; the rim band meets both fillets; webs reduce 6 -> 3 -> 1 columns per tooth with 2:1 and 3:1 bands. |
-| AC-8 | met | 1200x1200, 30 fps, 300 frames, 10.0 s. Sizes (limit 1.5 MB = 1,572,864 B): gears mp4 1,390,593 / webm 1.228-1.364 px (back far/near, front far/near)EBM; gyroscope 1,374,938 / 1,501,881; knot 1,384,899 / 1,462,299. MP4 probe: `avc1`, High profile, chroma 4:2:0 (yuv420p), boxes `ftyp free moov mdat` (faststart). WebM: `V_VP9`. Not played in Safari itself (see Not verified). |
+| AC-8 | met | 1200x1200, 30 fps, 300 frames, 10.0 s. Sizes (limit 1.5 MB = 1,572,864 B): gears mp4 1,390,593 / webm 1,462,635; gyroscope 1,374,938 / 1,501,881; knot 1,384,899 / 1,462,299. MP4 probe: `avc1`, High profile, chroma 4:2:0 (yuv420p), boxes `ftyp free moov mdat` (faststart). WebM: `V_VP9`. Not played in Safari itself (see Not verified). |
 | AC-9 | met | `.orchestration/reports/art-formats.md`, crops `art-shots/gears-formats-200pct.png` and `gears-video-frame150-200pct.png`. Default delivery stays WebM + MP4. |
 | AC-10 | met | `art/subjects/gears.py` 25 lines, `gyroscope.py` 60, `knot.py` 22. Each declares only `TITLE`, `LOOP_SECONDS`, `AZIMUTH`, optional `FILL`, `build()`, `animate(t)`. No camera, light, material, check or encode code. `gyroscope.py` also has two 3-line local helpers (`ring`, `pin`) that `build()` uses. |
 | AC-11 | met | Gears: ratios from tooth counts, loop = smallest driver turn after which every gear shows an identical image (see Gear ratio maths). Gyroscope: rotor spins a quarter turn per loop (its mesh is 4-fold symmetric), gimbals nod +-6 deg on sines with a phase offset. Knot: surface slides 12 rings along the knot and rolls 2 sides around the tube per loop. All close: AC-6 values. |
