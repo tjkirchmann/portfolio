@@ -358,3 +358,30 @@ and serve only, no test suite.
   - Apply inside `Prose` (posts and `/blocks`). The home page text and timelines stay as
     they are unless a timeline accent already uses the emerald token, in which case give
     the current-step node the same treatment.
+
+## Amendment 7 (2026-11-16, from the owner)
+
+The owner's words: "I want ... [art pieces] that I can switch between with a transparent
+icon menu that disappears after the mouse unhovers." Light process: build and serve only.
+
+- **AC-36 several art pieces per page.** `art` in `site.yaml` (and optionally in a post's
+  frontmatter) may be a single slug as now, or a list of `{ slug, icon, label, backdrop? }`.
+  The first is the default. `icon` is a lucide name; `label` is for the tooltip and screen
+  readers only. `backdrop: false` means the pane's background life simulation is faded out
+  and paused while that piece is showing (for pieces that carry their own colour).
+- **AC-37 the switcher.** When a pane has more than one piece, an icon menu sits over the
+  art pane (bottom centre or a corner, your call): a row of small icon buttons on a
+  transparent background, no panel, no border box, just the icons at low opacity with the
+  current one brighter. It is invisible until the pointer is over the art pane, fades in
+  quickly, and fades out shortly after the pointer leaves (about 600ms grace so it does
+  not flicker). It also shows while a button has keyboard focus, and on touch devices it
+  shows on a tap of the art and hides after about 3s. Buttons are real buttons with
+  `aria-pressed` and the label.
+- **AC-38 switching.** Choosing a piece crossfades to it using the existing blur-in (blurred
+  still first, then the video), keeps only the visible piece's video loaded and playing,
+  and remembers the choice per page in `localStorage` so a reload keeps it. No layout
+  shift, and the mobile dissolve and reduced-motion behaviour still apply to whichever
+  piece is showing.
+- For now set the home page to `spikeball` (default), `gyroscope` and `knot` so the menu can
+  be built and seen; the orchestrator will swap in `spikeball-life` and `waveball-life`
+  when they are rendered. Show the switcher on `/blocks` too.
