@@ -281,3 +281,19 @@ orange and yellow as design elements."
   shell.
 
 Report as round 3.
+
+## Amendment 4 (2026-11-16, from the owner)
+
+No test suite, Lighthouse, screenshots or evidence table for this round or later ones: make
+the change, confirm `pnpm build` passes and the dev server serves, add two lines to the
+report, commit, push.
+
+- **AC-32:** the life simulation gains two colours from the beetle: a small amount of
+  blue-leaning teal `--aqua #58b3b3` and a metallic blue `--blue #4a86c8`. Simulation only;
+  the rest of the site stays emerald, teal and deep. Mostly green still: roughly one cell
+  in ten aqua and one in ten blue, assigned so colour sits in coherent structures (for
+  example by a cell's age or by the region it was seeded in), not as per-cell confetti.
+  Trails keep fading through the dither in the cell's own hue.
+- **AC-33:** one step more colour on screen: raise how often coloured cells appear by a
+  single notch (pane about 85% black, from about 92%), through slightly longer trails or
+  slightly more seeding. Not more than that.
