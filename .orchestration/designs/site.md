@@ -230,3 +230,21 @@ in place of the static gradient.
 Report as round 2 in `.orchestration/reports/site.md`: add rows AC-19 to AC-26, mark AC-8 as
 replaced, keep the earlier rows, rerun `pnpm test` and Lighthouse, and replace the
 screenshots that changed.
+
+## Amendment 2 (2026-11-16, from the owner)
+
+- **AC-27 locked shell on blog pages (amends AC-3):** on desktop (800px and wider) the blog
+  index and post pages never scroll the document. The shell is exactly one viewport tall,
+  the art pane and back arrow stay put, and only the text pane scrolls, inside itself. The
+  owner's words: "lock the background of the site and have interior scroll only". The
+  scrolling pane must: take wheel, trackpad, keyboard (Space, PageDown, arrows, Home, End)
+  without a click first; keep footnote jumps and their highlight working inside it; keep
+  heading anchors and in-page links working; restore its scroll position on back/forward;
+  start at the top on a new post; have a thin unobtrusive scrollbar in palette tones and a
+  soft fade at the top and bottom edges where content is clipped; and leave comfortable
+  padding above the title and below the last line. No double scrollbars, no overscroll
+  chaining that moves the page. Below 800px nothing changes: the document scrolls and the
+  art dissolve from AC-4 stays as it is. Evidence: the test asserts
+  `document.scrollingElement.scrollHeight === innerHeight` on the post at 1440x900 and
+  1280x720, scrolls the pane with wheel and keyboard, repeats the footnote round trip, and
+  checks back/forward restoration; screenshots at pane top, middle and end.
