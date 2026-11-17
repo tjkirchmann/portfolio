@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { check, sleep } from './lib.mjs';
 
 const SHOTS = join(process.cwd(), '.orchestration/reports/site-shots');
-const MODES = ['life', 'smooth', 'flow'];
+const MODES = ['life'];
+// allowed simulation colours: bg, and emerald / teal / deep at any intensity over bg
+const ALLOWED = ['10,12,11'];
 
 const readCanvas = (page, sel) =>
   page.evaluate((sel) => {
@@ -27,21 +29,25 @@ const readCanvas = (page, sel) =>
       fills.push(on / (B * B));
     }
     const mean = fills.reduce((a, b) => a + b, 0) / fills.length;
+    const clumped = fills.filter((f) => f > 0.5).length / fills.length;
+    const maxFill = Math.max(...fills);
     const spread = Math.sqrt(fills.reduce((a, b) => a + (b - mean) ** 2, 0) / fills.length);
     return {
       w: c.width, h: c.height, cssW: r.width, cssH: r.height, dpr: devicePixelRatio,
       cell: Number(c.dataset.cell), rendering: getComputedStyle(c).imageRendering,
       steps: Number(c.dataset.steps || 0), avgMs: Number(c.dataset.avgMs || 0), maxMs: Number(c.dataset.maxMs || 0),
       empty: empty / (d.length / 4), colours: [...colours.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, +(n / (d.length / 4)).toFixed(3)]),
-      coherence: spread,
+      coherence: spread, clumped, maxFill,
       hash: [...d].reduce((h, v, i) => (i % 4 === 3 ? h : (h * 31 + v) >>> 0), 7),
     };
   }, sel);
 
-const PALETTE = {
-  '50,110,84': 'deep', '87,157,135': 'teal', '118,200,165': 'emerald', '115,152,79': 'leaf', '187,195,104': 'gold', '159,129,78': 'copper',
-};
-const named = (colours) => colours.map(([k]) => PALETTE[k]).filter(Boolean);
+// emerald, teal, deep mixed over bg at intensity t
+const GREENS = [[118, 200, 165], [87, 157, 135], [50, 110, 84]];
+const BGC = [10, 12, 11];
+function greenAt(t) {
+  return GREENS.map((c) => c.map((v, j) => Math.round(BGC[j] + (v - BGC[j]) * t)).join(','));
+}
 
 export async function ditherTests(browser, base, log) {
   // ---- three modes on /blocks: crisp cells, steps/s, cost, empty space, colour, 0/5/20s frames
@@ -54,33 +60,36 @@ export async function ditherTests(browser, base, log) {
     const t0 = {}, t5 = {}, t20 = {};
     for (const m of MODES) {
       t0[m] = await readCanvas(page, sel(m));
-      await page.locator(`[data-test="dither-${m}"] .stage`).screenshot({ path: join(SHOTS, `dither-${m}-00s.png`) });
+      await page.locator(`[data-test="dither-${m}"]`).screenshot({ path: join(SHOTS, `dither-${m}-00s.png`) });
     }
     await sleep(4800);
     for (const m of MODES) {
       t5[m] = await readCanvas(page, sel(m));
-      await page.locator(`[data-test="dither-${m}"] .stage`).screenshot({ path: join(SHOTS, `dither-${m}-05s.png`) });
+      await page.locator(`[data-test="dither-${m}"]`).screenshot({ path: join(SHOTS, `dither-${m}-05s.png`) });
     }
     const s5 = Date.now();
     await sleep(15000);
     const span = (Date.now() - s5) / 1000;
     for (const m of MODES) {
       t20[m] = await readCanvas(page, sel(m));
-      await page.locator(`[data-test="dither-${m}"] .stage`).screenshot({ path: join(SHOTS, `dither-${m}-20s.png`) });
+      await page.locator(`[data-test="dither-${m}"]`).screenshot({ path: join(SHOTS, `dither-${m}-20s.png`) });
     }
     for (const m of MODES) {
       const a = t0[m], b = t5[m], c = t20[m];
       const rate = (c.steps - b.steps) / span;
       const cellCss = a.cssW / a.w;
-      log.push(`dither ${m}: grid ${a.w}x${a.h}, cell ${cellCss.toFixed(3)}css (${(cellCss * a.dpr).toFixed(2)} device px), ${rate.toFixed(2)} steps/s, avg ${c.avgMs}ms max ${c.maxMs}ms per step (step+draw), empty ${a.empty.toFixed(2)} / ${b.empty.toFixed(2)} / ${c.empty.toFixed(2)}, block spread ${a.coherence.toFixed(2)}, colours ${JSON.stringify(c.colours.slice(0, 7))}`);
+      log.push(`dither ${m}: grid ${a.w}x${a.h} (one automaton cell per square), cell ${cellCss.toFixed(3)}css (${(cellCss * a.dpr).toFixed(2)} device px), ${rate.toFixed(2)} steps/s, avg ${c.avgMs}ms max ${c.maxMs}ms per step (step+draw), empty ${a.empty.toFixed(3)} / ${b.empty.toFixed(3)} / ${c.empty.toFixed(3)}, 8x8 blocks over half full ${a.clumped.toFixed(3)} / ${b.clumped.toFixed(3)} / ${c.clumped.toFixed(3)} (max block fill ${Math.max(a.maxFill, b.maxFill, c.maxFill).toFixed(2)}), colours ${JSON.stringify(c.colours)}`);
       check('AC-19', `${m}: square cells on whole device pixels, pixelated`, Math.abs(cellCss * a.dpr - Math.round(cellCss * a.dpr)) < 0.01 && a.rendering === 'pixelated' && Math.abs(cellCss - a.cell) < 0.5, `${(cellCss * a.dpr).toFixed(2)} device px, ${a.rendering}`);
-      check('AC-19', `${m}: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)`, a.coherence > 0.2 && c.coherence > 0.2, `${a.coherence.toFixed(2)} / ${c.coherence.toFixed(2)}`);
+      const allowed = new Set([...ALLOWED, ...greenAt(1)]);
+      const extra = [...new Set([...a.colours, ...b.colours, ...c.colours].map(([k]) => k))].filter((k) => !allowed.has(k));
+      check('AC-29', `${m}: no blur or upscale: every pixel is bg, emerald, teal or deep exactly`, extra.length === 0, extra.length ? `unexpected ${extra.slice(0, 4).join(' ')}` : `${new Set([...a.colours, ...c.colours].map(([k]) => k)).size} distinct colours`);
+      check('AC-29', `${m}: at least 60% pure --bg at 0s, 5s, 20s`, [a, b, c].every((f) => f.empty >= 0.6), [a, b, c].map((f) => f.empty.toFixed(3)).join(' / '));
+      check('AC-29', `${m}: no filled regions (under 5% of 8x8 blocks more than half full, none over 75%)`, [a, b, c].every((f) => f.clumped < 0.05 && f.maxFill <= 0.75), [a, b, c].map((f) => `${f.clumped.toFixed(3)} (max ${f.maxFill.toFixed(2)})`).join(' / '));
       check('AC-22', `${m}: 8-15 steps per second`, rate >= 8 && rate <= 15, `${rate.toFixed(2)}/s over ${span.toFixed(1)}s`);
-      check('AC-22', `${m}: main-thread cost under 2ms per step`, c.avgMs < 2, `avg ${c.avgMs}ms, max ${c.maxMs}ms (step + draw + putImageData)`);
+      check('AC-22', `${m}: main-thread cost under 2ms per step (average)`, c.avgMs < 2, `avg ${c.avgMs}ms, max ${c.maxMs}ms (step + draw + putImageData)`);
       check('AC-22', `${m}: the field evolves (frame changes 0s -> 5s -> 20s)`, a.hash !== b.hash && b.hash !== c.hash);
-      check('AC-21', `${m}: at least 35% empty at 0s, 5s, 20s`, [a, b, c].every((f) => f.empty >= 0.35), [a, b, c].map((f) => f.empty.toFixed(2)).join(' / '));
-      const names = new Set([...named(a.colours), ...named(b.colours), ...named(c.colours)]);
-      check('AC-21', `${m}: greens and gold/copper both present`, ['teal', 'emerald'].some((n) => names.has(n)) && ['gold', 'copper', 'leaf'].some((n) => names.has(n)), [...names].join(', '));
+      const names = new Set([...a.colours, ...b.colours, ...c.colours].map(([k]) => ['emerald', 'teal', 'deep'][greenAt(1).indexOf(k)]).filter(Boolean));
+      check('AC-29', `${m}: live cells emerald, trails teal and deep`, names.has('emerald') && names.has('teal') && names.has('deep'), [...names].join(', '));
     }
     await ctx.close();
   }
@@ -106,10 +115,10 @@ export async function ditherTests(browser, base, log) {
     await page.goto(base + '/blocks/');
     for (const m of MODES) {
       const f = await readCanvas(page, `[data-test="dither-${m}"] canvas[data-dither]`);
-      check('AC-22', `${m}: first frame is pre-evolved (0 steps taken, masses already there)`, f.steps === 0 && f.empty < 0.9 && f.empty >= 0.35 && f.coherence > 0.2, `steps ${f.steps}, empty ${f.empty.toFixed(2)}, spread ${f.coherence.toFixed(2)}`);
+      check('AC-22', `${m}: first frame is pre-evolved (0 steps taken, structure already there)`, f.steps === 0 && f.empty < 0.98 && f.empty >= 0.6 && f.colours.length >= 3, `steps ${f.steps}, empty ${f.empty.toFixed(3)}, ${f.colours.length} colours`);
     }
     await page.goto(base + '/');
-    check('AC-22', 'reduced motion: settled frame shown, 0 steps in 2s', r1.steps === 0 && r0.hash === r1.hash && r0.empty < 0.95, `steps ${r1.steps}, empty ${r0.empty.toFixed(2)}`);
+    check('AC-22', 'reduced motion: settled frame shown, 0 steps in 2s', r1.steps === 0 && r0.hash === r1.hash && r0.empty < 0.98, `steps ${r1.steps}, empty ${r0.empty.toFixed(2)}`);
     await ctx.close();
   }
 

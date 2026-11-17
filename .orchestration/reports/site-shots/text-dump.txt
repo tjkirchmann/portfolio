@@ -41,14 +41,7 @@ ink
 emerald
 teal
 deep
-leaf
-gold
-copper
-bronze
 Dither
-life
-smooth
-flow
 Art over Dither
 Timeline
 Companies

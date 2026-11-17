@@ -74,6 +74,8 @@ const textSide = mirror ? 'right' : 'left';
     border-radius: var(--radius);
     overflow: hidden;
     background: #0c0f0e;
+    /* hard clip to the rounded panel, including composited layers (canvas, video) */
+    clip-path: inset(0 round var(--radius));
     display: grid;
     place-items: center;
     container-type: size;

@@ -1,17 +1,13 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
-/* Tokens. Palette from the green rose chafer; see CLAUDE.md. */
+/* Tokens. Greens from the green rose chafer (emerald, teal, deep) on near-black and ink. */
 @theme {
   --color-bg: #0a0c0b;
   --color-ink: #e9ece8;
   --color-emerald: #76c8a5;
   --color-teal: #579d87;
   --color-deep: #326e54;
-  --color-leaf: #73984f;
-  --color-gold: #bbc368;
-  --color-copper: #9f814e;
-  --color-bronze: #85692c;
 
   --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -27,10 +23,6 @@
   --emerald: var(--color-emerald);
   --teal: var(--color-teal);
   --deep: var(--color-deep);
-  --leaf: var(--color-leaf);
-  --gold: var(--color-gold);
-  --copper: var(--color-copper);
-  --bronze: var(--color-bronze);
 
   /* Type scale: minor third from 17px */
   --text-xs: 0.8125rem;

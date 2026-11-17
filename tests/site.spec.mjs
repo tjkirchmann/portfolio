@@ -8,13 +8,14 @@ import { serve } from './serve.mjs';
 import { check, skip, sleep } from './lib.mjs';
 import { ditherTests } from './dither.spec.mjs';
 import { shellTests } from './shell.spec.mjs';
+import { paletteTests } from './palette.spec.mjs';
 
 const root = process.cwd();
 const dist = join(root, 'dist');
 const SHOTS = join(root, '.orchestration/reports/site-shots');
 const DESKTOP = { width: 1440, height: 900 };
 const MOBILE = { width: 390, height: 844 };
-const PALETTE = { ink: 'rgb(233, 236, 232)', emerald: 'rgb(118, 200, 165)', gold: 'rgb(187, 195, 104)', teal: 'rgb(87, 157, 135)' };
+const PALETTE = { ink: 'rgb(233, 236, 232)', emerald: 'rgb(118, 200, 165)', teal: 'rgb(87, 157, 135)' };
 const POST = '/blog/first-post/';
 
 const shot = (page, name, opts = {}) => page.screenshot({ path: join(SHOTS, `${name}.png`), ...opts });
@@ -297,8 +298,8 @@ export async function siteTests(log, text) {
     check('AC-9', 'body text is --ink', colours.body === PALETTE.ink, colours.body);
     check('AC-9', 'bold is --emerald', colours.bold === PALETTE.emerald, colours.bold);
     check('AC-9', 'links use a palette accent (underline --teal)', colours.linkDeco === PALETTE.teal, `color ${colours.link}, underline ${colours.linkDeco}`);
-    check('AC-9', 'footnote marks use --gold', colours.ref === PALETTE.gold, colours.ref);
-    check('AC-9', 'footnote back-arrows use --gold', colours.back === PALETTE.gold && accents.includes(colours.back), colours.back);
+    check('AC-9', 'footnote marks use --emerald (AC-28)', colours.ref === PALETTE.emerald, colours.ref);
+    check('AC-9', 'footnote back-arrows use --emerald (AC-28)', colours.back === PALETTE.emerald && accents.includes(colours.back), colours.back);
 
     // AC-10: footnotes both ways
     await page.click('.prose [data-footnote-ref] >> nth=0');
@@ -512,6 +513,7 @@ export async function siteTests(log, text) {
 
     await ditherTests(browser, base, log);
     await shellTests(browser, base, log);
+    await paletteTests(browser, base, log, pages);
   } finally {
     await browser.close();
   }

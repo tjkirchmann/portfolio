@@ -6,10 +6,10 @@ exit 1
     /Users/ty/repos/portfolio/.claude/worktrees/site/src/content/blog/zz-broken-fixture/index.md:0:0
 $ astro build   # site.yaml with an unknown icon and a company without a year
 exit 1
-21:36:20   ├─ /blocks/index.html21:36:20 [ERROR] Error: src/content/site.yaml is invalid:
+22:12:20   ├─ /blocks/index.html22:12:20 [ERROR] Error: src/content/site.yaml is invalid:
   projects.1.icon: unknown icon "not-an-icon" (use a lucide icon name, see https://lucide.dev/icons)
   companies.1.year: a year or range is required, e.g. 2024 or "2021 – 2024"
-21:36:20 [ERROR] [build] Caught error rendering /blocks: Error: src/content/site.yaml is invalid:
+22:12:20 [ERROR] [build] Caught error rendering /blocks: Error: src/content/site.yaml is invalid:
 $ pnpm new-post "Zz Scaffold Fixture"
 Created src/content/blog/zz-scaffold-fixture/index.md
 ---
@@ -25,24 +25,38 @@ _astro  art  blocks  blog  favicon.svg  index.html
 pages: /blocks/  /blog/first-post/  /blog/  /blog/second-post/  /
 built <figure> in dist/blog/first-post/index.html:
 <figure><img alt="A wireframe sphere inside a ring" title="Wireframe" loading="lazy" decoding="async" sizes="(min-width: 1440px) 1440px, 100vw" data-astro-image="constrained" data-astro-image-pos="center" width="1440" height="900" src="/_astro/wireframe.CSe5DZOb_rX4Dn.webp" srcset="/_astro/wireframe.CSe5DZOb_1chzzK.webp 360w, /_astro/wireframe.CSe5DZOb_cY40L.webp 480w, /_astro/wireframe.CSe5DZOb_5PtqD.webp 640w, /_astro/wireframe.CSe5DZOb_ZPQprQ.webp 960w, /_astro/wireframe.CSe5DZOb_22JTof.webp 1280w, /_astro/wireframe.CSe5DZOb_rX4Dn.webp 1440w"><figcaption>A wireframe sphere inside a ring</figcaption></figure>
-computed colours on /blog/first-post/: {"body":"rgb(233, 236, 232)","bold":"rgb(118, 200, 165)","link":"rgb(233, 236, 232)","linkDeco":"rgb(87, 157, 135)","ref":"rgb(187, 195, 104)","back":"rgb(187, 195, 104)"}
+computed colours on /blog/first-post/: {"body":"rgb(233, 236, 232)","bold":"rgb(118, 200, 165)","link":"rgb(233, 236, 232)","linkDeco":"rgb(87, 157, 135)","ref":"rgb(118, 200, 165)","back":"rgb(118, 200, 165)"}
 throttled video (2s delay): before {"state":"loading","blurOpacity":"1","blurSrc":"data:image/webp;base64","videoOpacity":"0"}
-after {"state":"ready","videoOpacity":"1","videoFilter":"blur(0px)","blurOpacity":"0","playing":true,"log":[{"state":"loading","t":188.2000000178814,"instant":false},{"state":"ready","t":2252,"instant":false}]}
-cached revisit art log: [{"state":"loading","t":64.69999998807907,"instant":false},{"state":"ready","t":189.09999999403954,"instant":false}]
-transition frames (mean, stdev of RGB): 30.9/45.1  20.9/33.0  21.0/33.3
+after {"state":"ready","videoOpacity":"1","videoFilter":"blur(0px)","blurOpacity":"0","playing":true,"log":[{"state":"loading","t":314.2000000178814,"instant":false},{"state":"ready","t":2417.5999999940395,"instant":false}]}
+cached revisit art log: [{"state":"loading","t":51.19999998807907,"instant":false},{"state":"ready","t":123.5,"instant":false}]
+transition frames (mean, stdev of RGB): 18.6/27.5  15.3/19.1  17.5/27.6
 view transition calls: 1
 view-transition pseudo animations mid-navigation: ::view-transition-group(root) ::view-transition-new(root) ::view-transition-old(root) ::view-transition-old(text-left) ::view-transition-old(art-right) ::view-transition-new(art-left) ::view-transition-new(text-right)
 mobile home: {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false,"cls":0},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false,"cls":0},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0}}
 mobile post: {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false,"cls":0},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false,"cls":0},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0}}
 script fallback (simulated): {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false,"cls":0},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false,"cls":0},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false,"cls":0}}
-dither life: grid 96x70, cell 6.000css (12.00 device px), 10.85 steps/s, avg 0.228ms max 1.8ms per step (step+draw), empty 0.67 / 0.81 / 0.66, block spread 0.40, colours [["10,12,11",0.662],["187,195,104",0.125],["115,152,79",0.066],["118,200,165",0.049],["159,129,78",0.044],["87,157,135",0.037],["50,110,84",0.018]]
-dither smooth: grid 96x70, cell 6.000css (12.00 device px), 10.65 steps/s, avg 0.442ms max 4.7ms per step (step+draw), empty 0.69 / 0.74 / 0.73, block spread 0.24, colours [["10,12,11",0.733],["115,152,79",0.072],["187,195,104",0.065],["118,200,165",0.053],["87,157,135",0.042],["50,110,84",0.03],["159,129,78",0.004]]
-dither flow: grid 96x70, cell 6.000css (12.00 device px), 10.72 steps/s, avg 0.363ms max 4.7ms per step (step+draw), empty 0.61 / 0.62 / 0.62, block spread 0.28, colours [["10,12,11",0.618],["187,195,104",0.134],["159,129,78",0.083],["115,152,79",0.055],["50,110,84",0.041],["118,200,165",0.035],["87,157,135",0.034]]
+dither life: grid 96x69 (one automaton cell per square), cell 6.000css (12.00 device px), 10.20 steps/s, avg 0.7ms max 4.5ms per step (step+draw), empty 0.912 / 0.911 / 0.932, 8x8 blocks over half full 0.000 / 0.000 / 0.010 (max block fill 0.53), colours [["10,12,11",0.932],["118,200,165",0.045],["87,157,135",0.016],["50,110,84",0.007]]
 home timelines: [{"label":"Projects","steps":[{"svg":true,"title":"Project one","link":"/blog/first-post/","sub":null,"year":"2026","yearRight":true,"rail":"16px","current":true},{"svg":true,"title":"Project two","link":null,"sub":null,"year":"2025","yearRight":true,"rail":"16px","current":false},{"svg":true,"title":"Project three","link":null,"sub":null,"year":"2024","yearRight":true,"rail":"last","current":false}]},{"label":"Companies","steps":[{"svg":true,"title":"Company one","link":null,"sub":"Role","year":"2024 – now","yearRight":true,"rail":"37.3281px","current":true},{"svg":true,"title":"Company two","link":null,"sub":"Role","year":"2021 – 2024","yearRight":true,"rail":"37.3281px","current":false},{"svg":true,"title":"Company three","link":null,"sub":"Role","year":"2018 – 2021","yearRight":true,"rail":"last","current":false}]}]
 home 1440x900: 3 entries {"area":633.46875,"p":316.734375,"c":316.734375,"pTop":165.734375,"cTop":482.46875,"sc":[{"overflow":false,"fadeBelow":false,"bar":"none","firstTop":0},{"overflow":false,"fadeBelow":false,"bar":"none","firstTop":0}],"docScroll":false,"sh":900,"ih":900} | 12 entries {"area":633.46875,"p":316.734375,"c":316.734375,"pTop":165.734375,"cTop":482.46875,"sc":[{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0},{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0}],"docScroll":false,"sh":900,"ih":900}
 home 1280x720: 3 entries {"area":463.0625,"p":231.53125,"c":231.53125,"pTop":160.9375,"cTop":392.46875,"sc":[{"overflow":false,"fadeBelow":false,"bar":"none","firstTop":0},{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0}],"docScroll":false,"sh":720,"ih":720} | 12 entries {"area":463.0625,"p":231.53125,"c":231.53125,"pTop":160.9375,"cTop":392.46875,"sc":[{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0},{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0}],"docScroll":false,"sh":720,"ih":720}
 home 1440x1100: 3 entries {"area":833.46875,"p":416.734375,"c":416.734375,"pTop":165.734375,"cTop":582.46875,"sc":[{"overflow":false,"fadeBelow":false,"bar":"none","firstTop":0},{"overflow":false,"fadeBelow":false,"bar":"none","firstTop":0}],"docScroll":false,"sh":1100,"ih":1100} | 12 entries {"area":833.46875,"p":416.734375,"c":416.734375,"pTop":165.734375,"cTop":582.46875,"sc":[{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0},{"overflow":true,"fadeBelow":true,"bar":"none","firstTop":0}],"docScroll":false,"sh":1100,"ih":1100}
 1440x900 keyboard (max 802): start 0, ArrowDown 40, PageDown 802, End 802, Home 0, Space 802
 1280x720 keyboard (max 977): start 0, ArrowDown 40, PageDown 720, End 977, Home 0, Space 680
+AC-28 grep for bbc368 9f814e 85692c 73984f c9a46a --gold --copper --bronze --leaf color-gold color-copper color-bronze color-leaf in 30 files: no matches
+AC-28 desktop /blocks/: 3903 computed colours checked, 0 off-band; canvas off-band 0; screenshot 3245760 px sampled, 0 off-band
+AC-28 desktop /blog/first-post/: 1044 computed colours checked, 0 off-band; canvas off-band 0; screenshot 648000 px sampled, 0 off-band
+AC-28 desktop /blog/: 494 computed colours checked, 0 off-band; canvas off-band 0; screenshot 648000 px sampled, 0 off-band
+AC-28 desktop /blog/second-post/: 769 computed colours checked, 0 off-band; canvas off-band 0; screenshot 648000 px sampled, 0 off-band
+AC-28 desktop /: 1276 computed colours checked, 0 off-band; canvas off-band 0; screenshot 648000 px sampled, 0 off-band
+AC-28 mobile /blocks/: 3903 computed colours checked, 0 off-band; canvas off-band 0; screenshot 164580 px sampled, 0 off-band
+AC-28 mobile /blog/first-post/: 1044 computed colours checked, 0 off-band; canvas off-band 0; screenshot 164580 px sampled, 0 off-band
+AC-28 mobile /blog/: 494 computed colours checked, 0 off-band; canvas off-band 0; screenshot 164580 px sampled, 0 off-band
+AC-28 mobile /blog/second-post/: 769 computed colours checked, 0 off-band; canvas off-band 0; screenshot 164580 px sampled, 0 off-band
+AC-28 mobile /: 1276 computed colours checked, 0 off-band; canvas off-band 0; screenshot 164580 px sampled, 0 off-band
+AC-31 home-desktop: 169478 sample points between the pane edge and the rounded panel, 0 coloured
+AC-31 home-1280: 138167 sample points between the pane edge and the rounded panel, 0 coloured
+AC-31 post-desktop: 155061 sample points between the pane edge and the rounded panel, 0 coloured
+AC-31 home-mobile: 50261 sample points between the pane edge and the rounded panel, 0 coloured
+AC-31 post-mobile: 50261 sample points between the pane edge and the rounded panel, 0 coloured
 firefox (scroll timeline native): {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false}}
 webkit (scroll timeline native): {"0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false},"60":{"opacity":0.5,"blur":7,"visibility":"visible","paused":false,"scrollY":60,"hscroll":false},"200":{"opacity":0,"blur":14,"visibility":"hidden","paused":true,"scrollY":200,"hscroll":false},"back-0":{"opacity":1,"blur":0,"visibility":"visible","paused":false,"scrollY":0,"hscroll":false}}

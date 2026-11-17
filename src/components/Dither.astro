@@ -1,40 +1,37 @@
 ---
 /**
- * A slowly evolving life-like field, drawn through an 8x8 Bayer dither as crisp square cells.
- * Dense regions are solid, edges break into ordered halftone, empty space is pure --bg.
- * Colour follows how long a place has been occupied: deep/teal when young, emerald, then
- * leaf, gold and copper where the mass is oldest.
+ * Conway's Life at display resolution, one automaton cell per drawn square. Live cells are
+ * solid emerald; a cell that dies leaves a trail that thins out through an 8x8 Bayer dither
+ * (teal, then deep, then gone). Nothing is blurred or upscaled.
  *
- * The field is pre-evolved at build time (seeded from the page) and shipped as a small state
- * string, so the first paint is already a settled pattern. In the browser it steps ~10 times
- * a second, and pauses off-screen, in hidden tabs, when the mobile art has dissolved, and
- * always under prefers-reduced-motion.
+ * The field is seeded from the page and pre-evolved at build time, then shipped as a small
+ * state string, so the first paint is already a settled pattern. In the browser it steps
+ * about 10 times a second and pauses off-screen, in hidden tabs, when the mobile art has
+ * dissolved, and always under prefers-reduced-motion. Only whole cells are drawn, centred in
+ * the box, so nothing is cut at the edges.
  */
-import { createSim, encodeState, WARMUP, MODES, type Mode } from '../lib/dither-sim';
+import { createLife, encodeState, WARMUP } from '../lib/dither-sim';
 
 interface Props {
-  mode?: Mode;
   /** CSS px per cell (snapped to whole device pixels) */
   cell?: number;
   /** pattern seed; defaults to the page path so each page has its own */
   seed?: string;
-  /** 0..1 brightness of the palette, to keep art on top readable */
+  /** 0..1 strength of the greens over --bg, to keep the art on top the subject */
   intensity?: number;
   /** steps per second */
   rate?: number;
   class?: string;
 }
-const { mode = 'life', cell = 6, seed = Astro.url.pathname, intensity = 1, rate = 10, class: className } = Astro.props;
-if (!MODES.includes(mode)) throw new Error(`Dither: unknown mode "${mode}" (use ${MODES.join(', ')})`);
-const sim = createSim(mode, seed);
-for (let i = 0; i < WARMUP[mode]; i++) sim.step();
-const state = encodeState(sim);
+const { cell = 6, seed = Astro.url.pathname, intensity = 1, rate = 10, class: className } = Astro.props;
+const life = createLife(seed);
+for (let i = 0; i < WARMUP; i++) life.step();
+const state = encodeState(life);
 ---
 
 <div class:list={['dither', className]} data-dither-box>
   <canvas
     data-dither
-    data-mode={mode}
     data-seed={seed}
     data-cell={cell}
     data-intensity={intensity}
@@ -48,6 +45,7 @@ const state = encodeState(sim);
     position: absolute;
     inset: 0;
     overflow: hidden;
+    border-radius: inherit;
     background: var(--bg);
   }
   canvas {
@@ -61,15 +59,16 @@ const state = encodeState(sim);
 </style>
 
 <script>
-  import { createSim, decodeState, draw, makeMapping, rampColours, RAMP, type Mapping, type Mode, type Sim } from '../lib/dither-sim';
+  import { createLife, decodeState, draw, colours, type Life } from '../lib/dither-sim';
 
   interface Inst {
     canvas: HTMLCanvasElement;
-    sim: Sim;
-    map?: Mapping;
+    life: Life;
+    cols: number;
+    rows: number;
     img?: ImageData;
     ctx: CanvasRenderingContext2D;
-    lut: Uint8Array;
+    pal: Uint8Array;
     inView: boolean;
     steps: number;
     ms: number;
@@ -83,6 +82,7 @@ const state = encodeState(sim);
   let io: IntersectionObserver | undefined;
   let ro: ResizeObserver | undefined;
 
+  /** whole cells only, centred, cell edges on device pixels */
   function layout(it: Inst) {
     const box = it.canvas.parentElement!;
     const r = box.getBoundingClientRect();
@@ -90,24 +90,26 @@ const state = encodeState(sim);
     const dpr = window.devicePixelRatio || 1;
     const cellDev = Math.max(1, Math.round(Number(it.canvas.dataset.cell || 6) * dpr));
     const cellCss = cellDev / dpr;
-    const cols = Math.ceil(r.width / cellCss);
-    const rows = Math.ceil(r.height / cellCss);
-    if (it.map && it.map.cols === cols && it.map.rows === rows) return true;
+    const cols = Math.min(it.life.w, Math.floor(r.width / cellCss));
+    const rows = Math.min(it.life.h, Math.floor(r.height / cellCss));
+    if (it.img && it.cols === cols && it.rows === rows) return true;
+    it.cols = cols;
+    it.rows = rows;
     it.canvas.width = cols;
     it.canvas.height = rows;
     it.canvas.style.width = `${cols * cellCss}px`;
     it.canvas.style.height = `${rows * cellCss}px`;
-    // land cell edges on whole device pixels
-    const fx = (r.left * dpr) % 1, fy = (r.top * dpr) % 1;
-    it.canvas.style.transform = fx || fy ? `translate(${-fx / dpr}px, ${-fy / dpr}px)` : '';
-    it.map = makeMapping(it.sim, cols, rows);
+    // centre the grid, then land its edges on whole device pixels
+    const left = Math.round((r.left + (r.width - cols * cellCss) / 2) * dpr) / dpr - r.left;
+    const top = Math.round((r.top + (r.height - rows * cellCss) / 2) * dpr) / dpr - r.top;
+    it.canvas.style.transform = `translate(${left}px, ${top}px)`;
     it.img = it.ctx.createImageData(cols, rows);
     return true;
   }
 
   function render(it: Inst) {
-    if (!it.map && !layout(it)) return;
-    const empty = draw(it.sim, it.map!, it.lut, it.img!.data);
+    if (!it.img && !layout(it)) return;
+    const empty = draw(it.life, it.cols, it.rows, it.pal, it.img!.data);
     it.ctx.putImageData(it.img!, 0, 0);
     it.canvas.dataset.empty = empty.toFixed(3);
   }
@@ -121,7 +123,7 @@ const state = encodeState(sim);
       if (!running(it)) continue;
       any = true;
       const t0 = performance.now();
-      it.sim.step();
+      it.life.step();
       render(it);
       const dt = performance.now() - t0;
       it.steps++;
@@ -169,13 +171,15 @@ const state = encodeState(sim);
       }
     });
     document.querySelectorAll<HTMLCanvasElement>('canvas[data-dither]').forEach((canvas) => {
-      const sim = createSim(canvas.dataset.mode as Mode, canvas.dataset.seed || '/');
-      decodeState(sim, canvas.dataset.state || '');
+      const life = createLife(canvas.dataset.seed || '/', undefined, undefined, false);
+      decodeState(life, canvas.dataset.state || '');
       const it: Inst = {
         canvas,
-        sim,
+        life,
+        cols: 0,
+        rows: 0,
         ctx: canvas.getContext('2d')!,
-        lut: rampColours(RAMP, Number(canvas.dataset.intensity || 1)),
+        pal: colours(Number(canvas.dataset.intensity || 1)),
         inView: false,
         steps: 0,
         ms: 0,

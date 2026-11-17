@@ -15,7 +15,7 @@ import { loadSite } from '../lib/site';
 
 const site = loadSite();
 const posts = await getPosts();
-const palette = ['bg', 'ink', 'emerald', 'teal', 'deep', 'leaf', 'gold', 'copper', 'bronze'];
+const palette = ['bg', 'ink', 'emerald', 'teal', 'deep'];
 const entries = [
   { label: 'Row one', detail: '2026', href: '/blog/' },
   { label: 'Row two', detail: '2025' },
@@ -25,7 +25,6 @@ const many = Array.from({ length: 12 }, (_, i) => ({
   year: 2026 - i,
   icon: ['box', 'layers', 'shapes', 'cpu', 'pen-tool', 'globe'][i % 6],
 }));
-const modes = ['life', 'smooth', 'flow'] as const;
 ---
 
 <Base title="Blocks" noindex>
@@ -56,24 +55,15 @@ const modes = ['life', 'smooth', 'flow'] as const;
 
     <section aria-labelledby="b-dither">
       <h2 id="b-dither">Dither</h2>
-      <div class="modes">
-        {
-          modes.map((m) => (
-            <figure class="mode" data-test={`dither-${m}`}>
-              <div class="stage tall">
-                <Dither mode={m} seed={`blocks-${m}`} />
-              </div>
-              <figcaption>{m}</figcaption>
-            </figure>
-          ))
-        }
+      <div class="stage tall" data-test="dither-life">
+        <Dither seed="blocks-life" />
       </div>
     </section>
 
     <section aria-labelledby="b-art">
       <h2 id="b-art">Art over Dither</h2>
       <div class="stage" data-test="art-over-dither">
-        <Dither seed="blocks-art" intensity={0.85} />
+        <Dither seed="blocks-art" intensity={0.7} />
         <Art slug="does-not-exist" />
       </div>
     </section>
@@ -151,18 +141,6 @@ const modes = ['life', 'smooth', 'flow'] as const;
     border-radius: 6px;
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 14%, transparent);
   }
-  .modes {
-    display: grid;
-    gap: var(--space-6);
-  }
-  .mode {
-    margin: 0;
-  }
-  .mode figcaption {
-    margin-top: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--ink-2);
-  }
   .stage.tall {
     height: 26rem;
   }
@@ -187,6 +165,7 @@ const modes = ['life', 'smooth', 'flow'] as const;
   }
   .stage {
     height: 22rem;
+    clip-path: inset(0 round 10px);
     display: grid;
     place-items: center;
     container-type: size;

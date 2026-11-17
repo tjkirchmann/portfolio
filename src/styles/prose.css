@@ -53,14 +53,14 @@
 /* Footnote marks */
 .prose-chafer :where(sup) { line-height: 0; }
 .prose-chafer :where([data-footnote-ref]) {
-  color: var(--gold);
+  color: var(--emerald);
   font-weight: 600;
   font-size: 0.8em;
   padding: 0 0.15em;
   text-decoration: none;
   font-variant-numeric: tabular-nums;
 }
-.prose-chafer :where([data-footnote-ref]):hover { color: var(--emerald); }
+.prose-chafer :where([data-footnote-ref]):hover { color: var(--ink); }
 .prose-chafer :where(.footnotes) {
   margin-top: var(--space-8);
   padding-top: var(--space-5);
@@ -77,16 +77,16 @@
 }
 .prose-chafer :where(.footnotes li p) { margin: 0.25em 0; }
 .prose-chafer :where(.data-footnote-backref) {
-  color: var(--gold);
+  color: var(--emerald);
   text-decoration: none;
   margin-left: 0.25em;
   font-family: var(--font-sans);
 }
-.prose-chafer :where(.data-footnote-backref):hover { color: var(--emerald); }
+.prose-chafer :where(.data-footnote-backref):hover { color: var(--ink); }
 .prose-chafer :where(.footnotes li:target),
 .prose-chafer :where(sup:target),
 .prose-chafer :where([data-footnote-ref]:target) {
-  background: color-mix(in oklab, var(--gold) 16%, transparent);
+  background: color-mix(in oklab, var(--emerald) 16%, transparent);
   border-radius: 4px;
 }
 .prose-chafer :where(sup:has([data-footnote-ref]:target)) { background: none; }

@@ -159,7 +159,7 @@
     "id": "AC-6",
     "name": "dither shows through the black matte inside the art box",
     "ok": true,
-    "detail": "358/358 coloured dither cells inside the art box keep at least their colour"
+    "detail": "104/104 coloured dither cells inside the art box keep at least their colour"
   },
   {
     "id": "AC-5",
@@ -229,15 +229,15 @@
   },
   {
     "id": "AC-9",
-    "name": "footnote marks use --gold",
+    "name": "footnote marks use --emerald (AC-28)",
     "ok": true,
-    "detail": "rgb(187, 195, 104)"
+    "detail": "rgb(118, 200, 165)"
   },
   {
     "id": "AC-9",
-    "name": "footnote back-arrows use --gold",
+    "name": "footnote back-arrows use --emerald (AC-28)",
     "ok": true,
-    "detail": "rgb(187, 195, 104)"
+    "detail": "rgb(118, 200, 165)"
   },
   {
     "id": "AC-10",
@@ -249,19 +249,19 @@
     "id": "AC-10",
     "name": "ref jumps to the footnote",
     "ok": true,
-    "detail": "{\"hash\":\"#user-content-fn-1\",\"tag\":\"LI\",\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"inView\":true}"
+    "detail": "{\"hash\":\"#user-content-fn-1\",\"tag\":\"LI\",\"bg\":\"oklab(0.770401 -0.0924881 0.0250493 / 0.16)\",\"inView\":true}"
   },
   {
     "id": "AC-10",
     "name": "footnote target is highlighted",
     "ok": true,
-    "detail": "oklab(0.79124 -0.0454688 0.106368 / 0.16)"
+    "detail": "oklab(0.770401 -0.0924881 0.0250493 / 0.16)"
   },
   {
     "id": "AC-10",
     "name": "back-arrow jumps to the reference, highlighted",
     "ok": true,
-    "detail": "{\"hash\":\"#user-content-fnref-1\",\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"inView\":true}"
+    "detail": "{\"hash\":\"#user-content-fnref-1\",\"bg\":\"oklab(0.770401 -0.0924881 0.0250493 / 0.16)\",\"inView\":true}"
   },
   {
     "id": "AC-11",
@@ -297,14 +297,14 @@
     "id": "AC-5",
     "name": "throttled load crossfades (not instant)",
     "ok": true,
-    "detail": "2064ms"
+    "detail": "2103ms"
   },
   {
     "id": "AC-5",
     "name": "cached video: swap with no blur-in",
     "ok": true,
     "skipped": true,
-    "detail": "video took 124ms to become playable on revisit; the instant path was not exercised"
+    "detail": "video took 72ms to become playable on revisit; the instant path was not exercised"
   },
   {
     "id": "AC-7",
@@ -334,13 +334,13 @@
     "id": "AC-15",
     "name": "no white flash in captured frames",
     "ok": true,
-    "detail": "31, 21, 21"
+    "detail": "19, 15, 17"
   },
   {
     "id": "AC-15",
     "name": "no blank black frame (content visible in each)",
     "ok": true,
-    "detail": "45.1, 33.0, 33.3"
+    "detail": "27.5, 19.1, 27.6"
   },
   {
     "id": "AC-4",
@@ -427,22 +427,34 @@
     "detail": "12.00 device px, pixelated"
   },
   {
-    "id": "AC-19",
-    "name": "life: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)",
+    "id": "AC-29",
+    "name": "life: no blur or upscale: every pixel is bg, emerald, teal or deep exactly",
     "ok": true,
-    "detail": "0.40 / 0.42"
+    "detail": "4 distinct colours"
+  },
+  {
+    "id": "AC-29",
+    "name": "life: at least 60% pure --bg at 0s, 5s, 20s",
+    "ok": true,
+    "detail": "0.912 / 0.911 / 0.932"
+  },
+  {
+    "id": "AC-29",
+    "name": "life: no filled regions (under 5% of 8x8 blocks more than half full, none over 75%)",
+    "ok": true,
+    "detail": "0.000 (max 0.48) / 0.000 (max 0.48) / 0.010 (max 0.53)"
   },
   {
     "id": "AC-22",
     "name": "life: 8-15 steps per second",
     "ok": true,
-    "detail": "10.85/s over 15.0s"
+    "detail": "10.20/s over 15.0s"
   },
   {
     "id": "AC-22",
-    "name": "life: main-thread cost under 2ms per step",
+    "name": "life: main-thread cost under 2ms per step (average)",
     "ok": true,
-    "detail": "avg 0.228ms, max 1.8ms (step + draw + putImageData)"
+    "detail": "avg 0.7ms, max 4.5ms (step + draw + putImageData)"
   },
   {
     "id": "AC-22",
@@ -451,106 +463,16 @@
     "detail": ""
   },
   {
-    "id": "AC-21",
-    "name": "life: at least 35% empty at 0s, 5s, 20s",
+    "id": "AC-29",
+    "name": "life: live cells emerald, trails teal and deep",
     "ok": true,
-    "detail": "0.67 / 0.81 / 0.66"
-  },
-  {
-    "id": "AC-21",
-    "name": "life: greens and gold/copper both present",
-    "ok": true,
-    "detail": "leaf, gold, emerald, teal, copper, deep"
-  },
-  {
-    "id": "AC-19",
-    "name": "smooth: square cells on whole device pixels, pixelated",
-    "ok": true,
-    "detail": "12.00 device px, pixelated"
-  },
-  {
-    "id": "AC-19",
-    "name": "smooth: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)",
-    "ok": true,
-    "detail": "0.24 / 0.22"
-  },
-  {
-    "id": "AC-22",
-    "name": "smooth: 8-15 steps per second",
-    "ok": true,
-    "detail": "10.65/s over 15.0s"
-  },
-  {
-    "id": "AC-22",
-    "name": "smooth: main-thread cost under 2ms per step",
-    "ok": true,
-    "detail": "avg 0.442ms, max 4.7ms (step + draw + putImageData)"
-  },
-  {
-    "id": "AC-22",
-    "name": "smooth: the field evolves (frame changes 0s -> 5s -> 20s)",
-    "ok": true,
-    "detail": ""
-  },
-  {
-    "id": "AC-21",
-    "name": "smooth: at least 35% empty at 0s, 5s, 20s",
-    "ok": true,
-    "detail": "0.69 / 0.74 / 0.73"
-  },
-  {
-    "id": "AC-21",
-    "name": "smooth: greens and gold/copper both present",
-    "ok": true,
-    "detail": "emerald, leaf, teal, gold, deep, copper"
-  },
-  {
-    "id": "AC-19",
-    "name": "flow: square cells on whole device pixels, pixelated",
-    "ok": true,
-    "detail": "12.00 device px, pixelated"
-  },
-  {
-    "id": "AC-19",
-    "name": "flow: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)",
-    "ok": true,
-    "detail": "0.28 / 0.27"
-  },
-  {
-    "id": "AC-22",
-    "name": "flow: 8-15 steps per second",
-    "ok": true,
-    "detail": "10.72/s over 15.0s"
-  },
-  {
-    "id": "AC-22",
-    "name": "flow: main-thread cost under 2ms per step",
-    "ok": true,
-    "detail": "avg 0.363ms, max 4.7ms (step + draw + putImageData)"
-  },
-  {
-    "id": "AC-22",
-    "name": "flow: the field evolves (frame changes 0s -> 5s -> 20s)",
-    "ok": true,
-    "detail": ""
-  },
-  {
-    "id": "AC-21",
-    "name": "flow: at least 35% empty at 0s, 5s, 20s",
-    "ok": true,
-    "detail": "0.61 / 0.62 / 0.62"
-  },
-  {
-    "id": "AC-21",
-    "name": "flow: greens and gold/copper both present",
-    "ok": true,
-    "detail": "leaf, gold, emerald, teal, deep, copper"
+    "detail": "emerald, teal, deep"
   },
   {
     "id": "AC-22",
     "name": "seeded per page: 4 pages, 4 different patterns",
     "ok": true,
-    "detail": "{\"/\":2072841524,\"/blog/\":2847851512,\"/blog/first-post/\":2133365814,\"/blog/second-post/\":1015766137}"
+    "detail": "{\"/\":1070395505,\"/blog/\":1970967851,\"/blog/first-post/\":974105000,\"/blog/second-post/\":3963755339}"
   },
   {
     "id": "AC-22",
@@ -560,27 +482,15 @@
   },
   {
     "id": "AC-22",
-    "name": "life: first frame is pre-evolved (0 steps taken, masses already there)",
+    "name": "life: first frame is pre-evolved (0 steps taken, structure already there)",
     "ok": true,
-    "detail": "steps 0, empty 0.67, spread 0.40"
-  },
-  {
-    "id": "AC-22",
-    "name": "smooth: first frame is pre-evolved (0 steps taken, masses already there)",
-    "ok": true,
-    "detail": "steps 0, empty 0.70, spread 0.25"
-  },
-  {
-    "id": "AC-22",
-    "name": "flow: first frame is pre-evolved (0 steps taken, masses already there)",
-    "ok": true,
-    "detail": "steps 0, empty 0.61, spread 0.28"
+    "detail": "steps 0, empty 0.916, 4 colours"
   },
   {
     "id": "AC-22",
     "name": "reduced motion: settled frame shown, 0 steps in 2s",
     "ok": true,
-    "detail": "steps 0, empty 0.66"
+    "detail": "steps 0, empty 0.89"
   },
   {
     "id": "AC-22",
@@ -796,7 +706,7 @@
     "id": "AC-27",
     "name": "1440x900: footnote ref -> note -> back, inside the pane, highlighted",
     "ok": true,
-    "detail": "{\"fn\":{\"hash\":\"#user-content-fn-1\",\"inView\":true,\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"pane\":802,\"win\":0},\"fb\":{\"hash\":\"#user-content-fnref-1\",\"inView\":true,\"pane\":0,\"win\":0}}"
+    "detail": "{\"fn\":{\"hash\":\"#user-content-fn-1\",\"inView\":true,\"bg\":\"oklab(0.770401 -0.0924881 0.0250493 / 0.16)\",\"pane\":802,\"win\":0},\"fb\":{\"hash\":\"#user-content-fnref-1\",\"inView\":true,\"pane\":0,\"win\":0}}"
   },
   {
     "id": "AC-27",
@@ -850,7 +760,7 @@
     "id": "AC-27",
     "name": "1280x720: footnote ref -> note -> back, inside the pane, highlighted",
     "ok": true,
-    "detail": "{\"fn\":{\"hash\":\"#user-content-fn-1\",\"inView\":true,\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"pane\":977,\"win\":0},\"fb\":{\"hash\":\"#user-content-fnref-1\",\"inView\":true,\"pane\":0,\"win\":0}}"
+    "detail": "{\"fn\":{\"hash\":\"#user-content-fn-1\",\"inView\":true,\"bg\":\"oklab(0.770401 -0.0924881 0.0250493 / 0.16)\",\"pane\":977,\"win\":0},\"fb\":{\"hash\":\"#user-content-fnref-1\",\"inView\":true,\"pane\":0,\"win\":0}}"
   },
   {
     "id": "AC-27",
@@ -875,6 +785,84 @@
     "name": "below 800px: unchanged, the document scrolls",
     "ok": true,
     "detail": "{\"docScrolls\":true,\"paneOverflow\":\"visible\"}"
+  },
+  {
+    "id": "AC-28",
+    "name": "source grep: removed colours and tokens appear nowhere in src/, public/ (minus art), astro.config",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-28",
+    "name": "computed colours on 5 pages x 2 viewports and every canvas frame stay in the green-teal band (hue 120-200, neutrals allowed)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-28",
+    "name": "screenshot pixels of every page stay in the green-teal band",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-31",
+    "name": "home-desktop: no cells outside the rounded art panel",
+    "ok": true,
+    "detail": "0 coloured of 169478 points outside"
+  },
+  {
+    "id": "AC-31",
+    "name": "home-desktop: only whole cells, the grid sits inside its box",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-31",
+    "name": "home-1280: no cells outside the rounded art panel",
+    "ok": true,
+    "detail": "0 coloured of 138167 points outside"
+  },
+  {
+    "id": "AC-31",
+    "name": "home-1280: only whole cells, the grid sits inside its box",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-31",
+    "name": "post-desktop: no cells outside the rounded art panel",
+    "ok": true,
+    "detail": "0 coloured of 155061 points outside"
+  },
+  {
+    "id": "AC-31",
+    "name": "post-desktop: only whole cells, the grid sits inside its box",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-31",
+    "name": "home-mobile: no cells outside the rounded art panel",
+    "ok": true,
+    "detail": "0 coloured of 50261 points outside"
+  },
+  {
+    "id": "AC-31",
+    "name": "home-mobile: only whole cells, the grid sits inside its box",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-31",
+    "name": "post-mobile: no cells outside the rounded art panel",
+    "ok": true,
+    "detail": "0 coloured of 50261 points outside"
+  },
+  {
+    "id": "AC-31",
+    "name": "post-mobile: only whole cells, the grid sits inside its box",
+    "ok": true,
+    "detail": ""
   },
   {
     "id": "AC-4",
