@@ -297,3 +297,35 @@ report, commit, push.
 - **AC-33:** one step more colour on screen: raise how often coloured cells appear by a
   single notch (pane about 85% black, from about 92%), through slightly longer trails or
   slightly more seeding. Not more than that.
+
+## Amendment 5 (2026-11-16, from the owner)
+
+The owner's words: "the colors look flat and non-metallic, can you add packages and edit as
+needed to get that metallic look within pixel." Same light process as amendment 4: no test
+suite, build and serve only.
+
+- **AC-34 metallic cells.** The simulation's cells must read as beetle shell, not flat
+  paint, while staying crisp square pixels on the same grid. The rose chafer's colour is
+  structural: a dark base with a bright, narrow, coloured specular that shifts hue with
+  angle (green toward gold-less teal and blue here). Get that with a fragment shader over
+  the cell grid (WebGL; a small helper such as `ogl`, `twgl.js` or `regl` is welcome, or
+  raw WebGL):
+  - Within each cell: a tiny bevel, a bright edge or corner highlight and a darker
+    opposite edge, so a single cell looks like a polished tile. Keep it readable at 6px:
+    two or three tones per cell, hard steps, no soft blur.
+  - Across cells: one shared light. A broad specular band that drifts slowly across the
+    pane, so neighbouring cells catch it in sequence and a mass of cells looks like one
+    curved lacquered surface. Outside the band cells are dark and saturated; inside it
+    they go bright and slightly desaturated toward white-green.
+  - Iridescence: hue shifts a few degrees with position relative to the light (emerald
+    toward aqua toward blue), on top of the per-region colours from AC-32. Greens and
+    blues only; no yellow, gold or orange even in highlights.
+  - Trails keep thinning through the Bayer dither and get the same shading, dimmer.
+  - Contrast is what sells metal: deep darks next to small hot highlights. Do not just
+    add a gradient or raise brightness.
+- Keep the manners from AC-22 (slow simulation steps, pauses when unseen, one still frame
+  under reduced motion; the light may animate at frame rate only while visible), a canvas
+  2D fallback to the current flat look if WebGL is unavailable, and the wireframe readable
+  on top.
+- Look at it at 100% and at 300% zoom next to a photo-like mental picture of the beetle
+  before handing back, and say plainly whether it reads as metal.
