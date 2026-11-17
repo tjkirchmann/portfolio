@@ -2,7 +2,16 @@
 # Icons are lucide names: https://lucide.dev/icons (default: circle-dot)
 name: Your Name
 role: Your role
-art: spikeball
+art:
+  - slug: spikeball
+    icon: asterisk
+    label: Spike ball
+  - slug: gyroscope
+    icon: orbit
+    label: Gyroscope
+  - slug: knot
+    icon: infinity
+    label: Knot
 
 projects:
   - title: Project one

@@ -4,7 +4,17 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 6 (Amendment 6: AC-35). Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 7 (Amendment 7: AC-36 to AC-38). Round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 7 (Amendment 7, no test run by request)
+
+- **AC-36 to AC-38:**
+  - **Data:** `art` (in `site.yaml` and in post frontmatter) is either one slug or a list of `{slug, icon, label, backdrop?}`, validated by `src/lib/art-set.ts`. Home is set to spikeball (default), gyroscope and knot. `/blocks` shows the switcher; the blog index uses the first piece only.
+  - **Component:** the new `ArtSet` stacks the pieces in the pane and draws a row of transparent lucide icon buttons at the bottom centre, with `aria-pressed` and labels.
+  - **When the menu shows:** it fades in on pointer enter and out about 600ms after leaving. It also stays up while a button has focus, and on touch a tap shows it for about 3s.
+  - **Switching:** crossfades the pieces. The hidden piece's video is paused and its sources removed. The new one starts from its blurred still through the existing blur-in. `backdrop: false` fades out and pauses the life simulation.
+  - **Remembering:** the choice is kept in `localStorage` under `art:<path>`. An inline script applies it before the art scripts run, so the wrong video never loads.
+- Tried in Chromium on home: hover shows the menu, and it is hidden 800ms after leaving. Clicking switches pieces, with only the chosen video playing. A reload keeps the choice, and keyboard focus plus Enter works. A simulated `backdrop: false` piece stopped the simulation and faded it out. Touch was not tried on a device. `pnpm build` passes and 4321 serves `/`, `/blocks/` and the post. Not run: `pnpm test`, Lighthouse, screenshot set.
 
 ## Round 6 (Amendment 6, no test run by request)
 

@@ -47,6 +47,11 @@ const state = encodeState(life);
     overflow: hidden;
     border-radius: inherit;
     background: var(--bg);
+    transition: opacity var(--dur-3) var(--ease);
+  }
+  /* a piece with its own colour asks for the life backdrop to step aside */
+  :global([data-no-backdrop]) .dither {
+    opacity: 0;
   }
   canvas {
     position: absolute;
@@ -147,7 +152,11 @@ const state = encodeState(life);
   }
 
   const running = (it: Inst) =>
-    it.inView && !document.hidden && !reduce.matches && !it.canvas.closest('[data-dissolved]');
+    it.inView &&
+    !document.hidden &&
+    !reduce.matches &&
+    !it.canvas.closest('[data-dissolved]') &&
+    !it.canvas.closest('[data-no-backdrop]');
 
   function tick() {
     let any = false;
@@ -241,6 +250,7 @@ const state = encodeState(life);
 
   document.addEventListener('visibilitychange', schedule);
   document.addEventListener('split:dissolve', schedule);
+  document.addEventListener('dither:check', schedule);
   reduce.addEventListener('change', schedule);
   document.addEventListener('astro:before-swap', teardown);
   document.addEventListener('astro:page-load', init);

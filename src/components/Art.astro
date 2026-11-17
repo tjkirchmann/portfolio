@@ -124,6 +124,8 @@ const ratio = `${art.width} / ${art.height}`;
 
   function setup(root: HTMLElement) {
     if (root.dataset.state) return;
+    // pieces hidden by an art switcher wait until they are chosen
+    if (root.closest('[data-art-piece][data-inactive]')) return;
     const video = root.querySelector<HTMLVideoElement>('video[data-art-video]');
     if (!video) return;
 
@@ -163,6 +165,23 @@ const ratio = `${art.width} / ${art.height}`;
       root.dataset.state = 'still';
     });
   });
+
+  // switching pieces: drop the hidden one's video entirely, start the chosen one from its blurred still
+  document.addEventListener('art:deactivate', (e) => {
+    const root = (e as CustomEvent<HTMLElement>).detail;
+    const video = root.querySelector<HTMLVideoElement>('video[data-art-video]');
+    if (video) {
+      video.dataset.wantsPlay = 'false';
+      video.pause();
+      video.querySelectorAll('source').forEach((s) => s.removeAttribute('src'));
+      video.removeAttribute('src');
+      video.preload = 'none';
+      video.load();
+    }
+    delete root.dataset.state;
+    root.removeAttribute('data-instant');
+  });
+  document.addEventListener('art:activate', (e) => setup((e as CustomEvent<HTMLElement>).detail));
 
   document.addEventListener('astro:page-load', init);
 </script>

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { parse } from 'yaml';
 import { z } from 'astro/zod';
 import { iconExists } from './icons';
+import { artField } from './art-set';
 
 const link = z.object({ label: z.string(), href: z.string() });
 
@@ -28,7 +29,7 @@ const schema = z
   .object({
     name: z.string(),
     role: z.string(),
-    art: z.string().default('_placeholder'),
+    art: artField.default('_placeholder'),
     projects: z.array(step),
     companies: z.array(step),
     links: z.array(link),

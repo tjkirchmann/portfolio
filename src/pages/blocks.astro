@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Split from '../components/Split.astro';
 import Art from '../components/Art.astro';
+import ArtSet from '../components/ArtSet.astro';
 import Dither from '../components/Dither.astro';
 import EntryList from '../components/EntryList.astro';
 import Timeline from '../components/Timeline.astro';
@@ -32,7 +33,7 @@ const many = Array.from({ length: 12 }, (_, i) => ({
     <BackLink slot="art-top" href="/" label="Home" />
     <Fragment slot="art">
       <Dither />
-      <Art slug={site.art} />
+      <ArtSet art={site.art} />
     </Fragment>
 
     <header class="page-head">

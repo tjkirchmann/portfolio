@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Split from '../components/Split.astro';
-import Art from '../components/Art.astro';
+import ArtSet from '../components/ArtSet.astro';
 import Dither from '../components/Dither.astro';
 import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
@@ -13,7 +13,7 @@ const site = loadSite();
 <Base title={site.name} description={`${site.name}, ${site.role}`}>
   <Split lock="fit" label="Animation">
     <Dither slot="art" intensity={0.7} />
-    <Art slot="art" slug={site.art} />
+    <ArtSet slot="art" art={site.art} />
 
     <header class="page-head home-head">
       <h1 class="page-title">{site.name}</h1>

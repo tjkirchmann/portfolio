@@ -1,0 +1,236 @@
+---
+/**
+ * One or more art pieces in a pane. With more than one, a row of small icon buttons sits over
+ * the art: invisible until the pointer is over the pane (or a button has focus, or the art is
+ * tapped), fading out 600ms after the pointer leaves. Only the visible piece loads and plays.
+ * The choice is remembered per page in localStorage.
+ */
+import Art from './Art.astro';
+import { artList, type ArtField } from '../lib/art-set';
+import { icon } from '../lib/icons';
+
+interface Props {
+  art: ArtField | undefined;
+}
+const pieces = artList(Astro.props.art);
+const multi = pieces.length > 1;
+---
+
+<div class="art-set" data-art-set data-default={pieces[0].slug}>
+  {
+    pieces.map((p, i) => (
+      <div
+        class="art-piece"
+        data-art-piece={p.slug}
+        data-backdrop={p.backdrop === false ? 'off' : 'on'}
+        data-inactive={i === 0 ? undefined : ''}
+        aria-hidden={i === 0 ? undefined : 'true'}
+      >
+        <Art slug={p.slug} />
+      </div>
+    ))
+  }
+  {
+    multi && (
+      <div class="art-menu" role="group" aria-label="Choose art" data-art-menu>
+        {pieces.map((p, i) => (
+          <button
+            type="button"
+            class="art-btn"
+            data-art-choose={p.slug}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            aria-label={p.label}
+            title={p.label}
+            set:html={icon(p.icon, 16)}
+          />
+        ))}
+      </div>
+    )
+  }
+</div>
+
+{/* apply a remembered choice before the art scripts start, so the wrong video never loads */}
+{
+  multi && (
+    <script is:inline>
+      (function () {
+        var set = document.currentScript && document.currentScript.previousElementSibling;
+        if (!set || !set.matches('[data-art-set]')) return;
+        var want;
+        try { want = localStorage.getItem('art:' + location.pathname); } catch (e) {}
+        if (!want || !set.querySelector('[data-art-piece="' + want + '"]')) return;
+        set.querySelectorAll('[data-art-piece]').forEach(function (p) {
+          var on = p.getAttribute('data-art-piece') === want;
+          p.toggleAttribute('data-inactive', !on);
+          if (on) p.removeAttribute('aria-hidden'); else p.setAttribute('aria-hidden', 'true');
+        });
+        set.querySelectorAll('[data-art-choose]').forEach(function (b) {
+          b.setAttribute('aria-pressed', b.getAttribute('data-art-choose') === want ? 'true' : 'false');
+        });
+      })();
+    </script>
+  )
+}
+
+<style>
+  .art-set {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  .art-piece {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    transition:
+      opacity var(--dur-3) var(--ease),
+      visibility 0s linear 0s;
+    /* no filter/opacity on the art itself: the media must still screen-blend with the pane */
+  }
+  .art-piece[data-inactive] {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--dur-3) var(--ease),
+      visibility 0s linear var(--dur-3);
+  }
+
+  .art-menu {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-5);
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--space-1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-1) var(--ease);
+    z-index: 2;
+  }
+  :global([data-art-menu-open]) .art-menu {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .art-btn {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    opacity: 0.42;
+    cursor: pointer;
+    transition: opacity var(--dur-1) var(--ease);
+  }
+  .art-btn:hover {
+    opacity: 0.75;
+  }
+  .art-btn[aria-pressed='true'] {
+    opacity: 1;
+  }
+  .art-btn :global(svg) {
+    display: block;
+  }
+  .art-btn:focus-visible {
+    outline: 2px solid var(--emerald);
+    outline-offset: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .art-piece,
+    .art-piece[data-inactive],
+    .art-menu {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const GRACE = 600;
+  const TOUCH = 3000;
+
+  function setup(set: HTMLElement) {
+    if (set.dataset.ready) return;
+    set.dataset.ready = '1';
+    const menu = set.querySelector<HTMLElement>('[data-art-menu]');
+    const pane = (set.closest('[data-split-art]') || set.parentElement) as HTMLElement;
+    const current = () => set.querySelector<HTMLElement>('[data-art-piece]:not([data-inactive])')!;
+
+    const applyBackdrop = () => {
+      pane.toggleAttribute('data-no-backdrop', current().dataset.backdrop === 'off');
+      document.dispatchEvent(new CustomEvent('dither:check'));
+    };
+    applyBackdrop();
+    if (!menu) return;
+
+    // ---- show / hide
+    let hideTimer = 0;
+    let hovering = false;
+    const open = () => {
+      clearTimeout(hideTimer);
+      pane.setAttribute('data-art-menu-open', '');
+    };
+    const closeSoon = (ms: number) => {
+      clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => {
+        if (hovering || menu.contains(document.activeElement)) return;
+        pane.removeAttribute('data-art-menu-open');
+      }, ms);
+    };
+    pane.addEventListener('pointerenter', (e) => {
+      if (e.pointerType === 'touch') return;
+      hovering = true;
+      open();
+    });
+    pane.addEventListener('pointerleave', (e) => {
+      if (e.pointerType === 'touch') return;
+      hovering = false;
+      closeSoon(GRACE);
+    });
+    pane.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      open();
+      closeSoon(TOUCH);
+    });
+    menu.addEventListener('focusin', open);
+    menu.addEventListener('focusout', () => closeSoon(GRACE));
+
+    // ---- switching
+    menu.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-art-choose]');
+      if (!btn) return;
+      const slug = btn.dataset.artChoose!;
+      const from = current();
+      const to = set.querySelector<HTMLElement>(`[data-art-piece="${slug}"]`);
+      if (!to || to === from) return;
+      from.setAttribute('data-inactive', '');
+      from.setAttribute('aria-hidden', 'true');
+      to.removeAttribute('data-inactive');
+      to.removeAttribute('aria-hidden');
+      menu.querySelectorAll('[data-art-choose]').forEach((b) =>
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'),
+      );
+      const fromArt = from.querySelector('[data-art]');
+      const toArt = to.querySelector('[data-art]');
+      if (fromArt) document.dispatchEvent(new CustomEvent('art:deactivate', { detail: fromArt }));
+      if (toArt) document.dispatchEvent(new CustomEvent('art:activate', { detail: toArt }));
+      applyBackdrop();
+      try {
+        if (slug === set.dataset.default) localStorage.removeItem(`art:${location.pathname}`);
+        else localStorage.setItem(`art:${location.pathname}`, slug);
+      } catch {}
+      if (e.detail > 0) open(); // keep the menu up while the pointer is on it
+      if (pane.matches(':hover')) hovering = true;
+      if (!hovering) closeSoon(TOUCH);
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-art-set]').forEach(setup);
+  });
+</script>
