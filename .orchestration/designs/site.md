@@ -329,3 +329,32 @@ suite, build and serve only.
   on top.
 - Look at it at 100% and at 300% zoom next to a photo-like mental picture of the beetle
   before handing back, and say plainly whether it reads as metal.
+
+## Amendment 6 (2026-11-16, from the owner)
+
+The owner's words: "can you make the colored bits on the markdown rendering (bold / link
+underline / footnote), can you make them metallic in the same way?" Light process: build
+and serve only, no test suite.
+
+- **AC-35 metallic markdown accents.** Bold text, link underlines, footnote reference
+  marks and back-arrows, and the other coloured markdown accents (list bullets, the
+  footnote target highlight, blockquote rule) get the same beetle-shell treatment as the
+  simulation cells: a dark saturated green base, a narrow bright specular that drifts
+  across slowly, and a slight hue slide from emerald through aqua to blue around the
+  highlight. Greens and blues only, highlight toward white-green, nothing warm.
+  - Do it in CSS where possible (gradient with `background-clip: text` for glyphs,
+    gradient `background-image` for underlines and rules), with hard-stepped colour stops
+    so it matches the pixel look rather than a soft chrome gradient.
+  - The sheen is shared: accents on the same page catch the light in sequence by
+    position (for example a fixed-attachment or position-offset gradient), not each
+    element looping on its own in unison. Slow: one pass every 12-20s. If it can be kept
+    in step with the simulation's specular band cheaply, do that; otherwise match its
+    period.
+  - Text must stay easy to read: the darkest stop of bold text keeps at least 4.5:1
+    contrast on `--bg`, weight and letterforms unchanged, no glow, no shadow, no shimmer
+    fast enough to notice while reading.
+  - Text selection, copy, and forced-colors mode still work; under
+    `prefers-reduced-motion` the gradient is static.
+  - Apply inside `Prose` (posts and `/blocks`). The home page text and timelines stay as
+    they are unless a timeline accent already uses the emerald token, in which case give
+    the current-step node the same treatment.
