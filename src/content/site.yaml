@@ -6,12 +6,14 @@ art:
   - slug: spikeball
     icon: asterisk
     label: Spike ball
-  - slug: gyroscope
-    icon: orbit
-    label: Gyroscope
-  - slug: knot
-    icon: infinity
-    label: Knot
+  - slug: spikeball-life
+    icon: sparkles
+    label: Spike ball, life
+    backdrop: false
+  - slug: waveball-life
+    icon: waves
+    label: Wave ball, life
+    backdrop: false
 
 projects:
   - title: Project one
