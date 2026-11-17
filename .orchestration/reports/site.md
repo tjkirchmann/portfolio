@@ -4,7 +4,15 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 5 (Amendment 5: AC-34). Round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 6 (Amendment 6: AC-35). Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 6 (Amendment 6, no test run by request)
+
+- **AC-35:** inside `Prose`, the accents now share one fixed-attachment metal gradient (`--metal` in `src/styles/prose.css`, all hard stops).
+  - **What gets it:** bold text, footnote marks and back-arrows (via `background-clip: text`); link underlines (a 1.5px strip per line fragment, so wrapped links keep it); 6px pixel-tile bullets; the blockquote rule; a faint footnote target highlight; and the home timeline's current-node ring.
+  - **The look:** a dark green base (#4a9a7c, about 5.8:1 on `--bg`) with wide stepped shoulders, sliding through aqua into blue around a narrow white-green highlight.
+  - **Motion:** the band crosses the viewport in 160 steps over 16s, phase-locked to the simulation's light via `performance.now()`. Static under reduced motion; under forced colours it falls back to plain system colours; selected text shows in ink.
+- Looked at a post at 100% and at 3x zoom while the band passed. It reads as a slow stepped glint on lacquered green rather than flat paint, and body text is unaffected. Because the accents are small, the metal shows mostly as that passing glint; between passes they are a calm darker green. `pnpm build` passes and 4321 serves. Not run: `pnpm test`, Lighthouse, screenshot set.
 
 ## Round 5 (Amendment 5, no test run by request)
 

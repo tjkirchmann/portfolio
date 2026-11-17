@@ -83,13 +83,6 @@
   font-family: var(--font-sans);
 }
 .prose-chafer :where(.data-footnote-backref):hover { color: var(--ink); }
-.prose-chafer :where(.footnotes li:target),
-.prose-chafer :where(sup:target),
-.prose-chafer :where([data-footnote-ref]:target) {
-  background: color-mix(in oklab, var(--emerald) 16%, transparent);
-  border-radius: 4px;
-}
-.prose-chafer :where(sup:has([data-footnote-ref]:target)) { background: none; }
 .prose-chafer :where(.footnotes li, [data-footnote-ref]) { scroll-margin-top: 30vh; }
 /* "Footnotes" heading that GFM inserts: visually hidden, kept for screen readers */
 .prose-chafer :where(.footnotes > h2) {
@@ -147,3 +140,175 @@
 .prose-chafer :where(table) { font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 .prose-chafer :where(th) { font-weight: 560; color: var(--ink); }
 .prose-chafer :where(hr) { margin: 3em 0; }
+
+/* ------------------------------------------------------------------------------------------
+   Metallic accents (AC-35). One shared sheen for the whole page: every accent uses the same
+   fixed-attachment gradient, so a narrow white-green specular band crosses the viewport and
+   accents catch it in turn by position. Hard colour stops keep the pixel look. The band moves
+   in 160 discrete steps per 16 s pass (10 per second, the simulation's rhythm and period);
+   --sheen-delay aligns its phase with the simulation's light. Greens and blues only.
+   Darkest stop #4a9a7c is about 5.8:1 on --bg.
+   ------------------------------------------------------------------------------------------ */
+:root {
+  --metal: linear-gradient(
+    110deg,
+    #4a9a7c 0 30%,
+    #4fa184 30% 36%,
+    #55aa8c 36% 41%,
+    #5fb594 41% 44%,
+    #76c8a5 44% 45.6%,
+    #6cc0bd 45.6% 46.9%,
+    #a8e6d8 46.9% 48%,
+    #e4fff5 48% 48.9%,
+    #a9d6ee 48.9% 50%,
+    #6fa8d8 50% 51.4%,
+    #5d9fc0 51.4% 54%,
+    #569fa6 54% 59%,
+    #4f9c90 59% 65%,
+    #4a9a7c 65% 100%
+  );
+  --metal-size: 300vw 100vh;
+  --sheen-delay: 0s;
+}
+@keyframes sheen {
+  from { background-position: 100% 0; }
+  to { background-position: 0% 0; }
+}
+@keyframes sheen-under {
+  from { background-position: 0 0, 100% 0; }
+  to { background-position: 0 0, 0% 0; }
+}
+.prose-chafer {
+  --metal-anim: 16s steps(160, end) var(--sheen-delay) infinite;
+}
+
+/* glyphs: bold, footnote marks, back-arrows */
+.prose-chafer :where(strong, [data-footnote-ref], .data-footnote-backref) {
+  background-image: var(--metal);
+  background-size: var(--metal-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: 45% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: sheen var(--metal-anim);
+}
+.prose-chafer :where(strong, [data-footnote-ref], .data-footnote-backref)::selection {
+  -webkit-text-fill-color: var(--ink);
+}
+.prose-chafer :where([data-footnote-ref], .data-footnote-backref):hover {
+  -webkit-text-fill-color: var(--ink);
+}
+
+/* link underline: a fixed metal layer, covered by a --bg layer except for the bottom 1.5px of
+   each line fragment, so wrapped links keep their underline on every line */
+.prose-chafer :where(a):not(:where(.data-footnote-backref, [data-footnote-ref])) {
+  text-decoration: none;
+  background-image: linear-gradient(var(--bg), var(--bg)), var(--metal);
+  background-size: 100% calc(100% - 1.5px), var(--metal-size);
+  background-repeat: no-repeat;
+  background-attachment: scroll, fixed;
+  background-position: 0 0, 45% 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: sheen-under var(--metal-anim);
+}
+.prose-chafer :where(a):not(:where(.data-footnote-backref, [data-footnote-ref])):hover {
+  background-size: 100% calc(100% - 2px), var(--metal-size);
+}
+
+/* bullets: a single pixel tile instead of a round marker */
+.prose-chafer :where(ul > li) {
+  list-style: none;
+  position: relative;
+}
+.prose-chafer :where(ul > li)::before {
+  content: '';
+  position: absolute;
+  left: -1.05em;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  background-image: var(--metal);
+  background-size: var(--metal-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: 45% 0;
+  animation: sheen var(--metal-anim);
+}
+
+/* blockquote rule */
+.prose-chafer :where(blockquote) {
+  border-left: none;
+  position: relative;
+}
+.prose-chafer :where(blockquote)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-image: var(--metal);
+  background-size: var(--metal-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: 45% 0;
+  animation: sheen var(--metal-anim);
+}
+
+/* footnote target highlight: the same metal, faint, behind the text */
+.prose-chafer :where(.footnotes li:target, [data-footnote-ref]:target) {
+  background: none;
+}
+.prose-chafer :where(.footnotes li) {
+  position: relative;
+  isolation: isolate;
+}
+.prose-chafer :where(.footnotes li:target)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 6px;
+  opacity: 0.2;
+  background-image: var(--metal);
+  background-size: var(--metal-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: 45% 0;
+  animation: sheen var(--metal-anim);
+}
+.prose-chafer :where(sup:target) {
+  background: none;
+  box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--emerald) 55%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose-chafer :where(strong, [data-footnote-ref], .data-footnote-backref, a, ul > li::before, blockquote::before, .footnotes li:target::after) {
+    animation: none !important;
+  }
+  .prose-chafer :where(ul > li)::before,
+  .prose-chafer :where(blockquote)::before,
+  .prose-chafer :where(.footnotes li:target)::after {
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .prose-chafer :where(strong, [data-footnote-ref], .data-footnote-backref) {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    forced-color-adjust: auto;
+  }
+  .prose-chafer :where(a):not(:where(.data-footnote-backref, [data-footnote-ref])) {
+    background: none;
+    text-decoration: underline;
+  }
+  .prose-chafer :where(ul > li) { list-style: disc; }
+  .prose-chafer :where(ul > li)::before,
+  .prose-chafer :where(blockquote)::before,
+  .prose-chafer :where(.footnotes li:target)::after { display: none; }
+  .prose-chafer :where(blockquote) { border-left: 2px solid CanvasText; }
+}

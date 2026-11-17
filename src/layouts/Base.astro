@@ -26,6 +26,17 @@ const { title, description, noindex = false } = Astro.props;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href={sansUrl} as="font" type="font/woff2" crossorigin />
     <ClientRouter fallback="none" />
+    <script is:inline>
+      // keep the CSS sheen (16 s period) in phase with the simulation's light, which is driven by
+      // performance.now(); re-run after client-side navigation so new elements join in step
+      (function () {
+        var set = function () {
+          document.documentElement.style.setProperty('--sheen-delay', -((performance.now() / 1000) % 16).toFixed(3) + 's');
+        };
+        set();
+        document.addEventListener('astro:after-swap', set);
+      })();
+    </script>
   </head>
   <body>
     <slot />
