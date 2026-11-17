@@ -1,148 +1,198 @@
 ---
 /**
- * Ordered (8x8 Bayer) dither of a gradient between palette colours, drawn once to a canvas at
- * device pixel ratio. Static: it redraws only when its box changes size, never on a loop.
+ * A slowly evolving life-like field, drawn through an 8x8 Bayer dither as crisp square cells.
+ * Dense regions are solid, edges break into ordered halftone, empty space is pure --bg.
+ * Colour follows how long a place has been occupied: deep/teal when young, emerald, then
+ * leaf, gold and copper where the mass is oldest.
+ *
+ * The field is pre-evolved at build time (seeded from the page) and shipped as a small state
+ * string, so the first paint is already a settled pattern. In the browser it steps ~10 times
+ * a second, and pauses off-screen, in hidden tabs, when the mobile art has dissolved, and
+ * always under prefers-reduced-motion.
  */
-interface Stop {
-  color: string;
-  at: number; // 0..1 along the direction
-}
+import { createSim, encodeState, WARMUP, MODES, type Mode } from '../lib/dither-sim';
+
 interface Props {
-  stops?: Stop[];
-  cell?: number; // CSS px per dither cell
-  direction?: 'to top' | 'to bottom' | 'to left' | 'to right' | number; // number = degrees, CSS-style
+  mode?: Mode;
+  /** CSS px per cell (snapped to whole device pixels) */
+  cell?: number;
+  /** pattern seed; defaults to the page path so each page has its own */
+  seed?: string;
+  /** 0..1 brightness of the palette, to keep art on top readable */
+  intensity?: number;
+  /** steps per second */
+  rate?: number;
   class?: string;
 }
-const {
-  stops = [
-    { color: '#0a0c0b', at: 0 },
-    { color: '#0c1210', at: 0.35 },
-    { color: '#102019', at: 0.62 },
-    { color: '#173426', at: 0.84 },
-    { color: '#21493a', at: 1 },
-  ],
-  cell = 3,
-  direction = 'to bottom',
-  class: className,
-} = Astro.props;
-const angle = typeof direction === 'number'
-  ? direction
-  : { 'to top': 0, 'to right': 90, 'to bottom': 180, 'to left': 270 }[direction];
+const { mode = 'life', cell = 6, seed = Astro.url.pathname, intensity = 1, rate = 10, class: className } = Astro.props;
+if (!MODES.includes(mode)) throw new Error(`Dither: unknown mode "${mode}" (use ${MODES.join(', ')})`);
+const sim = createSim(mode, seed);
+for (let i = 0; i < WARMUP[mode]; i++) sim.step();
+const state = encodeState(sim);
 ---
 
-<canvas
-  class:list={['dither', className]}
-  data-dither
-  data-stops={JSON.stringify(stops)}
-  data-cell={cell}
-  data-angle={angle}
-  aria-hidden="true"></canvas>
+<div class:list={['dither', className]} data-dither-box>
+  <canvas
+    data-dither
+    data-mode={mode}
+    data-seed={seed}
+    data-cell={cell}
+    data-intensity={intensity}
+    data-rate={rate}
+    data-state={state}
+    aria-hidden="true"></canvas>
+</div>
 
 <style>
   .dither {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
+    image-rendering: crisp-edges;
     image-rendering: pixelated;
   }
 </style>
 
 <script>
-  const BAYER = [
-    0, 32, 8, 40, 2, 34, 10, 42,
-    48, 16, 56, 24, 50, 18, 58, 26,
-    12, 44, 4, 36, 14, 46, 6, 38,
-    60, 28, 52, 20, 62, 30, 54, 22,
-    3, 35, 11, 43, 1, 33, 9, 41,
-    51, 19, 59, 27, 49, 17, 57, 25,
-    15, 47, 7, 39, 13, 45, 5, 37,
-    63, 31, 55, 23, 61, 29, 53, 21,
-  ];
+  import { createSim, decodeState, draw, makeMapping, rampColours, RAMP, type Mapping, type Mode, type Sim } from '../lib/dither-sim';
 
-  type Stop = { color: string; at: number };
-
-  function hex(c: string): [number, number, number] {
-    const h = c.replace('#', '');
-    const n = parseInt(h.length === 3 ? h.split('').map((x) => x + x).join('') : h, 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  interface Inst {
+    canvas: HTMLCanvasElement;
+    sim: Sim;
+    map?: Mapping;
+    img?: ImageData;
+    ctx: CanvasRenderingContext2D;
+    lut: Uint8Array;
+    inView: boolean;
+    steps: number;
+    ms: number;
+    maxMs: number;
   }
 
-  function draw(canvas: HTMLCanvasElement) {
-    const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const W = Math.round(rect.width * dpr);
-    const H = Math.round(rect.height * dpr);
-    const key = `${W}x${H}`;
-    if (canvas.dataset.drawn === key) return;
-
-    const cellPx = Math.max(1, Math.round(Number(canvas.dataset.cell || 3) * dpr));
-    const cols = Math.ceil(W / cellPx);
-    const rows = Math.ceil(H / cellPx);
-    const stops: Stop[] = JSON.parse(canvas.dataset.stops || '[]').sort((a: Stop, b: Stop) => a.at - b.at);
-    const rgb = stops.map((s) => hex(s.color));
-    const rad = (Number(canvas.dataset.angle || 0) * Math.PI) / 180;
-    // CSS gradient angle: 0deg points up, 90deg points right
-    const dx = Math.sin(rad);
-    const dy = -Math.cos(rad);
-    const half = (Math.abs(cols * dx) + Math.abs(rows * dy)) / 2;
-
-    const small = document.createElement('canvas');
-    small.width = cols;
-    small.height = rows;
-    const sctx = small.getContext('2d')!;
-    const img = sctx.createImageData(cols, rows);
-    const d = img.data;
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const px = x + 0.5 - cols / 2;
-        const py = y + 0.5 - rows / 2;
-        const t = Math.min(1, Math.max(0, ((px * dx + py * dy) / (half || 1) + 1) / 2));
-        let i = 0;
-        while (i < stops.length - 2 && t > stops[i + 1].at) i++;
-        const a = stops[i];
-        const b = stops[i + 1] ?? a;
-        const f = b.at === a.at ? 0 : Math.min(1, Math.max(0, (t - a.at) / (b.at - a.at)));
-        const threshold = (BAYER[(y & 7) * 8 + (x & 7)] + 0.5) / 64;
-        const c = f > threshold ? rgb[i + 1] ?? rgb[i] : rgb[i];
-        const o = (y * cols + x) * 4;
-        d[o] = c[0];
-        d[o + 1] = c[1];
-        d[o + 2] = c[2];
-        d[o + 3] = 255;
-      }
-    }
-    sctx.putImageData(img, 0, 0);
-
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d')!;
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(small, 0, 0, cols * cellPx, rows * cellPx);
-    canvas.dataset.drawn = key;
-  }
-
-  let ro: ResizeObserver | undefined;
-  const pending = new Set<HTMLCanvasElement>();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let insts: Inst[] = [];
   let timer = 0;
+  let timerRate = 0;
+  let io: IntersectionObserver | undefined;
+  let ro: ResizeObserver | undefined;
+
+  function layout(it: Inst) {
+    const box = it.canvas.parentElement!;
+    const r = box.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const dpr = window.devicePixelRatio || 1;
+    const cellDev = Math.max(1, Math.round(Number(it.canvas.dataset.cell || 6) * dpr));
+    const cellCss = cellDev / dpr;
+    const cols = Math.ceil(r.width / cellCss);
+    const rows = Math.ceil(r.height / cellCss);
+    if (it.map && it.map.cols === cols && it.map.rows === rows) return true;
+    it.canvas.width = cols;
+    it.canvas.height = rows;
+    it.canvas.style.width = `${cols * cellCss}px`;
+    it.canvas.style.height = `${rows * cellCss}px`;
+    // land cell edges on whole device pixels
+    const fx = (r.left * dpr) % 1, fy = (r.top * dpr) % 1;
+    it.canvas.style.transform = fx || fy ? `translate(${-fx / dpr}px, ${-fy / dpr}px)` : '';
+    it.map = makeMapping(it.sim, cols, rows);
+    it.img = it.ctx.createImageData(cols, rows);
+    return true;
+  }
+
+  function render(it: Inst) {
+    if (!it.map && !layout(it)) return;
+    const empty = draw(it.sim, it.map!, it.lut, it.img!.data);
+    it.ctx.putImageData(it.img!, 0, 0);
+    it.canvas.dataset.empty = empty.toFixed(3);
+  }
+
+  const running = (it: Inst) =>
+    it.inView && !document.hidden && !reduce.matches && !it.canvas.closest('[data-dissolved]');
+
+  function tick() {
+    let any = false;
+    for (const it of insts) {
+      if (!running(it)) continue;
+      any = true;
+      const t0 = performance.now();
+      it.sim.step();
+      render(it);
+      const dt = performance.now() - t0;
+      it.steps++;
+      it.ms += dt;
+      if (dt > it.maxMs) it.maxMs = dt;
+      it.canvas.dataset.steps = String(it.steps);
+      it.canvas.dataset.avgMs = (it.ms / it.steps).toFixed(3);
+      it.canvas.dataset.maxMs = it.maxMs.toFixed(3);
+    }
+    if (!any) schedule();
+  }
+
+  /** run the shared timer only while at least one field is live */
+  function schedule() {
+    const live = insts.filter(running);
+    const rate = live.length ? Math.max(...live.map((it) => Number(it.canvas.dataset.rate || 10))) : 0;
+    if (rate === timerRate) return;
+    clearInterval(timer);
+    timerRate = rate;
+    if (rate) timer = window.setInterval(tick, 1000 / rate);
+    document.documentElement.dataset.ditherLive = String(live.length);
+  }
+
+  function teardown() {
+    clearInterval(timer);
+    timerRate = 0;
+    io?.disconnect();
+    ro?.disconnect();
+    insts = [];
+  }
 
   function init() {
-    ro?.disconnect();
+    teardown();
+    io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const it = insts.find((i) => i.canvas === e.target);
+        if (it) it.inView = e.isIntersecting;
+      }
+      schedule();
+    });
     ro = new ResizeObserver((entries) => {
-      entries.forEach((e) => pending.add(e.target as HTMLCanvasElement));
-      clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        pending.forEach(draw);
-        pending.clear();
-      }, 120);
+      for (const e of entries) {
+        const it = insts.find((i) => i.canvas.parentElement === e.target);
+        if (it && layout(it)) render(it);
+      }
     });
-    document.querySelectorAll<HTMLCanvasElement>('canvas[data-dither]').forEach((c) => {
-      draw(c);
-      ro!.observe(c);
+    document.querySelectorAll<HTMLCanvasElement>('canvas[data-dither]').forEach((canvas) => {
+      const sim = createSim(canvas.dataset.mode as Mode, canvas.dataset.seed || '/');
+      decodeState(sim, canvas.dataset.state || '');
+      const it: Inst = {
+        canvas,
+        sim,
+        ctx: canvas.getContext('2d')!,
+        lut: rampColours(RAMP, Number(canvas.dataset.intensity || 1)),
+        inView: false,
+        steps: 0,
+        ms: 0,
+        maxMs: 0,
+      };
+      insts.push(it);
+      layout(it);
+      render(it);
+      io!.observe(canvas);
+      ro!.observe(canvas.parentElement!);
     });
+    schedule();
   }
 
+  document.addEventListener('visibilitychange', schedule);
+  document.addEventListener('split:dissolve', schedule);
+  reduce.addEventListener('change', schedule);
+  document.addEventListener('astro:before-swap', teardown);
   document.addEventListener('astro:page-load', init);
 </script>

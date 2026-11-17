@@ -10,13 +10,19 @@ import { fade } from 'astro:transitions';
 interface Props {
   mirror?: boolean;
   label?: string;
+  /**
+   * Desktop shell (800px and wider). `scroll`: one viewport tall, the document never scrolls,
+   * the text pane scrolls inside itself. `fit`: one viewport tall, nothing scrolls at this
+   * level (children manage their own overflow). Unset: the document scrolls.
+   */
+  lock?: 'scroll' | 'fit';
 }
-const { mirror = false, label } = Astro.props;
+const { mirror = false, label, lock } = Astro.props;
 const side = mirror ? 'left' : 'right';
 const textSide = mirror ? 'right' : 'left';
 ---
 
-<div class="split" data-mirror={mirror ? '' : undefined}>
+<div class="split" data-mirror={mirror ? '' : undefined} data-lock={lock}>
   <aside
     class="split-art"
     aria-label={label}
@@ -34,6 +40,8 @@ const textSide = mirror ? 'right' : 'left';
   <main
     class="split-text"
     id="main"
+    tabindex={lock === 'scroll' ? -1 : undefined}
+    data-pane={lock === 'scroll' ? '' : undefined}
     transition:name={`text-${textSide}`}
     transition:animate={fade({ duration: '260ms' })}
   >
@@ -88,6 +96,40 @@ const textSide = mirror ? 'right' : 'left';
   .split-text > :global(*) {
     width: 100%;
     max-width: 36rem;
+  }
+
+  @media (min-width: 800px) {
+    .split[data-lock] {
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .split[data-lock] .split-text {
+      height: 100dvh;
+      min-height: 0;
+    }
+    .split[data-lock='fit'] .split-text {
+      overflow: hidden;
+    }
+    .split[data-lock='scroll'] .split-text {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in oklab, var(--ink) 16%, var(--bg)) transparent;
+      padding-bottom: var(--space-9);
+      --fade-top: 0px;
+      --fade-bottom: 0px;
+      mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+    }
+    .split[data-lock='scroll'] .split-text[data-more-above] { --fade-top: 3rem; }
+    .split[data-lock='scroll'] .split-text[data-more-below] { --fade-bottom: 3rem; }
+    .split[data-lock='scroll'] .split-text:focus { outline: none; }
+    .split[data-lock='scroll'] .split-text::-webkit-scrollbar { width: 8px; }
+    .split[data-lock='scroll'] .split-text::-webkit-scrollbar-thumb {
+      background: color-mix(in oklab, var(--ink) 16%, var(--bg));
+      border-radius: 8px;
+      border: 2px solid var(--bg);
+    }
   }
 
   @media (max-width: 799.98px) {
@@ -166,7 +208,10 @@ const textSide = mirror ? 'right' : 'left';
       pane.style.setProperty('--dissolve-vis', p >= 1 ? 'hidden' : 'visible');
     }
     const hidden = p >= 1;
-    pane.toggleAttribute('data-dissolved', hidden);
+    if (pane.hasAttribute('data-dissolved') !== hidden) {
+      pane.toggleAttribute('data-dissolved', hidden);
+      document.dispatchEvent(new CustomEvent('split:dissolve', { detail: { dissolved: hidden } }));
+    }
     pane.querySelectorAll<HTMLVideoElement>('video[data-art-video]').forEach((v) => {
       if (hidden) {
         if (!v.paused) v.pause();
@@ -184,6 +229,94 @@ const textSide = mirror ? 'right' : 'left';
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  // ---- Locked shell (desktop, lock="scroll"): the text pane is the only scroller ----
+  const desk = window.matchMedia('(min-width: 800px)');
+  let navType = 'load';
+  const entryKey = () => `pane:${(history.state && history.state.index) ?? 'x'}:${location.pathname}`;
+
+  function paneEl() {
+    return document.querySelector<HTMLElement>('main[data-pane]');
+  }
+  function fades(pane: HTMLElement) {
+    const max = pane.scrollHeight - pane.clientHeight;
+    pane.toggleAttribute('data-more-above', pane.scrollTop > 1);
+    pane.toggleAttribute('data-more-below', max - pane.scrollTop > 1);
+  }
+  let saveQueued = false;
+  function save() {
+    saveQueued = false;
+    const pane = paneEl();
+    if (!pane) return;
+    try {
+      sessionStorage.setItem(entryKey(), String(Math.round(pane.scrollTop)));
+    } catch {}
+  }
+
+  function setupPane() {
+    const pane = paneEl();
+    if (!pane || !desk.matches) return;
+    const fromHistory =
+      navType === 'traverse' ||
+      (navType === 'load' && (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'back_forward');
+    if (fromHistory && !location.hash) {
+      let y = 0;
+      try {
+        y = Number(sessionStorage.getItem(entryKey()) || 0);
+      } catch {}
+      pane.scrollTop = y;
+    } else if (!location.hash) {
+      pane.scrollTop = 0;
+    }
+    // keyboard scrolling works without a click
+    if (!document.activeElement || document.activeElement === document.body) pane.focus({ preventScroll: true });
+    fades(pane);
+    pane.addEventListener(
+      'scroll',
+      () => {
+        fades(pane);
+        if (!saveQueued) {
+          saveQueued = true;
+          requestAnimationFrame(save);
+        }
+      },
+      { passive: true },
+    );
+    // wheel over the art pane scrolls the text pane
+    document.querySelector<HTMLElement>('[data-split-art]')?.addEventListener(
+      'wheel',
+      (e) => {
+        if (!desk.matches) return;
+        pane.scrollBy({ top: e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY, left: 0 });
+      },
+      { passive: true },
+    );
+  }
+
+  // If focus has fallen back to <body> (e.g. after clicking the art), keys still scroll the pane.
+  document.addEventListener('keydown', (e) => {
+    const pane = paneEl();
+    if (!pane || !desk.matches || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    const a = document.activeElement;
+    if (a && a !== document.body && a !== document.documentElement) return;
+    const page = pane.clientHeight * 0.88;
+    const by: Record<string, number> = { ArrowDown: 48, ArrowUp: -48, PageDown: page, PageUp: -page, ' ': e.shiftKey ? -page : page };
+    if (e.key === 'Home' || e.key === 'End') {
+      pane.scrollTo({ top: e.key === 'Home' ? 0 : pane.scrollHeight });
+    } else if (e.key in by) {
+      pane.scrollBy({ top: by[e.key] });
+    } else return;
+    e.preventDefault();
+    pane.focus({ preventScroll: true });
+  });
+
+  // Positions are saved as the pane scrolls. Not here: on back/forward the history entry has
+  // already changed when this fires, so a save would land on the wrong entry.
+  document.addEventListener('astro:before-preparation', (e) => {
+    navType = (e as unknown as { navigationType: string }).navigationType;
+  });
+  window.addEventListener('pagehide', save);
+  document.addEventListener('astro:page-load', setupPane);
   mq.addEventListener('change', update);
   document.addEventListener('astro:page-load', update);
   document.addEventListener('art:ready', update);

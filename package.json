@@ -20,6 +20,7 @@
     "@tailwindcss/vite": "^4.3.5",
     "astro": "^7.4.12",
     "cookie": "^2.0.2",
+    "lucide-static": "^1.73.0",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.3.5",
     "yaml": "^2.9.1"

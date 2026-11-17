@@ -1,0 +1,193 @@
+---
+/**
+ * Vertical stepped timeline: icon node on a rail, title (optional link and subtitle), year at
+ * the far right. The first step can be marked current. When it sits in a box shorter than its
+ * content, the list scrolls inside itself with a soft fade at the clipped edge.
+ */
+import { icon } from '../lib/icons';
+
+interface Item {
+  title: string;
+  subtitle?: string;
+  year: string | number;
+  icon?: string;
+  href?: string;
+}
+interface Props {
+  label: string;
+  items: Item[];
+  /** mark the first (newest) step as current */
+  current?: boolean;
+  /** heading id; defaults to one made from the label */
+  id?: string;
+  class?: string;
+}
+const { label, items, current = true, class: className } = Astro.props;
+const { id: idProp } = Astro.props as { id?: string };
+const id = idProp ?? `tl-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+const external = (href: string) => /^https?:/.test(href);
+---
+
+<section class:list={['tl', className]} aria-labelledby={id}>
+  <h2 class="tl-label" id={id}>{label}</h2>
+  <div class="tl-scroll" data-tl-scroll tabindex="0" aria-labelledby={id}>
+    <ol class="tl-list">
+      {
+        items.map((it, i) => (
+          <li class="tl-step" data-current={current && i === 0 ? '' : undefined}>
+            <span class="tl-node" set:html={icon(it.icon)} />
+            <div class="tl-body">
+              {it.href ? (
+                <a class="tl-title" href={it.href} {...(external(it.href) ? { rel: 'noopener' } : {})}>
+                  {it.title}
+                </a>
+              ) : (
+                <span class="tl-title">{it.title}</span>
+              )}
+              {it.subtitle && <span class="tl-sub">{it.subtitle}</span>}
+            </div>
+            <span class="tl-year">{it.year}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .tl {
+    --node: 1.75rem;
+    --step-pad: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .tl-label {
+    flex: none;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ink-3);
+    margin-bottom: var(--space-3);
+  }
+  .tl-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    --fade-top: 0px;
+    --fade-bottom: 0px;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+    border-radius: 6px;
+  }
+  .tl-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .tl-scroll[data-more-above] {
+    --fade-top: 2.5rem;
+  }
+  .tl-scroll[data-more-below] {
+    --fade-bottom: 2.5rem;
+  }
+  .tl-scroll:focus-visible {
+    outline-offset: 2px;
+  }
+  .tl-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tl-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--node) minmax(0, 1fr) auto;
+    column-gap: var(--space-4);
+    align-items: start;
+    padding: var(--step-pad) 0;
+  }
+  /* rail: from the bottom of this node to the top of the next */
+  .tl-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--node) / 2 - 0.5px);
+    top: calc(var(--step-pad) + var(--node));
+    bottom: calc(-1 * var(--step-pad));
+    width: 1px;
+    background: var(--line);
+  }
+  .tl-node {
+    width: var(--node);
+    height: var(--node);
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    color: var(--ink-3);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .tl-node :global(svg) {
+    display: block;
+  }
+  .tl-step[data-current] .tl-node {
+    color: var(--emerald);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--emerald) 45%, var(--bg));
+  }
+  .tl-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-top: calc((var(--node) - 1.6em) / 2);
+  }
+  .tl-title {
+    color: var(--ink);
+    line-height: 1.6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--dur-1) var(--ease);
+  }
+  a.tl-title:hover {
+    color: var(--emerald);
+  }
+  a.tl-title:focus-visible {
+    outline-offset: 2px;
+  }
+  .tl-sub {
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+  .tl-year {
+    line-height: 1.6;
+    color: var(--ink-3);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    /* sm text in a base-size line box: nudge to share the title baseline */
+    padding-top: calc((var(--node) - 1.6rem * 1.0625) / 2 + 0.06rem);
+  }
+</style>
+
+<script>
+  // Fade only the edge that actually clips content.
+  function update(el: HTMLElement) {
+    const max = el.scrollHeight - el.clientHeight;
+    el.toggleAttribute('data-more-above', el.scrollTop > 1);
+    el.toggleAttribute('data-more-below', max - el.scrollTop > 1);
+    el.dataset.overflow = max > 1 ? 'true' : 'false';
+    // only a box that actually scrolls is a tab stop
+    el.tabIndex = max > 1 ? 0 : -1;
+  }
+  let ro: ResizeObserver | undefined;
+  function init() {
+    ro?.disconnect();
+    ro = new ResizeObserver((es) => es.forEach((e) => update((e.target as HTMLElement).closest<HTMLElement>('[data-tl-scroll]')!)));
+    document.querySelectorAll<HTMLElement>('[data-tl-scroll]').forEach((el) => {
+      update(el);
+      el.addEventListener('scroll', () => update(el), { passive: true });
+      ro!.observe(el);
+      ro!.observe(el.firstElementChild!);
+    });
+  }
+  document.addEventListener('astro:page-load', init);
+</script>

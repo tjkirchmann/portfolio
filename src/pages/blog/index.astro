@@ -13,10 +13,10 @@ const posts = await getPosts();
 ---
 
 <Base title={`Blog · ${site.name}`}>
-  <Split mirror label="Animation">
+  <Split mirror lock="scroll" label="Animation">
     <BackLink slot="art-top" href="/" label="Home" />
     <Fragment slot="art">
-      <Dither />
+      <Dither intensity={0.85} />
       <Art slug={site.art} />
     </Fragment>
 

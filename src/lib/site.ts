@@ -2,23 +2,49 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { z } from 'astro/zod';
+import { iconExists } from './icons';
 
 const link = z.object({ label: z.string(), href: z.string() });
 
-const schema = z.object({
-  name: z.string(),
-  role: z.string(),
-  art: z.string().default('_placeholder'),
-  entries: z.array(z.object({ label: z.string(), detail: z.string().optional(), href: z.string().optional() })),
-  links: z.array(link),
-});
+const step = z
+  .object({
+    title: z.string().min(1),
+    subtitle: z.string().optional(),
+    year: z
+      .union([z.string(), z.number()], { error: 'a year or range is required, e.g. 2024 or "2021 – 2024"' })
+      .transform(String),
+    icon: z
+      .string()
+      .optional()
+      .superRefine((v, ctx) => {
+        if (v !== undefined && !iconExists(v))
+          ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (use a lucide icon name, see https://lucide.dev/icons)` });
+      }),
+    href: z.string().optional(),
+  })
+  .strict();
+
+const schema = z
+  .object({
+    name: z.string(),
+    role: z.string(),
+    art: z.string().default('_placeholder'),
+    projects: z.array(step),
+    companies: z.array(step),
+    links: z.array(link),
+  })
+  .strict();
 
 export type Site = z.infer<typeof schema>;
+export type Step = z.infer<typeof step>;
 
 const file = join(process.cwd(), 'src', 'content', 'site.yaml');
 
 export function loadSite(): Site {
   const result = schema.safeParse(parse(readFileSync(file, 'utf8')));
-  if (!result.success) throw new Error(`src/content/site.yaml is invalid:\n${result.error.message}`);
+  if (!result.success) {
+    const lines = result.error.issues.map((i) => `  ${i.path.join('.') || '(root)'}: ${i.message}`);
+    throw new Error(`src/content/site.yaml is invalid:\n${lines.join('\n')}`);
+  }
   return result.data;
 }

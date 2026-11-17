@@ -4,6 +4,7 @@ import Split from '../components/Split.astro';
 import Art from '../components/Art.astro';
 import Dither from '../components/Dither.astro';
 import EntryList from '../components/EntryList.astro';
+import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
 import BackLink from '../components/BackLink.astro';
 import PostList from '../components/PostList.astro';
@@ -15,6 +16,16 @@ import { loadSite } from '../lib/site';
 const site = loadSite();
 const posts = await getPosts();
 const palette = ['bg', 'ink', 'emerald', 'teal', 'deep', 'leaf', 'gold', 'copper', 'bronze'];
+const entries = [
+  { label: 'Row one', detail: '2026', href: '/blog/' },
+  { label: 'Row two', detail: '2025' },
+];
+const many = Array.from({ length: 12 }, (_, i) => ({
+  title: `Project ${['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'][i]}`,
+  year: 2026 - i,
+  icon: ['box', 'layers', 'shapes', 'cpu', 'pen-tool', 'globe'][i % 6],
+}));
+const modes = ['life', 'smooth', 'flow'] as const;
 ---
 
 <Base title="Blocks" noindex>
@@ -45,51 +56,43 @@ const palette = ['bg', 'ink', 'emerald', 'teal', 'deep', 'leaf', 'gold', 'copper
 
     <section aria-labelledby="b-dither">
       <h2 id="b-dither">Dither</h2>
-      <div class="tiles">
-        <div class="tile"><Dither /></div>
-        <div class="tile">
-          <Dither
-            stops={[
-              { color: '#0a0c0b', at: 0 },
-              { color: '#85692c', at: 0.7 },
-              { color: '#bbc368', at: 1 },
-            ]}
-            direction="to right"
-            cell={4}
-          />
-        </div>
-        <div class="tile">
-          <Dither
-            stops={[
-              { color: '#326e54', at: 0 },
-              { color: '#0a0c0b', at: 0.55 },
-              { color: '#9f814e', at: 1 },
-            ]}
-            direction={135}
-            cell={2}
-          />
-        </div>
+      <div class="modes">
+        {
+          modes.map((m) => (
+            <figure class="mode" data-test={`dither-${m}`}>
+              <div class="stage tall">
+                <Dither mode={m} seed={`blocks-${m}`} />
+              </div>
+              <figcaption>{m}</figcaption>
+            </figure>
+          ))
+        }
       </div>
     </section>
 
     <section aria-labelledby="b-art">
       <h2 id="b-art">Art over Dither</h2>
       <div class="stage" data-test="art-over-dither">
-        <Dither
-          stops={[
-            { color: '#0a0c0b', at: 0 },
-            { color: '#326e54', at: 0.6 },
-            { color: '#76c8a5', at: 1 },
-          ]}
-          direction="to top"
-        />
+        <Dither seed="blocks-art" intensity={0.85} />
         <Art slug="does-not-exist" />
+      </div>
+    </section>
+
+    <section aria-labelledby="b-timeline">
+      <h2 id="b-timeline">Timeline</h2>
+      <div class="tl-demos">
+        <div class="tl-box" data-test="timeline-companies">
+          <Timeline label="Companies" id="tl-demo-companies" items={site.companies} />
+        </div>
+        <div class="tl-box tl-box-overflow" data-test="timeline-overflow">
+          <Timeline label="Projects" id="tl-demo-overflow" items={many} />
+        </div>
       </div>
     </section>
 
     <section aria-labelledby="b-entries">
       <h2 id="b-entries">EntryList</h2>
-      <EntryList entries={site.entries} />
+      <EntryList entries={entries} />
     </section>
 
     <section aria-labelledby="b-posts">
@@ -148,21 +151,39 @@ const palette = ['bg', 'ink', 'emerald', 'teal', 'deep', 'leaf', 'gold', 'copper
     border-radius: 6px;
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 14%, transparent);
   }
-  .tiles {
+  .modes {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-3);
+    gap: var(--space-6);
   }
-  .tile,
+  .mode {
+    margin: 0;
+  }
+  .mode figcaption {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--ink-2);
+  }
+  .stage.tall {
+    height: 26rem;
+  }
+  .tl-demos {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .tl-box-overflow {
+    height: 16rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .tl-box-overflow > :global(.tl) {
+    flex: 1 1 auto;
+  }
   .stage,
   .backdemo {
     position: relative;
     border-radius: 10px;
     overflow: hidden;
     background: #0c0f0e;
-  }
-  .tile {
-    aspect-ratio: 1;
   }
   .stage {
     height: 22rem;

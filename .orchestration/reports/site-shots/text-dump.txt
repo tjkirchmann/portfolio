@@ -3,12 +3,23 @@ Your Name
 
 Your role
 
+Projects
 Project one
 2026
 Project two
 2025
 Project three
 2024
+Companies
+Company one
+Role
+2024 – now
+Company two
+Role
+2021 – 2024
+Company three
+Role
+2018 – 2021
 Blog
 GitHub
 Email
@@ -35,14 +46,51 @@ gold
 copper
 bronze
 Dither
+life
+smooth
+flow
 Art over Dither
-EntryList
+Timeline
+Companies
+Company one
+Role
+2024 – now
+Company two
+Role
+2021 – 2024
+Company three
+Role
+2018 – 2021
+Projects
 Project one
 2026
 Project two
 2025
 Project three
 2024
+Project four
+2023
+Project five
+2022
+Project six
+2021
+Project seven
+2020
+Project eight
+2019
+Project nine
+2018
+Project ten
+2017
+Project eleven
+2016
+Project twelve
+2015
+EntryList
+Row one
+2026
+Row two
+2025
 PostList
 First post
 10 Nov 2026

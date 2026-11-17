@@ -48,6 +48,21 @@ export async function contentTests(log) {
     check('AC-13', 'draft post has no page in production', !existsSync(join(tmp, 'draft/blog/zz-draft-fixture/index.html')));
     check('AC-13', 'draft post not listed on /blog/', !listed);
 
+    // AC-24: a bad site.yaml entry fails the build with a clear message
+    const siteFile = join(root, 'src/content/site.yaml');
+    const original = readFileSync(siteFile, 'utf8');
+    try {
+      writeFileSync(siteFile, original.replace('icon: layers', 'icon: not-an-icon').replace(/(- title: Company two\n\s+subtitle: Role\n)\s+year: .*\n/, '$1'));
+      r = build(join(tmp, 'site'));
+    } finally {
+      writeFileSync(siteFile, original);
+    }
+    const msg = r.out.split('\n').filter((l) => /site\.yaml|projects|companies|icon/.test(l)).slice(0, 4);
+    log.push('$ astro build   # site.yaml with an unknown icon and a company without a year', `exit ${r.code}`, ...msg);
+    check('AC-24', 'bad site.yaml entry fails the build', r.code !== 0, `exit ${r.code}`);
+    check('AC-24', 'message names the file, the entry and the problem', /site\.yaml is invalid/.test(r.out) && /projects\.1\.icon: unknown icon "not-an-icon"/.test(r.out) && /companies\.1\.year/.test(r.out));
+    check('AC-24', 'site.yaml restored', readFileSync(siteFile, 'utf8') === original);
+
     // AC-14: new-post scaffolds, then refuses to overwrite
     const title = 'Zz Scaffold Fixture';
     const dir = join(blog, 'zz-scaffold-fixture');

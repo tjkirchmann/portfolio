@@ -20,10 +20,10 @@ const site = loadSite();
 ---
 
 <Base title={`${post.data.title} · ${site.name}`} description={post.data.summary}>
-  <Split mirror label="Animation">
+  <Split mirror lock="scroll" label="Animation">
     <BackLink slot="art-top" href="/blog/" label="Blog" />
     <Fragment slot="art">
-      <Dither />
+      <Dither intensity={0.85} />
       <Art slug={post.data.art} />
     </Fragment>
 

@@ -1,16 +1,34 @@
 # Home page content. Edit freely; the build validates the shape.
+# Icons are lucide names: https://lucide.dev/icons (default: circle-dot)
 name: Your Name
 role: Your role
 art: _placeholder
 
-entries:
-  - label: Project one
-    detail: "2026"
+projects:
+  - title: Project one
+    year: 2026
+    icon: box
     href: /blog/first-post/
-  - label: Project two
-    detail: "2025"
-  - label: Project three
-    detail: "2024"
+  - title: Project two
+    year: 2025
+    icon: layers
+  - title: Project three
+    year: 2024
+    icon: shapes
+
+companies:
+  - title: Company one
+    subtitle: Role
+    year: 2024 – now
+    icon: building-2
+  - title: Company two
+    subtitle: Role
+    year: 2021 – 2024
+    icon: briefcase
+  - title: Company three
+    subtitle: Role
+    year: 2018 – 2021
+    icon: landmark
 
 links:
   - label: Blog

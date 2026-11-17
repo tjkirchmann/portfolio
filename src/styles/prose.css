@@ -20,6 +20,8 @@
   font-size: var(--text-base);
   line-height: 1.7;
   max-width: 36rem;
+  /* contains the visually hidden footnotes heading, which is absolutely positioned */
+  position: relative;
 }
 
 .prose-chafer :where(strong) {

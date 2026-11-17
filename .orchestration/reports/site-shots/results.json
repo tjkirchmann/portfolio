@@ -36,6 +36,24 @@
     "detail": ""
   },
   {
+    "id": "AC-24",
+    "name": "bad site.yaml entry fails the build",
+    "ok": true,
+    "detail": "exit 1"
+  },
+  {
+    "id": "AC-24",
+    "name": "message names the file, the entry and the problem",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-24",
+    "name": "site.yaml restored",
+    "ok": true,
+    "detail": ""
+  },
+  {
     "id": "AC-14",
     "name": "new-post creates <slug>/index.md",
     "ok": true,
@@ -115,9 +133,9 @@
   },
   {
     "id": "AC-2",
-    "name": "home: entry rows from site.yaml",
+    "name": "home: project and company timelines from site.yaml (amended by AC-24)",
     "ok": true,
-    "detail": ""
+    "detail": "[\"Project one 2026\",\"Company one Role 2024 – now\"]"
   },
   {
     "id": "AC-2",
@@ -129,25 +147,7 @@
     "id": "POLISH",
     "name": "keyboard focus is visible (Tab on home)",
     "ok": true,
-    "detail": "Project one2026: solid 2px rgb(118, 200, 165)"
-  },
-  {
-    "id": "AC-8",
-    "name": "dither canvas sized at device pixel ratio",
-    "ok": true,
-    "detail": "1466x1744 for 732.765625x872 @2x"
-  },
-  {
-    "id": "AC-8",
-    "name": "dither has several palette colours",
-    "ok": true,
-    "detail": "6 colours sampled"
-  },
-  {
-    "id": "AC-8",
-    "name": "no animation loop while idle (0 rAF calls in 1.2s)",
-    "ok": true,
-    "detail": "0 calls"
+    "detail": "Project one: solid 2px rgb(118, 200, 165)"
   },
   {
     "id": "AC-6",
@@ -159,7 +159,7 @@
     "id": "AC-6",
     "name": "dither shows through the black matte inside the art box",
     "ok": true,
-    "detail": "mean green 167 in the art box top band"
+    "detail": "358/358 coloured dither cells inside the art box keep at least their colour"
   },
   {
     "id": "AC-5",
@@ -205,7 +205,7 @@
   },
   {
     "id": "AC-3",
-    "name": "post: art pane fixed while text scrolls",
+    "name": "post: art pane fixed while text pane scrolls (AC-27 shell)",
     "ok": true,
     "detail": "art top 0->0, title 53->-347"
   },
@@ -249,13 +249,13 @@
     "id": "AC-10",
     "name": "ref jumps to the footnote",
     "ok": true,
-    "detail": "{\"hash\":\"#user-content-fn-1\",\"tag\":\"LI\",\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.159185)\",\"inView\":true}"
+    "detail": "{\"hash\":\"#user-content-fn-1\",\"tag\":\"LI\",\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"inView\":true}"
   },
   {
     "id": "AC-10",
     "name": "footnote target is highlighted",
     "ok": true,
-    "detail": "oklab(0.79124 -0.0454688 0.106368 / 0.159185)"
+    "detail": "oklab(0.79124 -0.0454688 0.106368 / 0.16)"
   },
   {
     "id": "AC-10",
@@ -297,13 +297,14 @@
     "id": "AC-5",
     "name": "throttled load crossfades (not instant)",
     "ok": true,
-    "detail": "2019ms"
+    "detail": "2064ms"
   },
   {
     "id": "AC-5",
-    "name": "cached video: swap with no blur-in (instant)",
+    "name": "cached video: swap with no blur-in",
     "ok": true,
-    "detail": "29.2ms to playable"
+    "skipped": true,
+    "detail": "video took 124ms to become playable on revisit; the instant path was not exercised"
   },
   {
     "id": "AC-7",
@@ -333,13 +334,13 @@
     "id": "AC-15",
     "name": "no white flash in captured frames",
     "ok": true,
-    "detail": "23, 13, 19"
+    "detail": "31, 21, 21"
   },
   {
     "id": "AC-15",
     "name": "no blank black frame (content visible in each)",
     "ok": true,
-    "detail": "29.7, 8.4, 25.0"
+    "detail": "45.1, 33.0, 33.3"
   },
   {
     "id": "AC-4",
@@ -418,6 +419,462 @@
     "name": "script fallback (simulated): 1 -> mid -> 0 (paused) -> 1 (playing)",
     "ok": true,
     "detail": "1 / 0.5 / 0 / 1"
+  },
+  {
+    "id": "AC-19",
+    "name": "life: square cells on whole device pixels, pixelated",
+    "ok": true,
+    "detail": "12.00 device px, pixelated"
+  },
+  {
+    "id": "AC-19",
+    "name": "life: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)",
+    "ok": true,
+    "detail": "0.40 / 0.42"
+  },
+  {
+    "id": "AC-22",
+    "name": "life: 8-15 steps per second",
+    "ok": true,
+    "detail": "10.85/s over 15.0s"
+  },
+  {
+    "id": "AC-22",
+    "name": "life: main-thread cost under 2ms per step",
+    "ok": true,
+    "detail": "avg 0.228ms, max 1.8ms (step + draw + putImageData)"
+  },
+  {
+    "id": "AC-22",
+    "name": "life: the field evolves (frame changes 0s -> 5s -> 20s)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-21",
+    "name": "life: at least 35% empty at 0s, 5s, 20s",
+    "ok": true,
+    "detail": "0.67 / 0.81 / 0.66"
+  },
+  {
+    "id": "AC-21",
+    "name": "life: greens and gold/copper both present",
+    "ok": true,
+    "detail": "leaf, gold, emerald, teal, copper, deep"
+  },
+  {
+    "id": "AC-19",
+    "name": "smooth: square cells on whole device pixels, pixelated",
+    "ok": true,
+    "detail": "12.00 device px, pixelated"
+  },
+  {
+    "id": "AC-19",
+    "name": "smooth: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)",
+    "ok": true,
+    "detail": "0.24 / 0.22"
+  },
+  {
+    "id": "AC-22",
+    "name": "smooth: 8-15 steps per second",
+    "ok": true,
+    "detail": "10.65/s over 15.0s"
+  },
+  {
+    "id": "AC-22",
+    "name": "smooth: main-thread cost under 2ms per step",
+    "ok": true,
+    "detail": "avg 0.442ms, max 4.7ms (step + draw + putImageData)"
+  },
+  {
+    "id": "AC-22",
+    "name": "smooth: the field evolves (frame changes 0s -> 5s -> 20s)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-21",
+    "name": "smooth: at least 35% empty at 0s, 5s, 20s",
+    "ok": true,
+    "detail": "0.69 / 0.74 / 0.73"
+  },
+  {
+    "id": "AC-21",
+    "name": "smooth: greens and gold/copper both present",
+    "ok": true,
+    "detail": "emerald, leaf, teal, gold, deep, copper"
+  },
+  {
+    "id": "AC-19",
+    "name": "flow: square cells on whole device pixels, pixelated",
+    "ok": true,
+    "detail": "12.00 device px, pixelated"
+  },
+  {
+    "id": "AC-19",
+    "name": "flow: large masses and empty space, not noise (8x8 block fill spread > 0.2; noise ~0.06)",
+    "ok": true,
+    "detail": "0.28 / 0.27"
+  },
+  {
+    "id": "AC-22",
+    "name": "flow: 8-15 steps per second",
+    "ok": true,
+    "detail": "10.72/s over 15.0s"
+  },
+  {
+    "id": "AC-22",
+    "name": "flow: main-thread cost under 2ms per step",
+    "ok": true,
+    "detail": "avg 0.363ms, max 4.7ms (step + draw + putImageData)"
+  },
+  {
+    "id": "AC-22",
+    "name": "flow: the field evolves (frame changes 0s -> 5s -> 20s)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-21",
+    "name": "flow: at least 35% empty at 0s, 5s, 20s",
+    "ok": true,
+    "detail": "0.61 / 0.62 / 0.62"
+  },
+  {
+    "id": "AC-21",
+    "name": "flow: greens and gold/copper both present",
+    "ok": true,
+    "detail": "leaf, gold, emerald, teal, deep, copper"
+  },
+  {
+    "id": "AC-22",
+    "name": "seeded per page: 4 pages, 4 different patterns",
+    "ok": true,
+    "detail": "{\"/\":2072841524,\"/blog/\":2847851512,\"/blog/first-post/\":2133365814,\"/blog/second-post/\":1015766137}"
+  },
+  {
+    "id": "AC-22",
+    "name": "seeded: same page reloads to the same pattern",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-22",
+    "name": "life: first frame is pre-evolved (0 steps taken, masses already there)",
+    "ok": true,
+    "detail": "steps 0, empty 0.67, spread 0.40"
+  },
+  {
+    "id": "AC-22",
+    "name": "smooth: first frame is pre-evolved (0 steps taken, masses already there)",
+    "ok": true,
+    "detail": "steps 0, empty 0.70, spread 0.25"
+  },
+  {
+    "id": "AC-22",
+    "name": "flow: first frame is pre-evolved (0 steps taken, masses already there)",
+    "ok": true,
+    "detail": "steps 0, empty 0.61, spread 0.28"
+  },
+  {
+    "id": "AC-22",
+    "name": "reduced motion: settled frame shown, 0 steps in 2s",
+    "ok": true,
+    "detail": "steps 0, empty 0.66"
+  },
+  {
+    "id": "AC-22",
+    "name": "steps while visible",
+    "ok": true,
+    "detail": "10 steps in 1s"
+  },
+  {
+    "id": "AC-22",
+    "name": "pauses when off-screen",
+    "ok": true,
+    "detail": "0 steps in 1.5s off-screen"
+  },
+  {
+    "id": "AC-22",
+    "name": "pauses when the tab is hidden, resumes after",
+    "ok": true,
+    "detail": "visible +10 in 1s, hidden +0 in 1.5s, back +10 in 1s"
+  },
+  {
+    "id": "AC-22",
+    "name": "mobile: pauses while the art is dissolved, resumes at the top",
+    "ok": true,
+    "detail": "dissolved +0 in 1.5s, back at top +12"
+  },
+  {
+    "id": "AC-24",
+    "name": "two timelines labelled Projects and Companies",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-23",
+    "name": "every step: inline SVG icon node, title, year at the far right",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-23",
+    "name": "rail line connects the nodes",
+    "ok": true,
+    "detail": "16px,16px,last | 37.3281px,37.3281px,last"
+  },
+  {
+    "id": "AC-23",
+    "name": "newest step marked current, only that one",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-23",
+    "name": "icons are inline SVG at build (no icon font)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-24",
+    "name": "projects match site.yaml (title, year, link)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-24",
+    "name": "companies match site.yaml (name, role subtitle, year range right)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x900: halves equal within 1px (3 entries)",
+    "ok": true,
+    "detail": "316.7 / 316.7 of 633.5"
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x900: halves equal within 1px (12 entries)",
+    "ok": true,
+    "detail": "316.7 / 316.7"
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x900: overflow scrolls inside its half with a fade, no scrollbar chrome",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x900: few entries align to the top",
+    "ok": true,
+    "detail": "0, 0"
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x900: the page itself does not scroll",
+    "ok": true,
+    "detail": "scrollHeight 900 vs 900"
+  },
+  {
+    "id": "AC-25",
+    "name": "1280x720: halves equal within 1px (3 entries)",
+    "ok": true,
+    "detail": "231.5 / 231.5 of 463.1"
+  },
+  {
+    "id": "AC-25",
+    "name": "1280x720: halves equal within 1px (12 entries)",
+    "ok": true,
+    "detail": "231.5 / 231.5"
+  },
+  {
+    "id": "AC-25",
+    "name": "1280x720: overflow scrolls inside its half with a fade, no scrollbar chrome",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-25",
+    "name": "1280x720: few entries align to the top",
+    "ok": true,
+    "detail": "0, 0"
+  },
+  {
+    "id": "AC-25",
+    "name": "1280x720: the page itself does not scroll",
+    "ok": true,
+    "detail": "scrollHeight 720 vs 720"
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x1100: halves equal within 1px (3 entries)",
+    "ok": true,
+    "detail": "416.7 / 416.7 of 833.5"
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x1100: halves equal within 1px (12 entries)",
+    "ok": true,
+    "detail": "416.7 / 416.7"
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x1100: overflow scrolls inside its half with a fade, no scrollbar chrome",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-25",
+    "name": "1440x1100: few entries align to the top",
+    "ok": true,
+    "detail": "0, 0"
+  },
+  {
+    "id": "AC-25",
+    "name": "below 800px: timelines stack at natural height and the page scrolls",
+    "ok": true,
+    "detail": "{\"stacked\":true,\"natural\":true,\"pageScrolls\":true}"
+  },
+  {
+    "id": "AC-26",
+    "name": "/blocks: Timeline with subtitles, without, and the overflow case",
+    "ok": true,
+    "detail": "{\"subs\":3,\"plain\":true,\"overflow\":true,\"steps\":12}"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900 /blog/: document does not scroll (scrollHeight === innerHeight)",
+    "ok": true,
+    "detail": "900 vs 900"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900 /blog/first-post/: document does not scroll (scrollHeight === innerHeight)",
+    "ok": true,
+    "detail": "900 vs 900"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: keyboard scrolls the pane without a click (ArrowDown, PageDown, End, Home, Space)",
+    "ok": true,
+    "detail": "40, 802, 802/802, 0, 802"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: thin scrollbar, no overscroll chaining, padding above the title",
+    "ok": true,
+    "detail": "thin, contain, 52.8px"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: fade only where clipped (top: bottom fade only)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: wheel scrolls the pane, art and back arrow stay put",
+    "ok": true,
+    "detail": "pane 200, window 0"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: wheel over the art pane also scrolls the text pane",
+    "ok": true,
+    "detail": "200 -> 260"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: at the end, more wheel does not move the page",
+    "ok": true,
+    "detail": "pane 802/802, window 0"
+  },
+  {
+    "id": "AC-27",
+    "name": "1440x900: footnote ref -> note -> back, inside the pane, highlighted",
+    "ok": true,
+    "detail": "{\"fn\":{\"hash\":\"#user-content-fn-1\",\"inView\":true,\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"pane\":802,\"win\":0},\"fb\":{\"hash\":\"#user-content-fnref-1\",\"inView\":true,\"pane\":0,\"win\":0}}"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720 /blog/: document does not scroll (scrollHeight === innerHeight)",
+    "ok": true,
+    "detail": "720 vs 720"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720 /blog/first-post/: document does not scroll (scrollHeight === innerHeight)",
+    "ok": true,
+    "detail": "720 vs 720"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: keyboard scrolls the pane without a click (ArrowDown, PageDown, End, Home, Space)",
+    "ok": true,
+    "detail": "40, 720, 977/977, 0, 680"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: thin scrollbar, no overscroll chaining, padding above the title",
+    "ok": true,
+    "detail": "thin, contain, 48px"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: fade only where clipped (top: bottom fade only)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: wheel scrolls the pane, art and back arrow stay put",
+    "ok": true,
+    "detail": "pane 200, window 0"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: wheel over the art pane also scrolls the text pane",
+    "ok": true,
+    "detail": "200 -> 260"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: at the end, more wheel does not move the page",
+    "ok": true,
+    "detail": "pane 977/977, window 0"
+  },
+  {
+    "id": "AC-27",
+    "name": "1280x720: footnote ref -> note -> back, inside the pane, highlighted",
+    "ok": true,
+    "detail": "{\"fn\":{\"hash\":\"#user-content-fn-1\",\"inView\":true,\"bg\":\"oklab(0.79124 -0.0454688 0.106368 / 0.16)\",\"pane\":977,\"win\":0},\"fb\":{\"hash\":\"#user-content-fnref-1\",\"inView\":true,\"pane\":0,\"win\":0}}"
+  },
+  {
+    "id": "AC-27",
+    "name": "heading anchor (#a-heading) scrolls the pane to bring the heading into view",
+    "ok": true,
+    "detail": "{\"top\":32.375,\"pane\":750,\"win\":0}"
+  },
+  {
+    "id": "AC-27",
+    "name": "a newly opened post starts at the top",
+    "ok": true,
+    "detail": "scrollTop 0"
+  },
+  {
+    "id": "AC-27",
+    "name": "back/forward restores the pane position",
+    "ok": true,
+    "detail": "after back 600, after forward+back 600"
+  },
+  {
+    "id": "AC-27",
+    "name": "below 800px: unchanged, the document scrolls",
+    "ok": true,
+    "detail": "{\"docScrolls\":true,\"paneOverflow\":\"visible\"}"
   },
   {
     "id": "AC-4",

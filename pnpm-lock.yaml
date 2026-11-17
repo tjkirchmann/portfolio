@@ -29,6 +29,9 @@ importers:
       cookie:
         specifier: ^2.0.2
         version: 2.0.2
+      lucide-static:
+        specifier: ^1.73.0
+        version: 1.73.0
       sharp:
         specifier: ^0.35.5
         version: 0.35.5(@types/node@26.6.6)
@@ -1425,6 +1428,9 @@ packages:
   lru-cache@11.5.3:
     resolution: {integrity: sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg==}
     engines: {node: 20 || >=22}
+
+  lucide-static@1.73.0:
+    resolution: {integrity: sha512-/FfzdRThAPnDVMk643pzENqYUnxudEON/fyOdh31ZiPiw/seE9VoYeIJPRDTCLDNtnF+5pK6CNwf6IkQMfrJ5w==}
 
   magic-string@1.4.5:
     resolution: {integrity: sha512-oLLC2+YvQUfAa+vxoufE/yc1icb87M9iXIRqAoR/2EhE/8cb3SF/+Gi0c2By1B+5Vz2e2vQtUvHiu1+63Znh+w==}
@@ -3223,6 +3229,8 @@ snapshots:
       lightningcss-win32-x64-msvc: 1.33.0
 
   lru-cache@11.5.3: {}
+
+  lucide-static@1.73.0: {}
 
   magic-string@1.4.5:
     dependencies:

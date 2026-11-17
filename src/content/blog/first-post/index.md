@@ -24,5 +24,15 @@ function add(a, b) {
 }
 ```
 
+## Another heading
+
+This paragraph and the next are here so the post is long enough to scroll. Replace them with your own text.
+
+A longer post scrolls inside the text column while the art stays in place. Links, footnotes and headings all jump within the column.
+
+> A short quote to break up the text.
+
+The last paragraph of the post.
+
 [^1]: A footnote. The arrow jumps back to where it was cited.
 [^2]: A second footnote.

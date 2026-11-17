@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Split from '../components/Split.astro';
 import Art from '../components/Art.astro';
 import Dither from '../components/Dither.astro';
-import EntryList from '../components/EntryList.astro';
+import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
 import { loadSite } from '../lib/site';
 
@@ -11,28 +11,23 @@ const site = loadSite();
 ---
 
 <Base title={site.name} description={`${site.name}, ${site.role}`}>
-  <Split label="Animation">
-    <Fragment slot="art">
-      <Dither
-        stops={[
-          { color: '#0a0c0b', at: 0 },
-          { color: '#0c1311', at: 0.3 },
-          { color: '#11231b', at: 0.58 },
-          { color: '#1a3b2c', at: 0.8 },
-          { color: '#285a45', at: 0.94 },
-          { color: '#326e54', at: 1 },
-        ]}
-        direction="to bottom"
-      />
-      <Art slug={site.art} />
-    </Fragment>
+  <Split lock="fit" label="Animation">
+    <Dither slot="art" intensity={0.85} />
+    <Art slot="art" slug={site.art} />
 
-    <header class="page-head">
+    <header class="page-head home-head">
       <h1 class="page-title">{site.name}</h1>
       <p class="page-sub">{site.role}</p>
     </header>
 
-    <EntryList entries={site.entries} label="Work" />
+    <div class="home-timelines" data-home-timelines>
+      <div class="home-half" data-half="projects">
+        <Timeline label="Projects" items={site.projects} />
+      </div>
+      <div class="home-half" data-half="companies">
+        <Timeline label="Companies" items={site.companies} />
+      </div>
+    </div>
 
     <footer class="home-foot">
       <LinkRow links={site.links} />
@@ -41,8 +36,43 @@ const site = loadSite();
 </Base>
 
 <style>
+  .home-head {
+    flex: none;
+    margin-bottom: var(--space-6);
+  }
+  .home-timelines {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .home-half {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: var(--space-5);
+  }
+  .home-half > :global(.tl) {
+    flex: 1 1 auto;
+  }
   .home-foot {
-    margin-top: auto;
-    padding-top: var(--space-8);
+    flex: none;
+    padding-top: var(--space-4);
+  }
+  @media (max-width: 799.98px) {
+    .home-timelines {
+      display: block;
+      flex: none;
+    }
+    .home-half {
+      padding-bottom: var(--space-6);
+    }
+    .home-half :global(.tl-scroll) {
+      overflow: visible;
+      mask-image: none;
+    }
+    .home-foot {
+      padding-top: var(--space-4);
+    }
   }
 </style>

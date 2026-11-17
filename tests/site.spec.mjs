@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { parse } from 'yaml';
 import { serve } from './serve.mjs';
 import { check, skip, sleep } from './lib.mjs';
+import { ditherTests } from './dither.spec.mjs';
+import { shellTests } from './shell.spec.mjs';
 
 const root = process.cwd();
 const dist = join(root, 'dist');
@@ -130,14 +132,18 @@ export async function siteTests(log, text) {
         textLeft: main.x < art.x,
         h1: document.querySelector('main h1')?.textContent.trim(),
         role: document.querySelector('main .page-sub')?.textContent.trim(),
-        rows: [...document.querySelectorAll('main .rows li')].map((l) => l.textContent.replace(/\s+/g, ' ').trim()),
+        projects: [...document.querySelectorAll('main [data-half="projects"] .tl-step')].map((l) => [...l.querySelectorAll('.tl-title, .tl-sub, .tl-year')].map((e) => e.textContent.trim()).join(' ')),
+        companies: [...document.querySelectorAll('main [data-half="companies"] .tl-step')].map((l) => [...l.querySelectorAll('.tl-title, .tl-sub, .tl-year')].map((e) => e.textContent.trim()).join(' ')),
         links: [...document.querySelectorAll('main .linkrow a')].map((a) => [a.textContent.trim(), a.getAttribute('href')]),
         linksBottom: document.querySelector('main .linkrow').getBoundingClientRect().bottom > window.innerHeight * 0.8,
       };
     });
     check('AC-2', 'home: text pane left, art pane right', home.textLeft);
     check('AC-2', 'home: name and role from site.yaml', home.h1 === site.name && home.role === site.role);
-    check('AC-2', 'home: entry rows from site.yaml', home.rows.length === site.entries.length && site.entries.every((e, i) => home.rows[i].startsWith(e.label)));
+    check('AC-2', 'home: project and company timelines from site.yaml (amended by AC-24)',
+      home.projects.length === site.projects.length && home.companies.length === site.companies.length &&
+      site.projects.every((e, i) => home.projects[i] === `${e.title} ${e.year}`) &&
+      site.companies.every((e, i) => home.companies[i] === `${e.title} ${e.subtitle} ${e.year}`), JSON.stringify([home.projects[0], home.companies[0]]));
     check('AC-2', 'home: link row from site.yaml, at the bottom', home.linksBottom && site.links.every((l, i) => home.links[i]?.[0] === l.label && home.links[i]?.[1] === l.href));
 
     // Focus states, with real keyboard input
@@ -151,22 +157,6 @@ export async function siteTests(log, text) {
     await shot(page, 'desktop-home-focus');
     check('POLISH', 'keyboard focus is visible (Tab on home)', /solid 2px/.test(focus.outline), `${focus.text}: ${focus.outline}`);
 
-    // AC-8: dither drawn at DPR, static
-    const dither = await page.evaluate(async () => {
-      const c = document.querySelector('[data-split-art] canvas[data-dither]');
-      const r = c.getBoundingClientRect();
-      const ctx = c.getContext('2d');
-      const d = ctx.getImageData(0, 0, c.width, c.height).data;
-      const colours = new Set();
-      for (let i = 0; i < d.length; i += 4 * 97) colours.add(`${d[i]},${d[i + 1]},${d[i + 2]}`);
-      window.__raf = 0;
-      await new Promise((res) => setTimeout(res, 1200));
-      return { w: c.width, h: c.height, cw: r.width, ch: r.height, dpr: devicePixelRatio, colours: colours.size, raf: window.__raf };
-    });
-    check('AC-8', 'dither canvas sized at device pixel ratio', dither.w === Math.round(dither.cw * dither.dpr) && dither.h === Math.round(dither.ch * dither.dpr), `${dither.w}x${dither.h} for ${dither.cw}x${dither.ch} @${dither.dpr}x`);
-    check('AC-8', 'dither has several palette colours', dither.colours >= 3, `${dither.colours} colours sampled`);
-    check('AC-8', 'no animation loop while idle (0 rAF calls in 1.2s)', dither.raf === 0, `${dither.raf} calls`);
-
     // AC-6: art over dither on /blocks
     await page.goto(base + '/blocks/');
     await page.waitForSelector('[data-test="art-over-dither"] [data-art][data-state="ready"]', { timeout: 8000 }).catch(() => {});
@@ -175,28 +165,48 @@ export async function siteTests(log, text) {
     const stage = page.locator('[data-test="art-over-dither"]');
     await stage.scrollIntoViewIfNeeded();
     await sleep(300);
+    // freeze the simulations (hidden-tab path) so the canvas and the screenshot agree
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await sleep(250);
     const stageBuf = await stage.screenshot({ path: join(SHOTS, 'blocks-art-over-dither.png') });
     const blend = await page.evaluate(() => {
-      const art = document.querySelector('[data-test="art-over-dither"] [data-art]');
+      const stage = document.querySelector('[data-test="art-over-dither"]');
+      const art = stage.querySelector('[data-art]');
       const v = art.querySelector('video');
+      const c = stage.querySelector('canvas[data-dither]');
+      const s = stage.getBoundingClientRect();
       const r = art.getBoundingClientRect();
-      const s = art.parentElement.getBoundingClientRect();
-      return { mode: getComputedStyle(v).mixBlendMode, slug: art.dataset.art, top: r.top - s.top, left: r.left - s.left, w: r.width, h: r.height, sw: s.width };
+      const cr = c.getBoundingClientRect();
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      const cw = cr.width / c.width;
+      // dither cells that sit inside the art box and are coloured (not --bg)
+      const pts = [];
+      for (let y = 0; y < c.height; y += 1) for (let x = 0; x < c.width; x += 1) {
+        const o = (y * c.width + x) * 4;
+        if (d[o] === 10 && d[o + 1] === 12) continue;
+        const px = cr.left + (x + 0.5) * cw, py = cr.top + (y + 0.5) * cw;
+        if (px < r.left || px > r.right || py < r.top || py > r.bottom || px > s.right || py > s.bottom) continue;
+        pts.push({ x: px - s.left, y: py - s.top, g: d[o + 1] });
+      }
+      return { mode: getComputedStyle(v).mixBlendMode, slug: art.dataset.art, sw: s.width, pts: pts.filter((_, i) => i % 3 === 0).slice(0, 400) };
     });
-    // sample the top band inside the art box (dither is brightest at the top of this stage)
+    await page.evaluate(() => {
+      delete document.hidden;
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
     const { data, info } = await sharp(stageBuf).raw().toBuffer({ resolveWithObject: true });
     const scale = info.width / blend.sw;
-    let sum = 0, n = 0;
-    for (let y = Math.round((blend.top + 4) * scale); y < Math.round((blend.top + 24) * scale); y++) {
-      for (let x = Math.round((blend.left + blend.w * 0.05) * scale); x < Math.round((blend.left + blend.w * 0.3) * scale); x++) {
-        const o = (y * info.width + x) * info.channels;
-        sum += data[o + 1];
-        n++;
-      }
+    let kept = 0;
+    for (const p of blend.pts) {
+      const o = (Math.round(p.y * scale) * info.width + Math.round(p.x * scale)) * info.channels;
+      if (data[o + 1] >= p.g - 12) kept++;
     }
-    const green = sum / n;
+    const keptFrac = blend.pts.length ? kept / blend.pts.length : 0;
     check('AC-6', 'video uses mix-blend-mode: screen', blend.mode === 'screen');
-    check('AC-6', 'dither shows through the black matte inside the art box', green > 60, `mean green ${green.toFixed(0)} in the art box top band`);
+    check('AC-6', 'dither shows through the black matte inside the art box', blend.pts.length > 20 && keptFrac > 0.95, `${kept}/${blend.pts.length} coloured dither cells inside the art box keep at least their colour`);
     check('AC-5', 'missing art folder falls back to _placeholder', blend.slug === '_placeholder');
 
     // AC-12: monospace only inside pre / code, on every built page
@@ -255,7 +265,8 @@ export async function siteTests(log, text) {
       backTop: document.querySelector('[data-split-art] [data-back]').getBoundingClientRect().top,
       artLeft: document.querySelector('[data-split-art]').getBoundingClientRect().x < document.querySelector('main').getBoundingClientRect().x,
     }));
-    await scrollTo(page, 400);
+    await page.evaluate(() => (document.querySelector('main[data-pane]').scrollTop = 400));
+    await sleep(300);
     await shot(page, 'desktop-post-scrolled');
     const after = await page.evaluate(() => ({
       art: document.querySelector('[data-split-art]').getBoundingClientRect().toJSON(),
@@ -263,10 +274,10 @@ export async function siteTests(log, text) {
     }));
     check('AC-3', 'post: art left, text right', before.artLeft);
     check('AC-3', 'post: back arrow goes to /blog/', before.back === '/blog/');
-    check('AC-3', 'post: art pane fixed while text scrolls', Math.abs(before.art.top - after.art.top) < 1 && Math.abs(before.art.height - after.art.height) < 1 && after.title < before.title - 300, `art top ${before.art.top}->${after.art.top}, title ${before.title.toFixed(0)}->${after.title.toFixed(0)}`);
+    check('AC-3', 'post: art pane fixed while text pane scrolls (AC-27 shell)', Math.abs(before.art.top - after.art.top) < 1 && Math.abs(before.art.height - after.art.height) < 1 && after.title < before.title - 300, `art top ${before.art.top}->${after.art.top}, title ${before.title.toFixed(0)}->${after.title.toFixed(0)}`);
 
     // AC-9: palette in markdown
-    await scrollTo(page, 0);
+    await page.evaluate(() => (document.querySelector('main[data-pane]').scrollTop = 0));
     const colours = await page.evaluate(() => {
       const c = (sel) => {
         const el = document.querySelector(sel);
@@ -423,12 +434,13 @@ export async function siteTests(log, text) {
       await cdp.send('Animation.setPlaybackRate', { playbackRate: 0.1 });
       await p.click('main .linkrow a[href="/blog/"]');
       const frames = [];
+      let vt;
       for (const [i, wait] of [[1, 200], [2, 1300], [3, 1500]]) {
         await sleep(wait);
         const buf = await p.screenshot({ path: join(SHOTS, `transition-frame-${i}.png`) });
         frames.push(await stats(buf));
+        if (i === 1) vt = await p.evaluate(() => ({ vt: window.__vt, groups: document.getAnimations().filter((a) => a.effect?.pseudoElement?.startsWith('::view-transition')).map((a) => a.effect.pseudoElement) }));
       }
-      const vt = await p.evaluate(() => ({ vt: window.__vt, groups: document.getAnimations().filter((a) => a.effect?.pseudoElement?.startsWith('::view-transition')).map((a) => a.effect.pseudoElement) }));
       await cdp.send('Animation.setPlaybackRate', { playbackRate: 1 });
       await p.waitForURL('**/blog/');
       log.push('transition frames (mean, stdev of RGB): ' + frames.map((f) => `${f.mean.toFixed(1)}/${f.sd.toFixed(1)}`).join('  '), 'view transition calls: ' + vt.vt);
@@ -497,6 +509,9 @@ export async function siteTests(log, text) {
       check('AC-4', 'script fallback (simulated): 1 -> mid -> 0 (paused) -> 1 (playing)', s['0'].opacity === 1 && s['60'].opacity > 0.3 && s['60'].opacity < 0.7 && s['200'].opacity === 0 && s['200'].visibility === 'hidden' && s['200'].paused && s['back-0'].opacity === 1 && !s['back-0'].paused, `${s['0'].opacity} / ${s['60'].opacity} / ${s['200'].opacity} / ${s['back-0'].opacity}`);
       await c.close();
     }
+
+    await ditherTests(browser, base, log);
+    await shellTests(browser, base, log);
   } finally {
     await browser.close();
   }
