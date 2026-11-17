@@ -13,6 +13,8 @@ export const WARMUP = 240;
 export interface Life {
   w: number;
   h: number;
+  /** per-cell hue family: 0 green, 1 aqua, 2 blue. Smooth regions, so colour sits in structures */
+  hue: Uint8Array;
   alive: Uint8Array;
   trail: Float32Array;
   steps: number;
@@ -44,11 +46,11 @@ export function rng(seed: number): () => number {
 // ---------- the automaton ----------
 
 /** trail multiplier per step: about 1.5 s from full to gone at 10 steps/s */
-export const DECAY = 0.84;
+export const DECAY = 0.92;
 /** initial random fill; the warm-up burns it down to Life's usual sparse mix */
 export const SOUP = 0.3;
 /** below this fraction of cells changing per step, a methuselah is planted */
-export const ACTIVITY = 0.012;
+export const ACTIVITY = 0.02;
 
 /** `fill: false` skips the initial soup, for a field that will be loaded with decodeState. */
 export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life {
@@ -57,6 +59,7 @@ export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life 
   const next = new Uint8Array(w * h);
   const trail = new Float32Array(w * h);
   const col = new Uint8Array(w);
+  const hue = hueMap(seed, w, h);
 
   const soup = (cx: number, cy: number, rad: number, p: number) => {
     for (let y = -rad; y <= rad; y++)
@@ -86,7 +89,7 @@ export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life 
 
   let quiet = 0;
   const life: Life = {
-    w, h, alive, trail, steps: 0,
+    w, h, hue, alive, trail, steps: 0,
     step() {
       let changed = 0;
       let pop = 0;
@@ -128,6 +131,28 @@ export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life 
     },
   };
   return life;
+}
+
+/** Low-frequency field over the torus; its top 10% is blue, the next 10% aqua, the rest green. */
+export const SHARE = { aqua: 0.1, blue: 0.1 };
+function hueMap(seed: string, w: number, h: number): Uint8Array {
+  const r = rng(hashSeed(`hue:${seed}`));
+  const waves = Array.from({ length: 5 }, () => ({
+    fx: 1 + Math.floor(r() * 3), fy: 1 + Math.floor(r() * 3), px: r() * Math.PI * 2, py: r() * Math.PI * 2, a: 0.5 + r(),
+  }));
+  const v = new Float32Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      let s = 0;
+      for (const q of waves) s += q.a * Math.sin((x / w) * Math.PI * 2 * q.fx + q.px) * Math.sin((y / h) * Math.PI * 2 * q.fy + q.py);
+      v[y * w + x] = s;
+    }
+  const sorted = Float32Array.from(v).sort();
+  const tBlue = sorted[Math.floor(sorted.length * (1 - SHARE.blue))];
+  const tAqua = sorted[Math.floor(sorted.length * (1 - SHARE.blue - SHARE.aqua))];
+  const out = new Uint8Array(w * h);
+  for (let i = 0; i < v.length; i++) out[i] = v[i] >= tBlue ? 2 : v[i] >= tAqua ? 1 : 0;
+  return out;
 }
 
 // ---------- state transfer (build -> browser) ----------
@@ -172,12 +197,17 @@ const BAYER = Float32Array.from(
 );
 
 export const BG = [10, 12, 11];
-/** emerald (live), teal (fresh trail), deep (old trail) */
-export const COLOURS = ['#76c8a5', '#579d87', '#326e54'];
+/** per hue family: live, fresh trail, old trail. Green uses emerald / teal / deep; aqua and
+ *  blue fade toward --bg in their own hue. */
+export const COLOURS = [
+  ['#76c8a5', '#579d87', '#326e54'],
+  ['#58b3b3', '#43898a', '#2b5c5d'],
+  ['#4a86c8', '#3a6898', '#284768'],
+];
 
 export function colours(intensity: number): Uint8Array {
-  const out = new Uint8Array(9);
-  COLOURS.forEach((c, k) => {
+  const out = new Uint8Array(27);
+  COLOURS.flat().forEach((c, k) => {
     for (let j = 0; j < 3; j++) {
       const v = parseInt(c.slice(1 + j * 2, 3 + j * 2), 16);
       out[k * 3 + j] = Math.round(BG[j] + (v - BG[j]) * intensity);
@@ -212,7 +242,8 @@ export function draw(l: Life, cols: number, rows: number, pal: Uint8Array, out: 
         out[o] = BG[0]; out[o + 1] = BG[1]; out[o + 2] = BG[2];
         empty++;
       } else {
-        out[o] = pal[k * 3]; out[o + 1] = pal[k * 3 + 1]; out[o + 2] = pal[k * 3 + 2];
+        const c = (l.hue[i] * 3 + k) * 3;
+        out[o] = pal[c]; out[o + 1] = pal[c + 1]; out[o + 2] = pal[c + 2];
       }
       out[o + 3] = 255;
     }

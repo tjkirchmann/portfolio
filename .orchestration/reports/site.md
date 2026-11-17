@@ -4,7 +4,12 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 3 (Amendment 3: AC-28 to AC-31). Round 2 covered Amendments 1 and 2 (AC-19 to AC-27).
+- **Round:** 4 (Amendment 4: AC-32, AC-33). Round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 4 (Amendment 4, no test run by request)
+
+- **AC-32:** the life simulation now has three colour families, used for the simulation only. They are assigned by a smooth per-page region map, so colour sits in whole structures: about 80% green, 10% aqua `#58b3b3` and 10% blue `#4a86c8`. Each family has its own live colour plus two trail shades, so trails fade in the cell's own hue. The rest of the site is still emerald, teal and deep.
+- **AC-33:** trails are a little longer (decay 0.84 to 0.92 per step) and seeding a little more frequent (activity threshold 0.012 to 0.02). The home pane went from about 92% to 88% black on a single look in the browser. `pnpm build` passes and the dev server on 4321 serves (200). Not run, as asked: `pnpm test`, Lighthouse, screenshots. `pnpm test`'s green-only canvas check will now fail on the aqua and blue cells.
 
 ## Round 3 summary
 
