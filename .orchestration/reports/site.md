@@ -2,9 +2,29 @@
 
 - **Design:** `.orchestration/designs/site.md`
 - **Branch:** `ai-feat/site`
-- **Head commit:** a5bab84 (code, tests and screenshots for round 2; this report is committed right after it)
+- **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 2 (Amendment 1: AC-19 to AC-26, replacing AC-8; Amendment 2: AC-27)
+- **Round:** 3 (Amendment 3: AC-28 to AC-31). Round 2 covered Amendments 1 and 2 (AC-19 to AC-27).
+
+## Round 3 summary
+
+- **Greens only (AC-28).**
+  - **Tokens deleted:** `--gold`, `--copper`, `--bronze`, `--leaf` and their `--color-*` sources are gone from `src/styles/global.css`.
+  - **Footnotes:** marks and back-arrows are now `--emerald` (hover: ink), and the footnote target highlight is an emerald tint.
+  - **Code theme:** rebuilt in emerald / teal / deep tints plus neutrals.
+  - **`/blocks`:** the palette swatches show bg, ink, emerald, teal, deep.
+  - **Untouched:** `CLAUDE.md`.
+- **Life at cell resolution (AC-29).**
+  - `src/lib/dither-sim.ts` is now one simulation: Conway B3/S23 on a fixed 192x192 torus, one automaton cell per drawn square. There is no blur, no upscale and no interpolation; the pane shows a centred window onto the torus.
+  - **Colours:** live cells are solid emerald. A cell that dies keeps a trail that decays 0.84 per step (about 1.5–2s), drawn through the 8x8 Bayer matrix: fresh trail teal, older trail deep, then gone (the teal/deep split is also dithered).
+  - **Keeping it alive but sparse:** when fewer than 1.2% of cells change for a few steps, a methuselah (R-pentomino, acorn or diehard) is planted, mostly inside the visible window.
+  - **Pre-evolved start:** the field is seeded per page and warmed up 240 generations at build. It ships as a 2-bit-per-cell state (live / fresh trail / old trail / empty), about 12 KB base64, so the first frame already has trails.
+  - **Speed:** the step uses typed arrays and column sums (3 adds per cell).
+  - **Look:** 90–93% of the pane is pure `--bg`. Art panes draw the greens at 0.7 intensity so the wireframe stays the subject.
+- **One mode (AC-30).** `smooth` and `flow` are removed with all their code, and `Dither` no longer takes a `mode` prop.
+- **Nothing outside the panel (AC-31).** Only whole cells are drawn, centred in the box with their edges on whole device pixels. The art panel also gets `clip-path: inset(0 round var(--radius))`, which clips composited layers too.
+  - The round 2 strays came from the old cover-crop: bilinear sampling across the torus seam, plus partial cells at the right and bottom edges. Both are gone.
+- **Check of the 0s / 5s / 20s captures** (`dither-life-00s/05s/20s.png`): they no longer read as blobs. You can see blinkers, blocks, beehives, boats, gliders and small chaotic regions whose trails fade out in teal and deep dots, on wide black. The densest 8x8 block is 53% full; 0–1% of blocks are over half full.
 
 ## Round 2 summary
 
@@ -70,25 +90,29 @@ All `tests/...` checks are in `tests/site.spec.mjs` / `tests/content.mjs`. The f
 | AC-6 | met | Screenshots: `blocks-art-over-dither.png`, `firefox-art-over-dither.png`, `webkit-art-over-dither.png`. The video uses `mix-blend-mode: screen` in all three engines. Round 2 pixel check, with the simulation paused so canvas and screenshot agree: every coloured dither cell inside the art box keeps at least its colour in the composite, so the black matte adds nothing (see `results.json`). |
 | AC-7 | met | Screenshot: `reduced-motion-home.png`. With `reducedMotion: 'reduce'`: state `still`, poster shown, video paused and hidden, 0 requests for `loop.*`. During navigation the view-transition animations list is empty (none run). |
 | AC-8 | replaced | Replaced by AC-19 to AC-22 (Amendment 1). The static gradient no longer exists. |
-| AC-9 | met | Computed colours: body `rgb(233,236,232)` (`--ink`), bold `rgb(118,200,165)` (`--emerald`), footnote marks and back-arrows `rgb(187,195,104)` (`--gold`). Links are ink text with a `--teal` underline that turns emerald on hover. |
+| AC-9 | met (round 3: marks and back-arrows emerald) | Round 3: footnote marks and back-arrows computed `rgb(118,200,165)` (`--emerald`); bold emerald; links ink with teal underline. Round 1: Computed colours: body `rgb(233,236,232)` (`--ink`), bold `rgb(118,200,165)` (`--emerald`), footnote marks and back-arrows `rgb(187,195,104)` (`--gold`). Links are ink text with a `--teal` underline that turns emerald on hover. |
 | AC-10 | met | Screenshots: `desktop-footnote-target.png`, `desktop-footnote-back.png`. The test clicks ref 1: hash `#user-content-fn-1`, the `li` is in view and highlighted with a gold tint. It then clicks the back-arrow: hash `#user-content-fnref-1`, the ref is in view and highlighted. The numbered list is the last element of the post. |
 | AC-11 | met | Built HTML in `test-log.txt`: `<figure><img … loading="lazy" decoding="async" width="1440" height="900" srcset="… 360w, … 480w, … 640w, … 960w, … 1280w, … 1440w"><figcaption>alt</figcaption></figure>`, between two `<p>`. It renders 576px wide in a 576px column, CLS 0. |
 | AC-12 | met | The test walks every text node on all 5 built pages: no monospace outside `pre`/`code`, and `pre`/`code` text is monospace. |
 | AC-13 | met | `test-log.txt`: the broken fixture (bad date, no `art`) gives `exit 1`, `[InvalidContentEntryDataError] blog → zz-broken-fixture …`, with the full path `src/content/blog/zz-broken-fixture/index.md`. A `draft: true` fixture has no page and no `/blog/` listing. Both fixtures are removed in `finally`. The schema is in `src/content.config.ts` and is `.strict()`. |
 | AC-14 | met | `test-log.txt`: `pnpm new-post "Zz Scaffold Fixture"` prints `Created src/content/blog/zz-scaffold-fixture/index.md` with `title`, `date: 2026-11-16`, `art: _placeholder`. A second run exits 1 with `… already exists`, and the file is unchanged. |
 | AC-15 | met | Screenshots: `transition-frame-1/2/3.png`, with animations slowed 10x through CDP. `startViewTransition` was called. Groups seen: `root`, `text-left` old, `text-right` new, `art-right` old, `art-left` new (fade, 260ms text / 400ms art). Frame mean brightness 23 / 14 / 19 of 255 (no white), stdev 30 / 7 / 24 (never blank). |
-| AC-16 | met | Round 2: `pnpm test` gives `149 passed, 0 failed, 1 skipped` (the skip is the AC-5 cached-video timing path). It runs headless, writes 51 files to `.orchestration/reports/site-shots/`, and exits 1 on any failure; several failing runs during round 2 exited 1. Round 1: 74 passed. |
-| AC-17 | met | Round 2, with the simulation running (`lighthouse.json`): `/` perf **99**, a11y **100** (TBT 90ms, LCP 1.8s); `/blog/first-post/` perf **99**, a11y **100** (TBT 40ms, LCP 2.2s). Round 1: 100/100 and 99/100. |
+| AC-16 | met | Round 3: `pnpm test` gives `147 passed, 0 failed, 1 skipped`. The skip is the AC-5 cached-video timing path. Round 2: 149 passed, 1 skipped. |
+| AC-17 | met (with variance) | Round 3 final, simulation running (`lighthouse.json`): `/` perf **99**, a11y **100** (TBT 90ms); `/blog/first-post/` perf **98**, a11y **100** (TBT 120ms). Earlier round 3 runs: `/` 100 twice, and one outlier of 69 (TBT 7,370ms) while the machine was loaded by other agents. The client-side init was also trimmed (no throwaway soup before decoding). Round 2: 99/100 both. |
 | AC-18 | met | Full text dump of `/`, `/blog/`, `/blocks/` is below and in `text-dump.txt`. It contains only names, labels, dates, sample post text and link text. |
-| AC-19 | met | Screenshots: `dither-{life,smooth,flow}-{00s,05s,20s}.png`. Each mode: 96x70 grid, cells 6 CSS px = 12.00 device px, `image-rendering: pixelated`, canvas offset snapped to the device pixel grid. Structure check, the spread of fill fraction across 8x8-cell blocks (noise at the same coverage is about 0.06): life 0.40 / 0.42, smooth 0.24 / 0.22, flow 0.28 / 0.27 at 0s / 20s. |
-| AC-20 | met | `mode` prop: `life`, `smooth` (Lenia), `flow` (Gray-Scott). All three shown large (26rem tall, full column) on `/blocks` (`desktop-blocks.png`). Real pages use `life`; the reasons are in the Round 2 summary. |
-| AC-21 | met | Empty fraction at 0s / 5s / 20s: life 0.67 / 0.81 / 0.66, smooth 0.69 / 0.74 / 0.73, flow 0.61 / 0.62 / 0.62 (all ≥ 0.35). The life frame at 20s uses all six palette stops: gold 12.5%, leaf 6.6%, emerald 4.9%, copper 4.4%, teal 3.7%, deep 1.8%, the rest `--bg`. Art panes use intensity 0.85 under the screen-blended wireframe (`post-pane-middle.png`, `desktop-home.png`). |
-| AC-22 | met (average cost; see note) | Steps/s over 15s: life 10.85, smooth 10.65, flow 10.72. Cost per step, step + draw + `putImageData`, timed in the page at 2x DPR: **avg** life 0.23ms, smooth 0.44ms, flow 0.36ms. **Max** life 1.8ms, smooth and flow 4.7ms (single spikes, likely GC). Pauses, each proven with step counts: off-screen +0 in 1.5s, hidden tab +0 in 1.5s and then +10 after returning, mobile dissolved +0 in 1.5s and then +12 back at the top, reduced motion 0 steps in 2s with a settled frame. Seeded: 4 pages give 4 different patterns, and a reload gives the same one. Pre-evolved: with reduced motion (0 steps), every mode already shows masses (empty 0.61–0.70, spread 0.25–0.40). |
+| AC-19 | met (amended by AC-29) | Round 3: 96x69 grid on `/blocks`, cells 6 CSS px = 12.00 device px, pixelated, whole cells only. Round 2: Screenshots: `dither-{life,smooth,flow}-{00s,05s,20s}.png`. Each mode: 96x70 grid, cells 6 CSS px = 12.00 device px, `image-rendering: pixelated`, canvas offset snapped to the device pixel grid. Structure check, the spread of fill fraction across 8x8-cell blocks (noise at the same coverage is about 0.06): life 0.40 / 0.42, smooth 0.24 / 0.22, flow 0.28 / 0.27 at 0s / 20s. |
+| AC-20 | replaced by AC-30 | Round 3: one simulation; `smooth` and `flow` removed. Round 2: `mode` prop: `life`, `smooth` (Lenia), `flow` (Gray-Scott). All three shown large (26rem tall, full column) on `/blocks` (`desktop-blocks.png`). Real pages use `life`; the reasons are in the Round 2 summary. |
+| AC-21 | amended by AC-28 / AC-29 | Round 3: greens only, at least 60% empty (measured 0.912 / 0.911 / 0.932). Round 2: Empty fraction at 0s / 5s / 20s: life 0.67 / 0.81 / 0.66, smooth 0.69 / 0.74 / 0.73, flow 0.61 / 0.62 / 0.62 (all ≥ 0.35). The life frame at 20s uses all six palette stops: gold 12.5%, leaf 6.6%, emerald 4.9%, copper 4.4%, teal 3.7%, deep 1.8%, the rest `--bg`. Art panes use intensity 0.85 under the screen-blended wireframe (`post-pane-middle.png`, `desktop-home.png`). |
+| AC-22 | met (average cost; see note) | Round 3, life at cell resolution: 10.20 steps/s; avg 0.70ms, max 4.5ms per step (step + draw + `putImageData`, 2x DPR, machine under load from other agents). All pause checks pass again: off-screen +0, hidden tab +0 then +10 on return, mobile dissolved +0 then +12, reduced motion 0 steps. 4 pages give 4 patterns, a reload gives the same one, and the first frame is pre-evolved (0 steps, empty 0.91, 4 colours). Round 2: Steps/s over 15s: life 10.85, smooth 10.65, flow 10.72. Cost per step, step + draw + `putImageData`, timed in the page at 2x DPR: **avg** life 0.23ms, smooth 0.44ms, flow 0.36ms. **Max** life 1.8ms, smooth and flow 4.7ms (single spikes, likely GC). Pauses, each proven with step counts: off-screen +0 in 1.5s, hidden tab +0 in 1.5s and then +10 after returning, mobile dissolved +0 in 1.5s and then +12 back at the top, reduced motion 0 steps in 2s with a settled frame. Seeded: 4 pages give 4 different patterns, and a reload gives the same one. Pre-evolved: with reduced motion (0 steps), every mode already shows masses (empty 0.61–0.70, spread 0.25–0.40). |
 | AC-23 | met | Screenshots: `home-timelines.png`, `blocks-timeline-companies.png`. The test asserts: every step has an inline SVG node, title and year flush right; rail segments are present (16px / 37px); only the newest step is current; no icon font in any stylesheet. Icons come from `lucide-static`, inlined at build, with no client JS for icons. |
 | AC-24 | met | `site.yaml` `projects:` / `companies:` (`title`, `subtitle?`, `year`, `icon?`, `href?`), strict schema. The test matches every step to the yaml. A bad entry fails the build: `src/content/site.yaml is invalid: projects.1.icon: unknown icon "not-an-icon" (use a lucide icon name …)` and `companies.1.year: a year or range is required …` (exit 1). The file is restored in `finally`. |
 | AC-25 | met | Halves at 3 heights, with 3 entries and with 12 (cloned in the DOM): 1440x900 316.7 / 316.7; 1280x720 231.5 / 231.5; 1440x1100 416.7 / 416.7, unchanged by entry count. With 12 entries: scrolls inside, fade below, `scrollbar-width: none`. With 3: first step at the top (offset 0). The document does not scroll at 1440x900 and 1280x720 (scrollHeight = innerHeight). Below 800px: stacked, natural height, page scrolls. Screenshots: `home-1440x900-12-entries.png`, `home-1280x720-12-entries.png`, `mobile-home-timelines.png`. |
 | AC-26 | met | `/blocks`: Companies (with subtitles) and a 12-entry Projects timeline in a 16rem box that scrolls (`blocks-timeline-companies.png`, `blocks-timeline-overflow.png`). |
 | AC-27 | met | At 1440x900 and 1280x720, `document.scrollingElement.scrollHeight === innerHeight` on `/blog/` and the post. Details:<br>• **Keyboard, no click** (1440, max 802): ArrowDown 40, PageDown 802, End 802, Home 0, Space 802.<br>• **Wheel:** 200 over the text pane, and the art pane forwards wheel too (200 -> 260). Window `scrollY` stays 0 throughout, and the art and back arrow do not move.<br>• **Overscroll:** extra wheel at the end leaves the page put.<br>• **Footnotes:** ref -> note -> back round trip inside the pane, highlighted.<br>• **Anchor:** `#a-heading` scrolls the pane.<br>• **History:** a new post opens at 0; back restores 600, forward then back again restores 600.<br>• **Look:** thin scrollbar, `overscroll-behavior: contain`, ~50px padding above the title, 6rem below the last line, fades only on clipped edges.<br>• **Mobile:** still scrolls the document.<br>Screenshots: `post-pane-top.png`, `post-pane-middle.png`, `post-pane-end.png`. |
+| AC-28 | met | **Source grep** for `bbc368 9f814e 85692c 73984f c9a46a --gold --copper --bronze --leaf color-gold color-copper color-bronze color-leaf` over 30 files in `src/`, `public/` (minus `art/`) and `astro.config.mjs`: no matches. **Computed colours:** the test walks every element on all 5 pages at 1440x900 and 390x844 and normalises colour, background, borders, outline, text decoration, fill, stroke and caret. None has a hue outside 120–200° (neutrals, with max-min under 24 of 255, allowed). Every canvas frame on every page passes the same check. **Screenshot pixels** of every page at both viewports (full page for `/blocks`): 0 off-band. Lines are in `test-log.txt`. |
+| AC-29 | met | Screenshots: `dither-life-00s.png`, `-05s.png`, `-20s.png`, `desktop-home.png`, `desktop-post-top.png`. One automaton cell per drawn square (canvas pixel = cell). Every canvas pixel is exactly bg, emerald, teal or deep, so nothing is blurred or upscaled (4 distinct colours). Live cells emerald; trails teal and deep, all three present. Empty: 0.912 / 0.911 / 0.932 at 0s / 5s / 20s. 8x8 blocks over half full: 0.000 / 0.000 / 0.010 (max block fill 0.53); the test requires under 5% and none over 75%. The field changes between all captures. Cost is in the AC-22 row. |
+| AC-30 | met | `src/lib/dither-sim.ts` contains only Life; `grep -rn "smooth\|flow\|Lenia\|Gray-Scott" src` finds only CSS words (`font-smoothing`, `overflow`). `/blocks` shows the single simulation large. |
+| AC-31 | met | Each case samples every half pixel between the art pane edge and the rounded panel (1px antialias band excluded): home 1440x900 0 coloured of 169,478 points; home 1280x720 0 of 138,167; post 1440x900 0 of 155,061; home 390x844 0 of 50,261; post 390x844 0 of 50,261. The canvas rect sits inside its box in every case (whole cells only). Screenshots: `ac31-home-desktop.png`, `ac31-home-mobile.png`. |
 
 ### AC-18 text dump (round 2)
 
@@ -111,6 +135,26 @@ EntryList: Row one 2026, Row two 2025 / PostList / LinkRow / BackLink Blog / Pro
 The full dump is in `site-shots/text-dump.txt`. It contains labels and data only.
 
 ## Tests run
+
+Round 3, final run:
+
+```
+$ pnpm test
+… 147 PASS lines (full list in site-shots/results.json) …
+SKIP  [AC-5] cached video: swap with no blur-in  (video took 72ms to become playable on revisit; the instant path was not exercised)
+147 passed, 0 failed, 1 skipped
+
+$ pnpm lighthouse
+/ {"performance":99,"accessibility":100,"best-practices":100,"seo":100,"lcp":"1.6 s","cls":"0","tbt":"90 ms"}
+/blog/first-post/ {"performance":98,"accessibility":100,"best-practices":100,"seo":100,"lcp":"2.1 s","cls":"0","tbt":"120 ms"}
+
+dither life: grid 96x69 (one automaton cell per square), cell 6.000css (12.00 device px), 10.20 steps/s,
+  avg 0.7ms max 4.5ms per step (step+draw), empty 0.912 / 0.911 / 0.932,
+  8x8 blocks over half full 0.000 / 0.000 / 0.010 (max block fill 0.53),
+  colours bg 0.932, emerald 0.045, teal 0.016, deep 0.007
+```
+
+The round 3 test count is lower than round 2 (147 vs 149) because the per-mode checks for `smooth` and `flow` were removed and the AC-28/29/31 checks were added.
 
 Round 2, final run:
 
@@ -156,7 +200,7 @@ In Node, the build-time warm-up per page takes 3–25ms depending on mode.
 | `scripts/new-post.mjs`, `scripts/placeholder-art.py`, `scripts/placeholder-meta.mjs` | added |
 | `tests/{run,lib,content,site.spec,serve,lighthouse}.mjs` | added. Self-test, static server with Range support, Lighthouse runner |
 | `.orchestration/reports/site.md`, `.orchestration/reports/site-shots/*` | added (round 2: updated, new shots for dither, timelines, locked shell) |
-| `src/lib/dither-sim.ts` | round 2, added. The three simulations, seeding, state encode/decode, Bayer drawing |
+| `src/lib/dither-sim.ts` | round 2, added; round 3, rewritten as Life only at cell resolution (typed arrays, column sums, methuselah planting, 2-bit state, Bayer-dithered trails) |
 | `src/components/Dither.astro` | round 2, rewritten. Build-time warm-up, shared timer, pauses, pixel-snapped canvas |
 | `src/components/Timeline.astro`, `src/lib/icons.ts` | round 2, added |
 | `src/lib/site.ts`, `src/content/site.yaml` | round 2, modified. `projects` / `companies` replace `entries`; strict schema with readable errors |
@@ -164,7 +208,9 @@ In Node, the build-time warm-up per page takes 3–25ms depending on mode.
 | `src/pages/index.astro`, `src/pages/blog/*.astro`, `src/pages/blocks.astro` | round 2, modified. Timelines on home, locked shells, three dither modes and timeline demos on `/blocks` |
 | `src/styles/prose.css` | round 2, modified. `position: relative` so the hidden footnotes heading cannot extend the page |
 | `src/content/blog/first-post/index.md` | round 2, modified. A few more plain sample paragraphs, so the post is long enough to scroll inside the pane |
-| `tests/dither.spec.mjs`, `tests/shell.spec.mjs` | round 2, added. AC-19..27 checks; `tests/site.spec.mjs` and `tests/content.mjs` updated |
+| `tests/palette.spec.mjs` | round 3, added. AC-28 grep, computed colours, canvas and screenshot hue scan; AC-31 outside-panel pixel scan |
+| `src/styles/global.css`, `src/styles/prose.css`, `src/lib/shiki-theme.mjs`, `src/components/Split.astro` | round 3, modified. Removed gold/copper/bronze/leaf; footnotes emerald; green code theme; panel `clip-path` |
+| `tests/dither.spec.mjs`, `tests/shell.spec.mjs` | round 2, added (dither spec rewritten in round 3). AC-19..27 checks; `tests/site.spec.mjs` and `tests/content.mjs` updated |
 
 ## System report (as built)
 
@@ -192,7 +238,7 @@ In Node, the build-time warm-up per page takes 3–25ms depending on mode.
 
 - **Post:** `src/content/blog/<slug>/index.md` plus images beside it. Frontmatter is `title`, `date`, `art`, optional `draft`, `summary` (strict schema).
 - **Site config:** `src/content/site.yaml` with `name`, `role`, `art`, `projects[]` and `companies[]` (`{title, subtitle?, year, icon?, href?}`), `links[] {label, href}`. It is validated with a strict zod schema at build; icon names are checked against `lucide-static`.
-- **Dither state:** `data-state` on each canvas carries the pre-evolved field (base64, every channel quantised to 8 bits). The seed is the page path unless `seed` is passed.
+- **Dither state:** `data-state` on each canvas carries the pre-evolved 192x192 Life field at 2 bits per cell (live / fresh trail / old trail / empty), base64. The seed is the page path unless `seed` is passed.
 - **Art reference:** a slug that resolves to `public/art/<slug>/meta.json` at build. If it is missing, `_placeholder` is used and the build prints a warning.
 - **Tokens:** CSS custom properties on `:root`, plus Tailwind `@theme` colours and fonts.
 
@@ -204,7 +250,7 @@ In Node, the build-time warm-up per page takes 3–25ms depending on mode.
 - **Mobile dissolve:** a CSS scroll-driven animation over 0–120px of root scroll. Where scroll timelines are unsupported, a script sets `--dissolve-p`. A scroll listener pauses the video when fully dissolved and resumes it otherwise.
 
 - **Dither:**
-  - At build, `createSim(mode, seed)` runs `WARMUP[mode]` steps and embeds the state.
+  - At build, `createLife(seed)` fills a 30% random soup, runs 240 generations and embeds the state.
   - In the browser it decodes the state and draws immediately. A shared `setInterval` (about 10/s) steps every live field. It is stopped when none are live: off-screen (IntersectionObserver), `document.hidden`, mobile art dissolved (`split:dissolve` event plus a `[data-dissolved]` check), or reduced motion. It redraws on resize.
 - **Locked shell:**
   - On `astro:page-load` the pane is focused (if nothing else has focus).
@@ -217,6 +263,13 @@ In Node, the build-time warm-up per page takes 3–25ms depending on mode.
 - No server endpoints.
 
 ## Deviations from the design
+
+Round 3:
+
+- **Planted seeds.** Life is kept going by planting methuselahs when activity drops, rather than by a self-sustaining rule. Without this a torus settles to still ash in a few hundred generations.
+- **The torus is a fixed 192x192.** Panes wider or taller than 192 cells (about 1150 CSS px at 6px cells, only on screens wider than about 2300px) show the full torus centred with plain `--bg` around it, rather than repeating it.
+- **Cell size stays 6 CSS px** (the AC-19 default). If the owner wants it finer still, `cell={4}` is a one-word change per page; at 4px the torus would need to grow to about 224 to cover a 1440 pane.
+- **Art pane intensity lowered from 0.85 to 0.7** so the emerald cells sit behind the wireframe.
 
 Round 2:
 
@@ -240,6 +293,14 @@ Round 1:
 - **Placeholder WebM** is encoded at a fixed 900 kbps (485 KB) because Blender's VP9 quality presets produced 2–3 MB. It shows mild compression noise on the lines. It is a stand-in.
 
 ## Not done or not verified
+
+Round 3:
+
+- **Max step cost.** The average is 0.70ms, but single steps peaked at 4.5ms (5.7ms in an earlier run). This machine was busy with other agents during the run, and a quiet machine was not measured. The simulation is not in a worker.
+- **Lighthouse variance.** One run of `/` scored 69 under load; it is reported, not hidden.
+- **Cached-video instant swap (AC-5)** was skipped again: the revisit took 72ms to become playable.
+- **Long runs.** The simulation was not watched for hours. Visually it was checked over about 60 generations in Node and 20s in the browser.
+- **Owner's taste.** Whether the 6px cell size reads as "fine" enough is a judgement only the owner can make.
 
 Round 2:
 
