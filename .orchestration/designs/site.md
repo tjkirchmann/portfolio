@@ -159,3 +159,74 @@ pnpm test
 Passing: all three exit 0, screenshots exist for home, blog index, post (top and scrolled),
 `/blocks`, mobile home, mobile post, and the report lists any interaction not proven by the
 self-test.
+
+## Amendment 1 (2026-11-16, from the owner after seeing the site)
+
+Where this amendment conflicts with the text above, the amendment wins.
+
+### Dithered life simulation (replaces AC-8)
+
+Reference: `.orchestration/designs/ref/dither-reference.webp`, the owner's first inspiration
+image. Open it. What matters in it: large soft organic masses, built entirely from square
+pixels on a grid, solid in the middle and breaking into ordered halftone at the edges, with
+wide areas of pure black between them. The owner wants that, alive, in the beetle palette,
+in place of the static gradient.
+
+- **AC-19:** `Dither` becomes a life-like simulation rendered through an ordered (Bayer)
+  dither. A field evolves on a coarse grid; its value at each cell goes through the Bayer
+  threshold, so dense regions are solid squares and edges break into halftone, as in the
+  reference. Square cells, crisp (no smoothing, no blur), cell size a prop (default about
+  6 CSS px), aligned to the device pixel grid.
+- **AC-20 explore:** build three variants behind one `mode` prop and show all three, large,
+  on `/blocks` for the owner to pick from:
+  1. `life`: a Conway-family cellular automaton (pick a rule that neither dies nor fills,
+     reseeding quietly if it stalls) where each cell leaves a decaying trail; the trail
+     value is what gets dithered.
+  2. `smooth`: a continuous life-like field (SmoothLife or Lenia style kernel) that grows
+     soft drifting blobs; the field value is dithered. Closest to the reference.
+  3. `flow`: a reaction-diffusion (Gray-Scott) field, dithered.
+  Put whichever best matches the reference on the home, blog and post art panes, and say
+  which and why in the report.
+- **AC-21 colour:** the palette in `CLAUDE.md`, all of it, not only greens. Colour is mapped
+  from the field (for example age or density: deep and teal in young or sparse areas,
+  emerald in the body, gold and copper where it is oldest or densest) so the masses show
+  the beetle's green-to-gold-to-copper shift. Pure `--bg` where the field is empty; at
+  least 35% of the pane is empty at any time. The wireframe video still screen-blends on
+  top and must stay clearly readable: cap the brightness behind it if needed.
+- **AC-22 cost and manners:** the simulation steps slowly (about 8-15 steps per second,
+  not every frame), draws to a canvas at grid resolution scaled up with
+  `image-rendering: pixelated`, pauses when the pane is off-screen, the tab is hidden, or
+  the mobile art is fully dissolved, and under `prefers-reduced-motion` shows one settled
+  frame and never steps. Main-thread cost under 2ms per step on this machine. It is seeded
+  per page (from the page slug) so each page has its own pattern, and it starts from a
+  pre-evolved state, never from noise or blank. Evidence: timings, a test that counts steps
+  per second and proves each pause, screenshots at 0s, 5s and 20s per mode.
+- AC-17 (Lighthouse) still holds with the simulation running.
+
+### Home page timelines (replaces `EntryList` on the home page, amends AC-2)
+
+- **AC-23 `Timeline` block:** a vertical stepped timeline. Each step has an icon node on a
+  rail, with a connecting line between nodes; to the right of the node, the title; at the
+  far right, the year. Optional subtitle under the title. Optional link on the title. The
+  icon is chosen per entry by name from one icon set (a third-party set, inlined as SVG at
+  build, no icon font, no client JS), with a default icon when none is given. The rail,
+  nodes and icons use palette accents sparingly; the newest step may be marked as current.
+- **AC-24 two timelines on home:** `Projects` (icon, title, year) and `Companies` (icon,
+  company name as title, the role as subtitle, year or year range on the right). Each has a
+  short label (just the word). Both read from `src/content/site.yaml`, which gains
+  `projects:` and `companies:` lists with `title`, `subtitle?`, `year`, `icon?`, `href?`.
+  Schema-validated like posts: a bad entry fails the build with a clear message.
+- **AC-25 the 50/50 split:** on desktop the area between the name/role header and the
+  bottom link row is divided into two equal halves, Projects on top, Companies below, each
+  exactly 50% of that space regardless of how many entries it has. A half with more
+  entries than fit scrolls inside itself, with a soft fade at the clipped edge and no
+  visible scrollbar chrome; a half with few entries aligns its content to the top. The
+  page itself does not scroll on desktop at 1440x900 or 1280x720. Below 800px the two
+  timelines stack at natural height and the page scrolls. Evidence: the test measures both
+  halves equal within 1px at three viewport heights, with 3 entries and with 12.
+- **AC-26:** `/blocks` shows `Timeline` in both forms, including the overflow case.
+- AC-18 still applies: labels and data only.
+
+Report as round 2 in `.orchestration/reports/site.md`: add rows AC-19 to AC-26, mark AC-8 as
+replaced, keep the earlier rows, rerun `pnpm test` and Lighthouse, and replace the
+screenshots that changed.
