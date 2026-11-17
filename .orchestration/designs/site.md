@@ -385,3 +385,36 @@ icon menu that disappears after the mouse unhovers." Light process: build and se
 - For now set the home page to `spikeball` (default), `gyroscope` and `knot` so the menu can
   be built and seen; the orchestrator will swap in `spikeball-life` and `waveball-life`
   when they are rendered. Show the switcher on `/blocks` too.
+
+## Amendment 8 (2026-11-17, from the owner)
+
+The owner's words: "a fourth setting of the ball that is the new default: wave ball,
+instead of transparent squares, the same color as the background, so its opaque, with the
+metallic game of life background that the first version has." Light process: build and
+serve only.
+
+**Stacked-alpha contract (shared by the art and site designs).** A piece that needs real
+opacity sets `"alpha": "stacked"` in `meta.json`. Its `loop.webm` and `loop.mp4` are then
+`width` x `2*height` pixels: the top half is the picture exactly as other pieces deliver it
+(light lines, and any colour, on pure black); the bottom half is the matte, white where the
+subject is solid, black elsewhere, antialiased at the silhouette. `meta.width` and
+`meta.height` stay the logical size (1200 x 1200). `poster.png` is the logical size, RGBA,
+already composited (lines over an opaque fill inside the silhouette, transparent outside),
+with the fill pure black; `blurDataUrl` is made from it. Pieces without `alpha` are
+unchanged.
+
+- **AC-39 opaque pieces in `Art`.** When a piece's `meta.alpha` is `"stacked"`, `Art`
+  plays the video hidden and composites it to a canvas each video frame (WebGL; use
+  `requestVideoFrameCallback` where available): with `L` the top-half pixel and `m` the
+  bottom-half matte, output colour is `L + (1 - L) * bg` inside the matte and alpha is
+  `max(m, L)`, where `bg` is the page's `--bg`. So the subject is a solid shape in the
+  page's background colour with light lines on it, and it hides whatever is behind it; no
+  blend mode. Everything else about `Art` still holds for these pieces: the blurred still
+  first (the RGBA poster), the crossfade, pause when unseen or dissolved, the still under
+  reduced motion, only the visible piece loaded, the switcher. Fallback when WebGL is
+  missing: show the poster.
+- **AC-40:** the home page's default piece will be `waveball` (opaque) with the background
+  life simulation on behind it, followed by the three existing pieces. The orchestrator
+  will add it to `site.yaml` once it is rendered. To build and see this now, make yourself
+  a small throwaway stacked clip (any moving solid shape) outside `public/art/`, or in
+  `public/art/_placeholder-stacked/`, and show it over the simulation on `/blocks`.
