@@ -6,7 +6,7 @@ import { figurePlugin } from './src/lib/figure-plugin.mjs';
 import { chaferTheme } from './src/lib/shiki-theme.mjs';
 
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://portfolio.tjkirchmann.workers.dev',
   output: 'static',
   trailingSlash: 'ignore',
   build: { format: 'directory' },
