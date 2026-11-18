@@ -24,6 +24,8 @@ const html = body.trim() ? markdownToHtml(body).html : '';
 
 <div class="about" data-tl-item="about" data-bar={slots ? '' : undefined} style={slots ? `--bar-slots:${slots}` : undefined}>
   <span class="hint about-hint" data-hint="about" data-tail="right" hidden>What is this?</span>
+  {/* the same line on hover or focus, like the links under it (not while the step above shows) */}
+  <span class="hint about-tip" data-tail="right" aria-hidden="true">What is this?</span>
   <button type="button" class="about-btn" data-tl-open aria-expanded="false" aria-label={title} set:html={icon('circle-question', 24)} />
   <span class="tl-title" hidden>{title}</span>
   {
@@ -55,6 +57,25 @@ const html = body.trim() ? markdownToHtml(body).html : '';
     right: calc(100% + var(--space-3));
     top: calc(var(--bar-pad, 0px) + 1.125rem);
     transform: translateY(-50%);
+  }
+  .about-tip {
+    position: absolute;
+    right: calc(100% + var(--space-3));
+    top: calc(var(--bar-pad, 0px) + 1.125rem);
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    animation: none;
+    transition: opacity var(--dur-1) var(--ease), visibility 0s linear var(--dur-1);
+  }
+  .about:hover > .about-tip,
+  .about:focus-within > .about-tip {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .about:has(.about-hint:not([hidden])) > .about-tip {
+    display: none;
   }
   .about-btn {
     display: grid;

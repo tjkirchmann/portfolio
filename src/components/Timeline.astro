@@ -76,6 +76,8 @@ const bodyHtml = (b?: string) => (b && b.trim() ? markdownToHtml(b).html : '');
       }
     </ol>
   </div>
+  {/* a thin scroll marker beside the list, shown only while the list overflows */}
+  <span class="tl-marker" data-tl-marker aria-hidden="true"><span class="tl-thumb" /></span>
 </section>
 
 <style>
@@ -86,6 +88,40 @@ const bodyHtml = (b?: string) => (b && b.trim() ? markdownToHtml(b).html : '');
     display: flex;
     flex-direction: column;
     min-height: 0;
+  }
+  /* the scroll marker: a hairline track with a thumb, just outside the list's right edge */
+  .tl {
+    position: relative;
+  }
+  .tl-marker {
+    position: absolute;
+    right: calc(-1 * var(--space-3));
+    top: var(--m-top, 0px);
+    width: 2px;
+    height: var(--m-h, 0px);
+    border-radius: 2px;
+    background: color-mix(in oklab, var(--emerald) 14%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-1) var(--ease);
+  }
+  .tl-marker[data-on] {
+    opacity: 1;
+  }
+  .tl-thumb {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: var(--m-thumb, 0px);
+    border-radius: 2px;
+    background: color-mix(in oklab, var(--emerald) 60%, transparent);
+    transform: translateY(var(--m-y, 0px));
+  }
+  @media (max-width: 799.98px) {
+    .tl-marker {
+      display: none;
+    }
   }
   .tl-label {
     flex: none;
@@ -230,6 +266,19 @@ const bodyHtml = (b?: string) => (b && b.trim() ? markdownToHtml(b).html : '');
     el.dataset.overflow = max > 1 ? 'true' : 'false';
     // only a box that actually scrolls is a tab stop
     el.tabIndex = max > 1 ? 0 : -1;
+    // the marker beside it: there only when the list overflows, thumb sized and placed to match
+    const marker = el.parentElement?.querySelector<HTMLElement>('[data-tl-marker]');
+    if (marker) {
+      marker.toggleAttribute('data-on', max > 1);
+      if (max > 1) {
+        const track = el.clientHeight;
+        const thumb = Math.max(16, (track * el.clientHeight) / el.scrollHeight);
+        marker.style.setProperty('--m-top', `${el.offsetTop}px`);
+        marker.style.setProperty('--m-h', `${track}px`);
+        marker.style.setProperty('--m-thumb', `${thumb}px`);
+        marker.style.setProperty('--m-y', `${((track - thumb) * el.scrollTop) / max}px`);
+      }
+    }
   }
   let ro: ResizeObserver | undefined;
   function init() {
