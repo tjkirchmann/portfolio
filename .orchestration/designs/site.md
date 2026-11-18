@@ -544,3 +544,30 @@ outwards, follows mouse, not permanent). Click to make explosion. Reset."
   the reduced-motion still (under reduced motion: brush and reset work on the still frame,
   gravity and explosion are disabled). Do not let tool state leak into the text panel's
   room: opening the panel clears any well and lets explosions finish outside the room.
+
+## Amendment 11 (2026-11-17, from the owner)
+
+Light process. The owner's words: "can we find options for a different icons pack and also
+lighten the tool menu slightly so its a bit more noticeable. Throw my github profile and my
+linkedin at the bottom behind monocolor icons."
+
+- **AC-52 tool menu a little brighter.** Raise the resting opacity of the tool menu's
+  icons one step (inactive roughly 0.45 to 0.65, active stays full) so the menu is easier
+  to notice. Slightly, not a redesign.
+- **AC-53 bottom links.** The home link row becomes: `Blog` as a text link, then three
+  icon links, each a single-colour glyph in the same emerald as the other icons, no
+  circles, with an accessible label and a tooltip: GitHub `https://github.com/tjkirchmann`,
+  LinkedIn `https://www.linkedin.com/in/tylerkirchmann`, Email
+  `mailto:tjkirchmann@gmail.com`. External links open in a new tab with `rel="noopener"`.
+  `links` in `site.yaml` gains an optional `icon`. Brand glyphs come from a brand set
+  (Simple Icons via `@iconify-json/simple-icons` or the `simple-icons` package), since
+  general packs often lack them.
+- **AC-54 icon pack options.** Do not switch packs yet. Add an "Icon packs" section to
+  `/blocks` that renders the same items in each candidate so the owner can choose by eye:
+  the six Experiences and four Companies as timeline rows, the four tool icons (brush,
+  gravity, explosion, reset), the back arrow, and mail. Candidates: the current Lucide;
+  Phosphor (show regular and duotone); Tabler; Pixelarticons (pixel-grid, may suit the
+  cell look); Iconoir. Use Iconify JSON packs (`@iconify-json/*`) inlined as SVG at build,
+  no client JS, no icon fonts. Label each column with the pack name only. Structure the
+  icon lookup so that switching the whole site to the chosen pack afterwards is a one-line
+  default plus per-item names in `site.yaml` (`pack:name` form is fine).
