@@ -13,7 +13,7 @@
   - The simulation draws at full strength while that view shows, and drops back to 0.7 behind real pieces.
   - It is first in `site.yaml` (Life, `grid-3-x-3`), followed by waveball, spikeball, spikeball-life, waveball-life.
   - The remembered choice now uses the key `art:v2:<path>`, so returning visitors land on the new default once.
-- **Icons:** all icons are emerald: switcher icons (others at 45% opacity, the current one at full), every timeline step icon, and the back arrow.
+- **Icons:** all icons are emerald: switcher icons (others at 45% opacity, the current one at full), every timeline step icon, and the back arrow. Their rings are emerald too: timeline node circles are a faint emerald while the current step keeps its brighter metallic ring, the rail between nodes is a faint emerald, and the back button's outline is emerald (brighter on hover).
 - **Checked:** in Chromium the old `art:/` key was ignored, switching to waveball and reloading kept it, and going back to Life stopped every video. `pnpm build` passes and 4321 serves.
 
 ## Round 8 follow-up (art size in short viewports, no test run by request)
