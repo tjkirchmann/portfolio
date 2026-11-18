@@ -25,6 +25,7 @@ const { groups, label = 'My Skills' } = Astro.props;
   <div class="skills-more" data-tl-more hidden>
     {/* RoomPanel reads the element with class `prose` */}
     <div class="prose skills">
+      <span class="hint skills-rows-hint" data-hint="skill-rows" data-tail="down" hidden>Hover a skill</span>
       {
         groups.map((g) => (
           <div class="skills-group">
@@ -135,6 +136,16 @@ const { groups, label = 'My Skills' } = Astro.props;
   }
   .skill-plain .skill-name {
     color: var(--ink-3);
+  }
+  /* the step that points visitors at the rows: top right of the list, over the meters */
+  .skills {
+    position: relative;
+  }
+  .skills-rows-hint {
+    position: absolute;
+    top: -0.5em;
+    right: 0;
+    z-index: 1;
   }
   /* the note for a hovered row, in a bubble above it */
   .skill {
