@@ -3,6 +3,7 @@ import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Split from '../../components/Split.astro';
 import Dither from '../../components/Dither.astro';
+import ToolMenu from '../../components/ToolMenu.astro';
 import BackLink from '../../components/BackLink.astro';
 import Prose from '../../components/Prose.astro';
 import { formatDate, getPosts, postSlug, type Post } from '../../lib/posts';
@@ -22,6 +23,7 @@ const site = loadSite();
   <Split mirror lock="scroll" label="Animation">
     <BackLink slot="art-top" href="/blog/" label="Blog" />
     <Dither slot="art" />
+    <ToolMenu slot="art" />
 
     <article>
       <header class="page-head post-head">

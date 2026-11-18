@@ -17,9 +17,19 @@ export interface Life {
   hue: Uint8Array;
   alive: Uint8Array;
   trail: Float32Array;
+  /** painted colour per cell (tools): 0 none, else a position on the palette ramp, see rampByte().
+   *  Survivors keep it, births take it from their parents when most of them carry it, and it
+   *  goes when the trail has faded. */
+  paint: Uint8Array;
   steps: number;
   step(): void;
+  /** call after writing into `paint`, so the next step carries it */
+  markPainted(): void;
 }
+
+/** Palette ramp for painted cells: 0 deep, 0.2 teal, 0.4 emerald, 0.6 aqua, 0.8 blue,
+ *  1 blue-white. Stored as 1..255 (0 means unpainted). */
+export const rampByte = (pos: number) => 1 + Math.round(Math.min(1, Math.max(0, pos)) * 254);
 
 // ---------- seeded randomness ----------
 
@@ -58,6 +68,9 @@ export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life 
   const alive = new Uint8Array(w * h);
   const next = new Uint8Array(w * h);
   const trail = new Float32Array(w * h);
+  const paint = new Uint8Array(w * h);
+  const nextPaint = new Uint8Array(w * h);
+  let painted = 0;
   const col = new Uint8Array(w);
   const hue = hueMap(seed, w, h);
 
@@ -89,8 +102,13 @@ export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life 
 
   let quiet = 0;
   const life: Life = {
-    w, h, hue, alive, trail, steps: 0,
+    markPainted() {
+      painted = Math.max(painted, 1);
+    },
+    w, h, hue, alive, trail, paint, steps: 0,
     step() {
+      // painted cells are rare; skip the paint pass entirely when there are none
+      const doPaint = painted > 0;
       let changed = 0;
       let pop = 0;
       // column sums of three rows, then a sliding window of three columns: 3 adds per cell
@@ -105,16 +123,33 @@ export function createLife(seed: string, w = SIZE, h = SIZE, fill = true): Life 
           const n = left + mid + right - a;
           const v = n === 3 || (a === 1 && n === 2) ? 1 : 0;
           next[i] = v;
+          if (doPaint) {
+            if (v && !a) {
+              // a birth: take the colour of the painted parents if they are the majority
+              let k = 0, sum = 0;
+              const xm = x === 0 ? w - 1 : x - 1, xp = x === w - 1 ? 0 : x + 1;
+              for (const j of [ym + xm, ym + x, ym + xp, y0 + xm, y0 + xp, yp + xm, yp + x, yp + xp]) {
+                if (alive[j] && paint[j]) (k++, (sum += paint[j]));
+              }
+              nextPaint[i] = k >= 2 ? Math.round(sum / k) : 0;
+            } else nextPaint[i] = paint[i];
+          }
           changed += v ^ a;
           pop += v;
           left = mid;
           mid = right;
         }
       }
+      painted = 0;
       for (let i = 0; i < alive.length; i++) {
         const a = next[i];
         trail[i] = a ? 1 : trail[i] * DECAY;
         alive[i] = a;
+        if (doPaint) {
+          const p = trail[i] > 0.03 ? nextPaint[i] : 0;
+          paint[i] = p;
+          if (p) painted++;
+        }
       }
       // keep it alive but sparse: when it settles into ash, drop a small soup somewhere
       quiet = changed < w * h * ACTIVITY ? quiet + 1 : 0;
@@ -271,7 +306,7 @@ export function classify(l: Life, cols: number, rows: number, out: Uint8Array): 
       if (!v) empty++;
       out[o] = v;
       out[o + 1] = l.hue[i] * 127;
-      out[o + 2] = 0;
+      out[o + 2] = v ? l.paint[i] : 0;
       out[o + 3] = 255;
     }
   }

@@ -1,0 +1,161 @@
+---
+/**
+ * Paint tools for the pane's life simulation: a row of small icon buttons over the art, in the
+ * archived art switcher's style. Shown while the pointer is over the pane, fading out shortly
+ * after it leaves; hidden (and the tools suspended) while the home text panel is up. One tool
+ * at a time, clicking it again puts it down. Reset is a one-off. Pointer devices at 800px and
+ * wider only. The Dither in the same pane does the painting (events `dither:tool`, `dither:reset`).
+ */
+import { icon } from '../lib/icons';
+
+const tools = [
+  { id: 'brush', icon: 'paintbrush', label: 'Brush' },
+  { id: 'gravity', icon: 'orbit', label: 'Gravity' },
+  { id: 'explode', icon: 'bomb', label: 'Explosion' },
+];
+---
+
+<div class="tools" role="toolbar" aria-label="Paint tools" data-tools>
+  {
+    tools.map((t) => (
+      <button
+        type="button"
+        class="tool"
+        data-tool-pick={t.id}
+        data-motion={t.id === 'brush' ? undefined : ''}
+        aria-pressed="false"
+        aria-label={t.label}
+        title={t.label}
+        set:html={icon(t.icon, 16)}
+      />
+    ))
+  }
+  <button type="button" class="tool" data-tool-reset aria-label="Reset" title="Reset" set:html={icon('rotate-ccw', 16)} />
+</div>
+
+<style>
+  .tools {
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-3);
+    transform: translateX(-50%);
+    z-index: 2;
+    display: none;
+    gap: var(--space-1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-1) var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) and (min-width: 800px) {
+    .tools {
+      display: flex;
+    }
+  }
+  :global([data-tools-open]) .tools,
+  .tools:focus-within {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* the text panel is up: out of the way, whatever the pointer does */
+  :global([data-room-open]) .tools {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tool {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--emerald);
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity var(--dur-1) var(--ease);
+  }
+  .tool:hover {
+    opacity: 0.75;
+  }
+  .tool[aria-pressed='true'] {
+    opacity: 1;
+  }
+  .tool:disabled {
+    opacity: 0.18;
+    cursor: default;
+  }
+  .tool :global(svg) {
+    display: block;
+  }
+  .tool:focus-visible {
+    outline: 2px solid var(--emerald);
+    outline-offset: 0;
+  }
+  /* the pointer shows which tool is in hand */
+  :global([data-split-art][data-tool='brush']) {
+    cursor: crosshair;
+  }
+  :global([data-split-art][data-tool='gravity']) {
+    cursor: none;
+  }
+  :global([data-split-art][data-tool='explode']) {
+    cursor: cell;
+  }
+  :global([data-split-art][data-room-open]) {
+    cursor: auto;
+  }
+  .tools {
+    cursor: auto;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tools {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const GRACE = 600;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function setup() {
+    document.querySelectorAll<HTMLElement>('[data-tools]').forEach((menu) => {
+      if (menu.dataset.ready) return;
+      menu.dataset.ready = '1';
+      const pane = (menu.closest('[data-split-art]') ?? menu.parentElement!) as HTMLElement;
+      const picks = Array.from(menu.querySelectorAll<HTMLButtonElement>('[data-tool-pick]'));
+      let current: string | null = null;
+      let hideT = 0;
+
+      const send = (name: string, detail: object) => document.dispatchEvent(new CustomEvent(name, { detail: { pane, ...detail } }));
+      const pick = (tool: string | null) => {
+        current = tool;
+        for (const b of picks) b.setAttribute('aria-pressed', String(b.dataset.toolPick === tool));
+        send('dither:tool', { tool });
+      };
+      const motion = () => {
+        // under reduced motion only the brush and reset work (on the still frame)
+        for (const b of picks) if (b.hasAttribute('data-motion')) b.disabled = reduce.matches;
+        if (reduce.matches && current && current !== 'brush') pick(null);
+      };
+      motion();
+      reduce.addEventListener('change', motion);
+
+      for (const b of picks) b.addEventListener('click', () => pick(current === b.dataset.toolPick ? null : b.dataset.toolPick!));
+      menu.querySelector('[data-tool-reset]')!.addEventListener('click', () => send('dither:reset', {}));
+
+      pane.addEventListener('pointerenter', (e) => {
+        if (e.pointerType === 'touch') return;
+        clearTimeout(hideT);
+        pane.setAttribute('data-tools-open', '');
+      });
+      pane.addEventListener('pointerleave', () => {
+        clearTimeout(hideT);
+        hideT = window.setTimeout(() => pane.removeAttribute('data-tools-open'), GRACE);
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', setup);
+</script>

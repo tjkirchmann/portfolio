@@ -143,6 +143,7 @@
       if (!open) {
         open = true;
         room.setAttribute('data-open', '');
+        pane.setAttribute('data-room-open', ''); // the tool menu steps aside
         fill(li);
         if (held) {
           // back before the frame was let go: the room is still there
@@ -172,6 +173,7 @@
       clearTimeout(swapT);
       mark(null);
       room.removeAttribute('data-open');
+      pane.removeAttribute('data-room-open');
       room.removeAttribute('data-swap');
       const wasShown = room.hasAttribute('data-show');
       room.removeAttribute('data-show');

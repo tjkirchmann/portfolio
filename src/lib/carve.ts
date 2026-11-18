@@ -276,6 +276,7 @@ export function openCarve(life: Life, cols: number, rows: number, now: number, i
           const o = backPos(b, now) * 4;
           cells[o] = b.v;
           cells[o + 1] = b.hue;
+          cells[o + 2] = 0;
         }
         return;
       }
@@ -286,6 +287,7 @@ export function openCarve(life: Life, cols: number, rows: number, now: number, i
         const o = p * 4;
         cells[o] = v;
         cells[o + 1] = m.hue;
+        cells[o + 2] = 0;
       }
     },
     release(now, quick = false) {

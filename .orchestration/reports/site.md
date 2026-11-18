@@ -4,7 +4,32 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 9 (Amendment 9: AC-41 to AC-46). Round 8: AC-39, AC-40; round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 10 (Amendment 10: AC-47 to AC-51). Round 9: AC-41 to AC-46; round 8: AC-39, AC-40; round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 10 (Amendment 10, no test run by request)
+
+- **AC-47 menu:** `ToolMenu.astro` sits in the art slot on home, the blog index and posts. It has four transparent emerald lucide buttons: brush (`paintbrush`), gravity (`orbit`), explosion (`bomb`), and reset (`rotate-ccw`).
+  - It appears while the pointer is over the pane and fades 600ms after the pointer leaves.
+  - It only appears on devices with a fine, hovering pointer at 800px and wider.
+  - It is hidden while the text panel is open: `RoomPanel` sets `data-room-open` on the pane. Tools are suspended while the room exists or is walking back.
+  - The active tool shows at full opacity, and a second click puts it down. The cursor shows the tool: crosshair for the brush, none for gravity (the well is the cursor), cell for explosions.
+- **Shared plumbing:**
+  - Life gained a `paint` layer, a byte per cell on a deep, teal, emerald, aqua, blue, blue-white ramp. Survivors keep their colour, a birth takes the colour when at least 2 of its 3 parents are painted, and the colour clears once the trail has faded. The pass is skipped when nothing is painted.
+  - `classify` sends the paint in the B channel, and the metal shader uses `ramp(b)` in place of the hue family.
+  - The tools are in `src/lib/tools.ts`, driven from `Dither.astro` through `dither:tool` and `dither:reset` events.
+- **AC-48 brush:** strokes are filled in between pointer samples (coalesced events, no diagonal-only gaps). The colour ping-pongs over 60 cells per one-way trip.
+  - Deviation: painted cells are held as drawn for 450ms, then handed to Life. Painted straight into Life, a one-cell line had turned into blobs before the stroke even finished, so it never read as a stroke.
+- **AC-49 gravity:** the well has a radius of 7 cells and follows the pointer with easing. Cells inside are pushed out along their own direction to just beyond the rim (they are real and keep their paint). The ring is drawn on top as cells: 6 cells of falloff, blue at the rim through emerald to teal, with hash grain. It fades in and out over 250ms when the pointer enters or leaves the pane or the tool is put down.
+- **AC-50 explosion:** a snowplough front reaches 26 cells in 560ms with ease-out, carrying real cells with it. It leaves a faint cooling wake, so the centre reads as hollow, with a hot blue-white front and a cooling band behind.
+  - At the end the carried cells cool to ordinary ramp colours, and small 3x3 clumps of debris are dropped around the edge plus a few inside. Single cells would just die.
+  - Explosions can overlap.
+- **AC-51 reset:** fades out over 140ms, builds a new seed and its 240 warm-up steps in the browser, clears paint and tool state, then fades back in over 220ms.
+- **Checked:** Playwright with SwiftShader, using real mouse paths plus in-page synthetic paths with canvas frame capture (screenshots were too slow to catch the 450ms stroke).
+  - Covered: slow strokes and fast scribbles, circling with the well, three overlapping explosions, switching tools mid-explosion, opening the text panel with gravity active (the well dropped, the menu was at opacity 0), reset, a built blog post, and the button toggle.
+  - The empty fraction stayed between 0.79 and 0.86 over these runs (about 0.92 untouched), so nothing got stuck, flooded or emptied.
+  - `pnpm build` passes, and `/`, `/blog/`, both posts and `/blocks/` serve 200.
+- **Dev 404:** the owner's dev content store (`.astro/data-store.json`) was rewritten at 19:28, the moment `content.config.ts` changed in round 9. It holds no blog entries, while the build store does. That fits a failed or partial content re-sync after the schema change, not a code fault. I could not reproduce it in a copy outside the worktree (a symlinked `node_modules` breaks dev there). A restart of `pnpm dev` should fix it, and restarting after any `content.config.ts` change is the safe habit. When I checked, 4321 still returned 404 for the post, so it had not been restarted yet.
+- **Not checked:** real GPU, Safari, Firefox, a real trackpad or mouse by hand, reduced motion with the tools (gravity and explosion buttons are disabled, and brush and reset render on the still frame), long play sessions, and the 2D fallback colours for painted cells (they map to the nearest hue family).
 
 ## Round 9 (Amendment 9, no test run by request)
 

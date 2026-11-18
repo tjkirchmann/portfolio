@@ -64,9 +64,10 @@ const state = encodeState(life);
 </style>
 
 <script>
-  import { createLife, decodeState, draw, classify, colours, type Life } from '../lib/dither-sim';
+  import { createLife, decodeState, classify, colours, WARMUP, type Life } from '../lib/dither-sim';
   import { createMetal, type Metal } from '../lib/metal';
   import { openCarve, type Carve } from '../lib/carve';
+  import { createTools, type Tools } from '../lib/tools';
 
   interface Inst {
     canvas: HTMLCanvasElement;
@@ -87,6 +88,10 @@ const state = encodeState(life);
     carve: Carve | null;
     /** a closed room whose frame cells are still walking back in */
     leaving: Carve | null;
+    /** paint tools (menu in the same pane) */
+    tools: Tools;
+    tool: string | null;
+    pane: HTMLElement;
     /** css px of the grid's top-left inside the box, and per cell */
     offX: number;
     offY: number;
@@ -163,32 +168,29 @@ const state = encodeState(life);
 
   function render(it: Inst) {
     if (!it.img && !it.cells && !layout(it)) return;
-    let empty: number;
+    const now = performance.now();
+    // per cell: the simulation, then the tools' passing effects, then the panel's room on top
+    const empty = classify(it.life, it.cols, it.rows, it.cells!);
+    it.tools.paint(it.cells!, now);
+    it.leaving?.paint(it.cells!, now);
+    it.carve?.paint(it.cells!, now);
     if (it.metal) {
-      empty = classify(it.life, it.cols, it.rows, it.cells!);
-      it.leaving?.paint(it.cells!, performance.now());
-      it.carve?.paint(it.cells!, performance.now());
       it.metal.upload(it.cells!);
       it.metal.draw(lightTime());
-    } else if (it.carve || it.leaving) {
-      // flat fallback with a room: classify, paint the room, then colour by the same palette
-      empty = classify(it.life, it.cols, it.rows, it.cells!);
-      it.leaving?.paint(it.cells!, performance.now());
-      it.carve?.paint(it.cells!, performance.now());
+    } else {
+      // flat fallback: the same cells coloured from the 2D palette (painted cells by ramp band)
       const c = it.cells!, out = it.img!.data;
       for (let i = 0; i < c.length; i += 4) {
         const v = c[i];
         if (!v) {
           out[i] = 10; out[i + 1] = 12; out[i + 2] = 11;
         } else {
-          const k = ((c[i + 1] / 127) | 0) * 3 + (v > 200 ? 0 : v > 120 ? 1 : 2);
+          const fam = c[i + 2] ? (c[i + 2] < 140 ? 0 : c[i + 2] < 180 ? 1 : 2) : (c[i + 1] / 127) | 0;
+          const k = fam * 3 + (v > 200 ? 0 : v > 120 ? 1 : 2);
           out[i] = it.pal[k * 3]; out[i + 1] = it.pal[k * 3 + 1]; out[i + 2] = it.pal[k * 3 + 2];
         }
         out[i + 3] = 255;
       }
-      it.ctx!.putImageData(it.img!, 0, 0);
-    } else {
-      empty = draw(it.life, it.cols, it.rows, it.pal, it.img!.data);
       it.ctx!.putImageData(it.img!, 0, 0);
     }
     it.canvas.dataset.empty = empty.toFixed(3);
@@ -208,23 +210,28 @@ const state = encodeState(life);
     if (!raf && insts.some((it) => it.metal && running(it))) raf = requestAnimationFrame(frame);
   }
 
-  // while cells are walking, redraw every frame (the Life step stays at its own rate)
+  // while cells are walking or a tool is animating, redraw every frame (the Life step stays at
+  // its own rate)
   let walkRaf = 0;
   function walkFrame() {
     walkRaf = 0;
     const now = performance.now();
     let more = false;
     for (const it of insts) {
-      if (!it.carve && !it.leaving) continue;
+      const fx = it.tools.frame(now);
+      if (!it.carve && !it.leaving && !fx) continue;
       if (it.leaving?.done(now)) {
         it.leaving.commit();
         it.leaving = null;
       }
       render(it);
-      if (it.leaving || it.carve?.walking(now)) more = true;
+      if (fx || it.leaving || it.carve?.walking(now)) more = true;
     }
     if (more) walkRaf = requestAnimationFrame(walkFrame);
   }
+  const wake = () => {
+    if (!walkRaf) walkRaf = requestAnimationFrame(walkFrame);
+  };
 
   function setRoom(it: Inst, open: boolean) {
     if (open === !!it.carve) return;
@@ -234,6 +241,10 @@ const state = encodeState(life);
       // back before the old frame finished walking in: land it now, then make the new room
       it.leaving?.commit();
       it.leaving = null;
+      // tools are suspended while the panel is up; a well goes at once, blasts run on outside
+      it.tools.dropWell();
+      it.tools.brushEnd();
+      it.tools.flushBrush();
       it.carve = openCarve(it.life, it.cols, it.rows, now, reduce.matches);
     } else {
       it.carve!.release(now, reduce.matches);
@@ -242,7 +253,97 @@ const state = encodeState(life);
     }
     announce(it);
     render(it);
-    if ((it.leaving || it.carve?.walking(now)) && !walkRaf) walkRaf = requestAnimationFrame(walkFrame);
+    if (it.leaving || it.carve?.walking(now)) wake();
+  }
+
+  // ---- paint tools ----
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 800px)');
+  const suspended = (it: Inst) => !!(it.carve || it.leaving) || !fine.matches;
+  const motionTool = (t: string | null) => t === 'gravity' || t === 'explode';
+
+  function toCell(it: Inst, e: PointerEvent) {
+    const r = it.canvas.getBoundingClientRect();
+    return { x: ((e.clientX - r.left) / r.width) * it.cols, y: ((e.clientY - r.top) / r.height) * it.rows };
+  }
+  const onMenu = (e: Event) => !!(e.target as Element | null)?.closest?.('[data-tools]');
+
+  function bindTools(it: Inst) {
+    const pane = it.pane;
+    let down = false;
+    pane.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' || e.button !== 0 || !it.tool || suspended(it) || onMenu(e)) return;
+      const c = toCell(it, e);
+      if (it.tool === 'brush') {
+        down = true;
+        pane.setPointerCapture(e.pointerId);
+        it.tools.brush(c.x, c.y, true);
+        render(it);
+        wake();
+        e.preventDefault();
+      } else if (it.tool === 'explode' && !reduce.matches) {
+        it.tools.explode(c.x, c.y, performance.now());
+        wake();
+        e.preventDefault();
+      }
+    });
+    pane.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch' || !it.tool) return;
+      if (suspended(it)) return;
+      if (it.tool === 'brush' && down) {
+        const evs = e.getCoalescedEvents?.() ?? [e];
+        for (const ce of evs.length ? evs : [e]) {
+          const c = toCell(it, ce);
+          it.tools.brush(c.x, c.y, false);
+        }
+        render(it);
+      } else if (it.tool === 'gravity' && !reduce.matches) {
+        if (onMenu(e)) return it.tools.well(null, null);
+        const c = toCell(it, e);
+        it.tools.well(c.x, c.y);
+        wake();
+      }
+    });
+    const up = () => {
+      if (!down) return;
+      down = false;
+      it.tools.brushEnd();
+    };
+    pane.addEventListener('pointerup', up);
+    pane.addEventListener('pointercancel', up);
+    pane.addEventListener('pointerleave', () => {
+      it.tools.well(null, null);
+      wake();
+    });
+  }
+
+  function setTool(it: Inst, tool: string | null) {
+    it.tool = tool;
+    it.tools.well(null, null);
+    it.tools.brushEnd();
+    if (tool) it.pane.dataset.tool = tool;
+    else delete it.pane.dataset.tool;
+    wake();
+  }
+
+  /** a fresh pre-evolved field under a quick fade */
+  function reseed(it: Inst) {
+    const c = it.canvas;
+    c.style.transition = 'opacity 140ms ease-out';
+    c.style.opacity = '0';
+    window.setTimeout(() => {
+      const fresh = createLife(`${c.dataset.seed}:${Math.random().toString(36).slice(2)}`);
+      for (let i = 0; i < WARMUP; i++) fresh.step();
+      it.life.alive.set(fresh.alive);
+      it.life.trail.set(fresh.trail);
+      it.life.hue.set(fresh.hue);
+      it.life.paint.fill(0);
+      it.tools.clear();
+      // keep an open room clear
+      it.carve?.hold();
+      render(it);
+      c.style.transition = 'opacity 220ms ease-in';
+      c.style.opacity = '1';
+    }, reduce.matches ? 0 : 150);
   }
 
   const running = (it: Inst) =>
@@ -260,6 +361,7 @@ const state = encodeState(life);
       const t0 = performance.now();
       it.life.step();
       it.carve?.hold();
+      it.tools.afterStep();
       render(it);
       const dt = performance.now() - t0;
       it.steps++;
@@ -294,6 +396,7 @@ const state = encodeState(life);
   function teardown() {
     clearInterval(timer);
     cancelAnimationFrame(walkRaf);
+    for (const it of insts) delete it.pane.dataset.tool;
     walkRaf = 0;
     cancelAnimationFrame(raf);
     raf = 0;
@@ -330,6 +433,7 @@ const state = encodeState(life);
         metal = null;
       }
       canvas.dataset.renderer = metal ? 'webgl' : '2d';
+      const pane = (canvas.closest('[data-split-art]') ?? canvas.parentElement!) as HTMLElement;
       const it: Inst = {
         canvas,
         life,
@@ -348,8 +452,12 @@ const state = encodeState(life);
         offX: 0,
         offY: 0,
         cellCss: 6,
+        tools: createTools(life, () => it),
+        tool: null,
+        pane,
       };
       insts.push(it);
+      bindTools(it);
       layout(it);
       render(it);
       io!.observe(canvas);
@@ -377,6 +485,15 @@ const state = encodeState(life);
   document.addEventListener('dither:carve', (e) => {
     const { pane, open } = (e as CustomEvent<{ pane: Element; open: boolean }>).detail;
     for (const it of insts) if (pane.contains(it.canvas)) setRoom(it, open);
+  });
+  // the tool menu in a pane picks a tool (or none) and asks for a reset
+  document.addEventListener('dither:tool', (e) => {
+    const { pane, tool } = (e as CustomEvent<{ pane: Element; tool: string | null }>).detail;
+    for (const it of insts) if (pane.contains(it.canvas)) setTool(it, motionTool(tool) && reduce.matches ? null : tool);
+  });
+  document.addEventListener('dither:reset', (e) => {
+    const { pane } = (e as CustomEvent<{ pane: Element }>).detail;
+    for (const it of insts) if (pane.contains(it.canvas)) reseed(it);
   });
   document.addEventListener('astro:before-swap', teardown);
   document.addEventListener('astro:page-load', init);

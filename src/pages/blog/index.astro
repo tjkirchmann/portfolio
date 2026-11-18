@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Split from '../../components/Split.astro';
 import Dither from '../../components/Dither.astro';
+import ToolMenu from '../../components/ToolMenu.astro';
 import BackLink from '../../components/BackLink.astro';
 import PostList from '../../components/PostList.astro';
 import { getPosts } from '../../lib/posts';
@@ -15,6 +16,7 @@ const posts = await getPosts();
   <Split mirror lock="scroll" label="Animation">
     <BackLink slot="art-top" href="/" label="Home" />
     <Dither slot="art" />
+    <ToolMenu slot="art" />
 
     <header class="page-head">
       <h1 class="page-title">Blog</h1>

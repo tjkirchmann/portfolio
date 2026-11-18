@@ -26,6 +26,9 @@ const vec3 EMERALD = vec3(0.463, 0.784, 0.647);
 const vec3 AQUA = vec3(0.345, 0.702, 0.702);
 const vec3 BLUE = vec3(0.290, 0.525, 0.784);
 const vec3 SHEEN = vec3(0.86, 1.0, 0.95);   // white-green, never warm
+const vec3 DEEP = vec3(0.196, 0.431, 0.329);
+const vec3 TEAL = vec3(0.341, 0.616, 0.529);
+const vec3 BLUEWHITE = vec3(0.80, 0.90, 1.0);
 
 vec4 cellAt(vec2 c) {
   if (c.x < 0.0 || c.y < 0.0 || c.x >= uGrid.x || c.y >= uGrid.y) return vec4(0.0);
@@ -39,6 +42,16 @@ vec3 family(float g, float shift) {
   // g: 0 green, 0.5 aqua, 1 blue; shift slides one step toward blue (iridescence)
   float h = clamp(g * 2.0 + shift, 0.0, 2.0);
   return h < 1.0 ? mix(EMERALD, AQUA, h) : mix(AQUA, BLUE, h - 1.0);
+}
+
+// painted cells: b in (0, 1], 0 deep -> teal -> emerald -> aqua -> blue -> blue-white
+vec3 ramp(float b) {
+  float p = clamp((b * 255.0 - 1.0) / 254.0, 0.0, 1.0) * 5.0;
+  if (p < 1.0) return mix(DEEP, TEAL, p);
+  if (p < 2.0) return mix(TEAL, EMERALD, p - 1.0);
+  if (p < 3.0) return mix(EMERALD, AQUA, p - 2.0);
+  if (p < 4.0) return mix(AQUA, BLUE, p - 3.0);
+  return mix(BLUE, BLUEWHITE, p - 4.0);
 }
 
 void main() {
@@ -91,7 +104,7 @@ void main() {
   if (!live) score = min(score, 0.7);
 
   float shift = 0.55 * (0.5 + 0.5 * sin((along - centre) * 9.0 + n.x * 2.0));
-  vec3 base = family(t.g / 0.996, shift);
+  vec3 base = t.b > 0.002 ? ramp(t.b) : family(t.g / 0.996, shift);
   // intensity tames the body tones; highlights keep their heat so the contrast survives
   vec3 col;
   float k = uIntensity;

@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Split from '../components/Split.astro';
 import Dither from '../components/Dither.astro';
+import ToolMenu from '../components/ToolMenu.astro';
 import RoomPanel from '../components/RoomPanel.astro';
 import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
@@ -13,6 +14,7 @@ const site = loadSite();
 <Base title={site.name} description={`${site.name}, ${site.role}`}>
   <Split lock="fit" label="Animation">
     <Dither slot="art" />
+    <ToolMenu slot="art" />
     <RoomPanel slot="art" />
 
     <header class="page-head home-head">
