@@ -5,7 +5,16 @@ import { z } from 'astro/zod';
 import { iconExists } from './icons';
 import { artField } from './art-set';
 
-const link = z.object({ label: z.string(), href: z.string() });
+const iconName = z
+  .string()
+  .optional()
+  .superRefine((v, ctx) => {
+    if (v !== undefined && !iconExists(v))
+      ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (a lucide name, or pack:name, e.g. simple-icons:github)` });
+  });
+
+/** with an icon, the link shows as the icon alone (label kept for screen readers and tooltip) */
+const link = z.object({ label: z.string(), href: z.string(), icon: iconName }).strict();
 
 const step = z
   .object({

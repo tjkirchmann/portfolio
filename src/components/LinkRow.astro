@@ -1,7 +1,13 @@
 ---
-/** A row of plain links, used along the bottom of the home text pane. */
+/**
+ * A row of links along the bottom of the home text pane. A link with an `icon` shows as the
+ * icon alone, in emerald, with its label as the accessible name and tooltip; others are text.
+ * External links open in a new tab.
+ */
+import { icon } from '../lib/icons';
+
 interface Props {
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; icon?: string }[];
   label?: string;
 }
 const { links, label = 'Links' } = Astro.props;
@@ -13,8 +19,14 @@ const external = (href: string) => /^https?:/.test(href);
     {
       links.map((l) => (
         <li>
-          <a href={l.href} {...(external(l.href) ? { rel: 'noopener' } : {})}>
-            {l.label}
+          <a
+            href={l.href}
+            class:list={[{ 'is-icon': !!l.icon }]}
+            aria-label={l.icon ? l.label : undefined}
+            title={l.icon ? l.label : undefined}
+            {...(external(l.href) ? { target: '_blank', rel: 'noopener' } : {})}
+          >
+            {l.icon ? <Fragment set:html={icon(l.icon, 17)} /> : l.label}
           </a>
         </li>
       ))
@@ -26,6 +38,7 @@ const external = (href: string) => /^https?:/.test(href);
   .linkrow ul {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2) var(--space-5);
     list-style: none;
     margin: 0;
@@ -40,5 +53,21 @@ const external = (href: string) => /^https?:/.test(href);
   }
   .linkrow a:hover {
     color: var(--emerald);
+  }
+  .linkrow a.is-icon {
+    display: grid;
+    place-items: center;
+    padding: var(--space-1);
+    margin: 0 calc(-1 * var(--space-1));
+    color: var(--emerald);
+  }
+  .linkrow a.is-icon:hover {
+    color: color-mix(in oklab, var(--emerald) 70%, var(--ink));
+  }
+  .linkrow a.is-icon :global(svg) {
+    display: block;
+  }
+  .linkrow a:focus-visible {
+    outline-offset: 2px;
   }
 </style>

@@ -14,8 +14,32 @@ import { Content as Sample } from '../blocks/sample.md';
 import { getPosts } from '../lib/posts';
 import { loadSite } from '../lib/site';
 import { artList, type ArtField } from '../lib/art-set';
+import { icon } from '../lib/icons';
 
 const site = loadSite();
+
+// Icon pack candidates (AC-54): the same items in each pack, keyed by the current lucide
+// name. Where a pack has no close match the nearest glyph stands in.
+const ITEMS = ['users', 'handshake', 'megaphone', 'wrench', 'network', 'gamepad-2', 'scale', 'bird', 'package', 'trophy', 'paintbrush', 'orbit', 'bomb', 'rotate-ccw', 'chevron-left', 'mail'] as const;
+type Item = (typeof ITEMS)[number];
+const PACKS: { name: string; map: Record<Item, string> }[] = [
+  { name: 'Lucide', map: Object.fromEntries(ITEMS.map((n) => [n, n])) as Record<Item, string> },
+  ...(['regular', 'duotone'] as const).map((v) => {
+    const ph: Record<Item, string> = { users: 'users', handshake: 'handshake', megaphone: 'megaphone', wrench: 'wrench', network: 'network', 'gamepad-2': 'game-controller', scale: 'scales', bird: 'bird', package: 'package', trophy: 'trophy', paintbrush: 'paint-brush', orbit: 'planet', bomb: 'bomb', 'rotate-ccw': 'arrow-counter-clockwise', 'chevron-left': 'caret-left', mail: 'envelope' };
+    return {
+      name: v === 'regular' ? 'Phosphor' : 'Phosphor duotone',
+      map: Object.fromEntries(ITEMS.map((n) => [n, `ph:${ph[n]}${v === 'duotone' ? '-duotone' : ''}`])) as Record<Item, string>,
+    };
+  }),
+  { name: 'Tabler', map: { users: 'tabler:users', handshake: 'tabler:heart-handshake', megaphone: 'tabler:speakerphone', wrench: 'tabler:tool', network: 'tabler:network', 'gamepad-2': 'tabler:device-gamepad-2', scale: 'tabler:scale', bird: 'tabler:feather', package: 'tabler:package', trophy: 'tabler:trophy', paintbrush: 'tabler:brush', orbit: 'tabler:planet', bomb: 'tabler:bomb', 'rotate-ccw': 'tabler:rotate', 'chevron-left': 'tabler:chevron-left', mail: 'tabler:mail' } },
+  { name: 'Pixelarticons', map: { users: 'pixelarticons:users', handshake: 'pixelarticons:hand', megaphone: 'pixelarticons:megaphone', wrench: 'pixelarticons:tools', network: 'pixelarticons:share', 'gamepad-2': 'pixelarticons:gamepad', scale: 'pixelarticons:briefcase', bird: 'pixelarticons:feather', package: 'pixelarticons:package', trophy: 'pixelarticons:trophy', paintbrush: 'pixelarticons:brush', orbit: 'pixelarticons:bullseye', bomb: 'pixelarticons:bomb', 'rotate-ccw': 'pixelarticons:undo', 'chevron-left': 'pixelarticons:chevron-left', mail: 'pixelarticons:mail' } },
+  { name: 'Iconoir', map: { users: 'iconoir:group', handshake: 'iconoir:user-love', megaphone: 'iconoir:megaphone', wrench: 'iconoir:wrench', network: 'iconoir:network', 'gamepad-2': 'iconoir:gamepad', scale: 'iconoir:open-book', bird: 'iconoir:twitter', package: 'iconoir:package', trophy: 'iconoir:trophy', paintbrush: 'iconoir:design-pencil', orbit: 'iconoir:planet', bomb: 'iconoir:fire-flame', 'rotate-ccw': 'iconoir:refresh', 'chevron-left': 'iconoir:nav-arrow-left', mail: 'iconoir:mail' } },
+];
+const packRows = (map: Record<Item, string>) => ({
+  experiences: site.experiences.map((e) => ({ ...e, body: undefined, icon: map[(e.icon ?? 'users') as Item] ?? e.icon })),
+  companies: site.companies.map((e) => ({ ...e, body: undefined, icon: map[(e.icon ?? 'users') as Item] ?? e.icon })),
+});
+const TOOL_ITEMS: Item[] = ['paintbrush', 'orbit', 'bomb', 'rotate-ccw', 'chevron-left', 'mail'];
 // Archived: the ball pieces and their switcher no longer appear on the site. They live here.
 const archivedArt: ArtField = site.art ?? [
   { none: true, icon: 'grid-3-x-3', label: 'Life' },
@@ -118,6 +142,29 @@ const many = Array.from({ length: 12 }, (_, i) => ({
       <div class="backdemo"><BackLink href="/blog/" label="Blog" /></div>
     </section>
 
+    <section aria-labelledby="b-packs" class="packs-section">
+      <h2 id="b-packs">Icon packs</h2>
+      <div class="packs" tabindex="0" aria-labelledby="b-packs">
+        {
+          PACKS.map((p, k) => {
+            const rows = packRows(p.map);
+            return (
+              <div class="pack">
+                <h3 class="pack-name">{p.name}</h3>
+                <div class="pack-tools">
+                  {TOOL_ITEMS.map((n) => (
+                    <span class="pack-icon" set:html={icon(p.map[n], 18)} />
+                  ))}
+                </div>
+                <Timeline label="Experiences" id={`pk-${k}-exp`} items={rows.experiences} />
+                <Timeline label="Companies" id={`pk-${k}-co`} items={rows.companies} />
+              </div>
+            );
+          })
+        }
+      </div>
+    </section>
+
     <section aria-labelledby="b-prose">
       <h2 id="b-prose">Prose</h2>
       <Prose>
@@ -128,6 +175,36 @@ const many = Array.from({ length: 12 }, (_, i) => ({
 </Base>
 
 <style>
+  .packs-section {
+    max-width: none;
+  }
+  .packs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 17rem;
+    gap: var(--space-6);
+    overflow-x: auto;
+    padding-bottom: var(--space-3);
+    scrollbar-width: thin;
+  }
+  .pack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .pack-name {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .pack-tools {
+    display: flex;
+    gap: var(--space-3);
+    color: var(--emerald);
+  }
+  .pack-icon :global(svg) {
+    display: block;
+  }
   section {
     margin-bottom: var(--space-8);
     max-width: 36rem;

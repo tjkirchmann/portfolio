@@ -1,5 +1,6 @@
 # Home page content. Edit freely; the build validates the shape.
-# Icons are lucide names: https://lucide.dev/icons (default: circle-dot)
+# Icons are lucide names: https://lucide.dev/icons (default: circle-dot), or pack:name for an
+# installed Iconify pack, e.g. simple-icons:github
 # Multi-line body (markdown, blank line between paragraphs): `body: |` then indented lines below.
 name: Ty Kirchmann
 role: Operator & Technical Generalist
@@ -56,6 +57,11 @@ links:
   - label: Blog
     href: /blog/
   - label: GitHub
-    href: https://github.com/
+    href: https://github.com/tjkirchmann
+    icon: simple-icons:github
+  - label: LinkedIn
+    href: https://www.linkedin.com/in/tylerkirchmann
+    icon: simple-icons:linkedin
   - label: Email
-    href: mailto:you@example.com
+    href: mailto:tjkirchmann@gmail.com
+    icon: mail

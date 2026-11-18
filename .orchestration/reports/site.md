@@ -4,7 +4,23 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 10 (Amendment 10: AC-47 to AC-51). Round 9: AC-41 to AC-46; round 8: AC-39, AC-40; round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 10 (Amendment 10: AC-47 to AC-51, plus Amendment 11: AC-52 to AC-54). Round 9: AC-41 to AC-46; round 8: AC-39, AC-40; round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 10 additions (Amendment 11, no test run by request)
+
+- **AC-52:** tool icons rest at opacity 0.65 (was 0.45), with hover at 0.85 and the active tool at 1.
+- **AC-53:** the home link row is `Blog` as text, then GitHub and LinkedIn (`simple-icons:github`, `simple-icons:linkedin`) and Email (lucide `mail`). The icons are single-colour emerald, with no rings, and each has `aria-label` and `title`. The external links have `target="_blank" rel="noopener"`.
+  - `links[].icon` is optional and validated. The real URLs and address are in `site.yaml`.
+  - The experience renamed by the orchestrator ("Operating through Acquisition") is kept.
+- **AC-54:** `icon()` accepts `name` (default pack, `DEFAULT_PACK = 'lucide'` in `src/lib/icons.ts`) or `pack:name` for any installed `@iconify-json/<pack>`. Iconify packs render as inline SVG at build.
+  - Added: `@iconify-json/ph`, `tabler`, `pixelarticons`, `iconoir`, `simple-icons`.
+  - `/blocks` has an "Icon packs" section. It is a horizontally scrolling row of columns: Lucide, Phosphor, Phosphor duotone, Tabler, Pixelarticons, Iconoir.
+  - Each column shows the tool icons, the back arrow and mail, then the six Experiences and four Companies as timeline rows.
+  - Approximate stand-ins where a pack has no close match:
+    - Tabler: handshake `heart-handshake`, bird `feather`.
+    - Pixelarticons: handshake `hand`, network `share`, scale `briefcase`, bird `feather`, gravity `bullseye`.
+    - Iconoir: handshake `user-love`, scale `open-book`, bird `twitter`, brush `design-pencil`, explosion `fire-flame`.
+- **Checked:** screenshots of the section, the link row and the menu. `pnpm build` passes, and `/`, `/blog/`, a post and `/blocks/` serve.
 
 ## Round 10 (Amendment 10, no test run by request)
 
