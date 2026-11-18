@@ -98,6 +98,53 @@ companies:
     icon: trophy
     body: ""
 
+# "My Skills" in the bottom row opens these. level is 1 to 5 (5 is best, the brightest green).
+# icon is a Pixelarticons name, or simple-icons:<name> for a technology logo
+# (browse https://simpleicons.org). A row with no level is a plain line.
+# The levels below are placeholders: set your own.
+skills:
+  - title: Technical Skills
+    items:
+      - name: Python
+        level: 5
+        icon: simple-icons:python
+      - name: Analytics
+        level: 5
+        icon: simple-icons:jupyter
+      - name: Machine Learning
+        level: 4
+        icon: simple-icons:jupyter
+      - name: DBT
+        level: 4
+        icon: simple-icons:dbt
+      - name: React
+        level: 3
+        icon: simple-icons:react
+      - name: Coding Agents
+        level: 5
+        icon: simple-icons:claudecode
+      - name: Git
+        level: 4
+        icon: simple-icons:git
+      - name: Cloud
+        level: 3
+        icon: simple-icons:amazonwebservices
+      - name: and more...
+  - title: People Skills
+    items:
+      - name: Leadership
+        level: 4
+        icon: flag
+      - name: Management
+        level: 4
+        icon: users
+      - name: Problem Solving
+        level: 5
+        icon: lightbulb
+      - name: Determination
+        level: 5
+        icon: zap
+
 # The question mark on the simulation opens this. Placeholder text: replace with your own.
 about:
   title: About this simulation

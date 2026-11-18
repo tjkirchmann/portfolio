@@ -4,6 +4,7 @@ import { parse } from 'yaml';
 import { z } from 'astro/zod';
 import { iconExists } from './icons';
 import { artField } from './art-set';
+import { SKILL_LEVELS } from './skills';
 
 const iconName = z
   .string()
@@ -46,6 +47,21 @@ const step = z
   })
   .strict();
 
+/** a row in the skills panel; with no `level` it is a plain line (e.g. "and more...") */
+const skill = z
+  .object({
+    name: z.string().min(1),
+    level: z
+      .number({ error: `level is a whole number from 1 to ${SKILL_LEVELS}` })
+      .int()
+      .min(1)
+      .max(SKILL_LEVELS, { error: `level goes up to ${SKILL_LEVELS}, the number of colours in the meter` })
+      .optional(),
+    icon: iconName,
+  })
+  .strict();
+const skillGroup = z.object({ title: z.string().min(1), items: z.array(skill) }).strict();
+
 const schema = z
   .object({
     name: z.string(),
@@ -54,6 +70,8 @@ const schema = z
     art: artField.optional(),
     experiences: z.array(step),
     companies: z.array(step),
+    /** shown in the hover panel from "My Skills" in the bottom row */
+    skills: z.array(skillGroup).optional(),
     /** shown in the hover panel from the question mark on the life simulation */
     about: z
       .object({ title: z.string().min(1), body: z.string().nullish().transform((v) => v ?? '') })

@@ -6,6 +6,7 @@ import ToolMenu from '../components/ToolMenu.astro';
 import RoomPanel from '../components/RoomPanel.astro';
 import SimAbout from '../components/SimAbout.astro';
 import Hints from '../components/Hints.astro';
+import SkillsLink from '../components/SkillsLink.astro';
 import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
 import { loadSite } from '../lib/site';
@@ -38,6 +39,7 @@ const site = loadSite();
 
     <footer class="home-foot">
       <LinkRow links={site.links} />
+      {site.skills && <SkillsLink groups={site.skills} />}
     </footer>
   </Split>
 </Base>
@@ -73,6 +75,11 @@ const site = loadSite();
   }
   .home-foot {
     flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
     padding-top: var(--space-4);
   }
   @media (max-width: 799.98px) {

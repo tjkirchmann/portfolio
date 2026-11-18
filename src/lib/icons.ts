@@ -73,7 +73,9 @@ export function icon(name: string | undefined, size = ICON_GRID): string {
   const ic = lookup(set, n)!;
   const w = ic.width ?? set.width ?? 16, h = ic.height ?? set.height ?? 16;
   const l = ic.left ?? set.left ?? 0, t = ic.top ?? set.top ?? 0;
-  const svg = `<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${l} ${t} ${w} ${h}" shape-rendering="crispEdges">${ic.body}</svg>`;
+  // only the pixel pack is drawn with hard edges; other packs (brand logos) have curves
+  const crisp = pack === DEFAULT_PACK ? ' shape-rendering="crispEdges"' : '';
+  const svg = `<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${l} ${t} ${w} ${h}"${crisp}>${ic.body}</svg>`;
   cache.set(key, svg);
   return svg;
 }

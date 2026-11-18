@@ -1,0 +1,138 @@
+---
+/**
+ * "My Skills" in the home bottom row. Hovering or focusing it opens the same text panel the
+ * experiences use (RoomPanel copies the hidden title and list from here), showing the skill
+ * groups from `skills` in site.yaml. Each row is a logo, a name and a stepped meter whose
+ * filled segments run blue to bright green. On narrow screens a tap opens the list inline.
+ */
+import { icon } from '../lib/icons';
+import { SKILL_GRADIENT, SKILL_LEVELS } from '../lib/skills';
+import type { Site } from '../lib/site';
+
+interface Props {
+  groups: NonNullable<Site['skills']>;
+  label?: string;
+}
+const { groups, label = 'My Skills' } = Astro.props;
+---
+
+<div class="skills-link" data-tl-item="skills">
+  <button type="button" class="skills-btn" data-tl-open aria-expanded="false">{label}</button>
+  <span class="tl-title" hidden>{label}</span>
+  <div class="skills-more" data-tl-more hidden>
+    {/* RoomPanel reads the element with class `prose` */}
+    <div class="prose skills">
+      {
+        groups.map((g) => (
+          <div class="skills-group">
+            <div class="skills-head">{g.title}</div>
+            <div class="skills-list" role="list">
+              {g.items.map((s) =>
+                s.level ? (
+                  <div class="skill" role="listitem">
+                    <span class="skill-logo" set:html={icon(s.icon, 24)} />
+                    <span class="skill-name">{s.name}</span>
+                    <span class="skill-meter" role="img" aria-label={`${s.level} of ${SKILL_LEVELS}`}>
+                      {SKILL_GRADIENT.map((c, i) => (
+                        <span class="skill-seg" style={i < s.level! ? `background:${c}` : undefined} data-on={i < s.level! ? '' : undefined} />
+                      ))}
+                    </span>
+                  </div>
+                ) : (
+                  <div class="skill skill-plain" role="listitem">
+                    <span class="skill-logo" />
+                    <span class="skill-name">{s.name}</span>
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .skills-link {
+    position: relative;
+  }
+  .skills-btn {
+    padding: var(--space-1) 0;
+    border: 0;
+    background: none;
+    color: var(--emerald);
+    font: inherit;
+    font-size: var(--text-md);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: default;
+    transition: color var(--dur-1) var(--ease);
+  }
+  .skills-btn:hover,
+  .skills-link[data-open] .skills-btn {
+    color: color-mix(in oklab, var(--emerald) 70%, var(--ink));
+  }
+  .skills-btn:focus-visible {
+    outline: 2px solid var(--emerald);
+    outline-offset: 2px;
+  }
+  /* narrow screens: the list opens inline, above the button */
+  .skills-more {
+    padding-bottom: var(--space-4);
+    font-size: var(--text-sm);
+  }
+</style>
+
+<style is:global>
+  /* global: the rows are copied into the hover panel, which sizes them through font-size */
+  .skills {
+    display: grid;
+    gap: 1.1em;
+    max-width: none;
+  }
+  .skills-head {
+    margin-bottom: 0.35em;
+    color: var(--ink-3);
+    font-size: 0.86em;
+    font-weight: 500;
+  }
+  .skill {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75em;
+    min-height: 28px;
+    padding: 0.12em 0;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .skill-logo {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    color: var(--emerald);
+  }
+  .skill-logo svg {
+    display: block;
+  }
+  .skill-plain .skill-name {
+    color: var(--ink-3);
+  }
+  /* a stepped meter: one hard-edged block per level, blue up to bright green */
+  .skill-meter {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1.5em;
+    gap: 3px;
+  }
+  .skill-seg {
+    height: 0.62em;
+    min-height: 6px;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--deep) 55%, transparent);
+  }
+  .skill-seg[data-on] {
+    box-shadow: none;
+  }
+</style>
