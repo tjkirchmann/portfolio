@@ -4,9 +4,9 @@
 
 Body text with **bold**, *italic*, a [link](https://example.com), `inline code` and a footnote.[^1]
 
-![A wireframe sphere inside a ring](../content/blog/first-post/wireframe.png "Wireframe")
+![A wireframe sphere inside a ring](./wireframe.png "Wireframe")
 
-![An image with no title has no caption](../content/blog/first-post/wireframe.png)
+![An image with no title has no caption](./wireframe.png)
 
 > A blockquote.
 
