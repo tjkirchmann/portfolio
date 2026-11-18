@@ -142,9 +142,10 @@ def deliver(stage, a, cache, first=None, size=None):
     root = os.path.join(cache, "preview") if preview else cache
     black_dir = os.path.join(root, "black")
     n = len(glob.glob(os.path.join(black_dir, "*.png")))
-    if first is None:
+    opaque = bool(getattr(stage.subject, "OPAQUE", False))
+    if first is None or opaque:
         first = post.load_png(os.path.join(black_dir, "f_0001.png"))[:, :, 0]
-    size = size or first.shape[0]
+    size = first.shape[1] if opaque else (size or first.shape[1])  # logical width (stacked is 2x tall)
     out = os.path.join(root, "out") if preview else a.public
     out = os.path.abspath(out)
     os.makedirs(out, exist_ok=True)
@@ -154,10 +155,20 @@ def deliver(stage, a, cache, first=None, size=None):
     sizes["loop.mp4"] = encode_capped(black_dir, os.path.join(out, "loop.mp4"), stage.fps, "h264", secs, cap)
     if not preview:
         sizes["loop.webm"] = encode_capped(black_dir, os.path.join(out, "loop.webm"), stage.fps, "vp9", secs, cap)
-    shutil.copyfile(os.path.join(black_dir, "f_0001.png"), os.path.join(out, "poster.png"))
-    blur = post.blur_data_url(first, os.path.join(cache, "tmp", "blur.png"))
+    os.makedirs(os.path.join(cache, "tmp"), exist_ok=True)
+    if opaque:
+        # poster: the composited RGBA master of frame 1 (lines over opaque black fill)
+        frames_dir = os.path.join(root, "frames")
+        shutil.copyfile(os.path.join(frames_dir, "f_0001.png"), os.path.join(out, "poster.png"))
+        rgba = post.load_png(os.path.join(frames_dir, "f_0001.png")).astype(np.float64)
+        blur = post.blur_data_url(None, os.path.join(cache, "tmp", "blur.png"), rgba=rgba)
+    else:
+        shutil.copyfile(os.path.join(black_dir, "f_0001.png"), os.path.join(out, "poster.png"))
+        blur = post.blur_data_url(first, os.path.join(cache, "tmp", "blur.png"))
     meta = dict(slug=a.slug, subject=getattr(stage.subject, "TITLE", a.slug), width=size, height=size,
                 fps=stage.fps, frames=n, duration=round(n / stage.fps, 3), blurDataUrl=blur)
+    if opaque:
+        meta["alpha"] = "stacked"
     with open(os.path.join(out, "meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
         f.write("\n")

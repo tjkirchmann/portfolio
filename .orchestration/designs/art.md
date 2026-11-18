@@ -287,3 +287,32 @@ This is the one place colour is allowed in the art. The plain `spikeball` stays 
   these two take priority and the zoom clip follows. One final render at a time.
 
 Output contract unchanged: `public/art/<slug>/{loop.webm,loop.mp4,poster.png,meta.json}`.
+
+## Amendment 3 (2026-11-17, from the owner)
+
+The owner's words: "a fourth setting of the ball that is the new default: wave ball,
+instead of transparent squares, the same color as the background, so its opaque, with the
+metallic game of life background that the first version has." Light process, parallel
+workers, no evidence work.
+
+**Stacked-alpha contract (shared by the art and site designs).** A piece that needs real
+opacity sets `"alpha": "stacked"` in `meta.json`. Its `loop.webm` and `loop.mp4` are then
+`width` x `2*height` pixels: the top half is the picture exactly as other pieces deliver it
+(light lines, and any colour, on pure black); the bottom half is the matte, white where the
+subject is solid, black elsewhere, antialiased at the silhouette. `meta.width` and
+`meta.height` stay the logical size (1200 x 1200). `poster.png` is the logical size, RGBA,
+already composited (lines over an opaque fill inside the silhouette, transparent outside),
+with the fill pure black; `blurDataUrl` is made from it. Pieces without `alpha` are
+unchanged.
+
+- **AC-32 opaque rendering.** A framework option a subject can switch on. The mesh is
+  treated as a solid: edges hidden behind the surface are not drawn at all (true hidden
+  line removal, not dimming), back faces are not drawn, and the matte pass renders the
+  solid silhouette. Visible lines keep the same width and depth-brightness rules. Output
+  follows the stacked-alpha contract above.
+- **AC-33 `waveball`:** the wave ball form and motion from `waveball-life`, with no life
+  tiles and no colour: light wireframe only, opaque. Before rendering, fix the two faults
+  noted on `waveball-life` if they are cheap: the faint cube-face seams in the grid, and
+  make sure the loop is exactly periodic. Loop 12-14s. Each file under 3 MB (the frame is
+  twice as tall).
+- Do not change the other pieces.

@@ -116,6 +116,12 @@ level L should be fully in by the zoom where level L-1's spacing reaches ~50 px
 (z = 50 * 2^(L-1) / s0) and start fading in at ~34 px. For a new subject, reuse the `LOD`
 class and register per-edge weights in `builders.spikeball.WEIGHTS[obj.name]`.
 
+## 3b2. Opaque solids
+
+`OPAQUE = True` makes the subject a solid: hidden lines are removed (not dimmed), and the
+video is delivered stacked (1200 x 2400, picture over matte) with `"alpha": "stacked"` in
+`meta.json` and an RGBA poster. Set `MAX_MB = 2.8`. See `waveball.py`.
+
 ## 3c. Life tiles (colour pieces only)
 
 `from framework.life import attach` then `attach(obj, int(LOOP_SECONDS * 30), seed=...)`

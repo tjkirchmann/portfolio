@@ -123,6 +123,8 @@ class LineRenderer:
         self.far = FAR
         self.occ = OCC
         self.depth_max = None
+        self.opaque = False  # set by the renderer: z-tested against the solid, no back edges
+        self.opaque_eps = 8.0  # depth offset toward the camera, in half line widths
         ang = np.linspace(0, 2 * np.pi, JOIN_SEGS, endpoint=False)
         self.circle = np.stack([np.cos(ang), np.sin(ang)], 1)
 
@@ -225,7 +227,71 @@ class LineRenderer:
         np.maximum.at(vb, E[:, 1], b1)
         return P, E, front, A, B, bA, bB, vb
 
+    def _write_mesh(self, co, Bv, nr, nd):
+        starts = np.concatenate([np.arange(nr) * 4, nr * 4 + np.arange(nd) * JOIN_SEGS])
+        loops = np.arange(len(co))
+        me = bpy.data.meshes.new("lines")
+        me.vertices.add(len(co))
+        me.vertices.foreach_set("co", co.astype(np.float32).ravel())
+        me.loops.add(len(loops))
+        me.loops.foreach_set("vertex_index", loops.astype(np.int32))
+        me.polygons.add(len(starts))
+        me.polygons.foreach_set("loop_start", starts.astype(np.int32))
+        me.update(calc_edges=True)
+        lum = srgb_to_linear(np.clip(Bv, 0, 1) * COLOR_DISPLAY).astype(np.float32)
+        a = me.attributes.new("lum", "FLOAT", "POINT")
+        a.data.foreach_set("value", lum)
+        me.materials.append(self.mat)
+        old = self.obj.data
+        self.obj.data = me
+        if old.users == 0:
+            bpy.data.meshes.remove(old)
+
+    def update_opaque(self):
+        """Opaque solids: only edges of front-facing faces, each ribbon placed at its true
+        depth plus a small offset toward the camera, so EEVEE's depth test against the solid
+        (rendered black in the same pass) removes hidden lines per pixel."""
+        P, E, front = self.gather()
+        E = E[front]
+        w = self.weights_kept[front]
+        f = self.fade(P)
+        b0, b1 = f[E[:, 0]] * w, f[E[:, 1]] * w
+        A, B = P[E[:, 0]], P[E[:, 1]]
+        dA, dB = A @ self.Z, B @ self.Z
+        x0, y0, x1, y1 = A @ self.X, A @ self.Y, B @ self.X, B @ self.Y
+        dx, dy = x1 - x0, y1 - y0
+        L = np.hypot(dx, dy)
+        ok = L > 1e-9
+        x0, y0, x1, y1, dx, dy, L, b0, b1, dA, dB = (a[ok] for a in (x0, y0, x1, y1, dx, dy, L, b0, b1, dA, dB))
+        Eo = E[ok]
+        hw = self.hw
+        eps = self.opaque_eps * hw
+        nx, ny = -dy / L * hw, dx / L * hw
+        rx = np.stack([x0 + nx, x0 - nx, x1 - nx, x1 + nx], 1).ravel()
+        ry = np.stack([y0 + ny, y0 - ny, y1 - ny, y1 + ny], 1).ravel()
+        rd = np.stack([dA, dA, dB, dB], 1).ravel() + eps
+        rb = np.stack([b0, b0, b1, b1], 1).ravel()
+        vb = np.full(len(P), -1.0)
+        np.maximum.at(vb, Eo[:, 0], b0)
+        np.maximum.at(vb, Eo[:, 1], b1)
+        used = np.nonzero(vb >= 0)[0]
+        sx, sy, sd = P[used] @ self.X, P[used] @ self.Y, P[used] @ self.Z
+        cx = (sx[:, None] + self.circle[None, :, 0] * hw).ravel()
+        cy = (sy[:, None] + self.circle[None, :, 1] * hw).ravel()
+        cd = np.repeat(sd + eps, JOIN_SEGS)
+        cb = np.repeat(vb[used], JOIN_SEGS)
+        X = np.concatenate([rx, cx])
+        Y = np.concatenate([ry, cy])
+        D = np.concatenate([rd, cd])
+        Bv = np.concatenate([rb, cb])
+        co = X[:, None] * self.X + Y[:, None] * self.Y + D[:, None] * self.Z
+        nr, nd = len(rx) // 4, len(used)
+        self._write_mesh(co, Bv, nr, nd)
+        return dict(edges=int(len(E)), front=int(len(E)), ribbons=int(nr), joins=int(nd))
+
     def update(self, back_dim=True):
+        if self.opaque:
+            return self.update_opaque()
         P, E, front, A, B, bA, bB, vb = self.segments(back_dim)
         x0, y0, x1, y1 = A @ self.X, A @ self.Y, B @ self.X, B @ self.Y
         sx, sy = P @ self.X, P @ self.Y
@@ -246,23 +312,6 @@ class LineRenderer:
         Bv = np.concatenate([rb, cb])
         co = (X[:, None] * self.X + Y[:, None] * self.Y + (5.0 + 10.0 * Bv)[:, None] * self.Z)
         nr, nd = len(rx) // 4, len(used)
-        starts = np.concatenate([np.arange(nr) * 4, nr * 4 + np.arange(nd) * JOIN_SEGS])
-        loops = np.arange(len(X))
-        me = bpy.data.meshes.new("lines")
-        me.vertices.add(len(X))
-        me.vertices.foreach_set("co", co.astype(np.float32).ravel())
-        me.loops.add(len(loops))
-        me.loops.foreach_set("vertex_index", loops.astype(np.int32))
-        me.polygons.add(len(starts))
-        me.polygons.foreach_set("loop_start", starts.astype(np.int32))
-        me.update(calc_edges=True)
-        lum = srgb_to_linear(np.clip(Bv, 0, 1) * COLOR_DISPLAY).astype(np.float32)
-        a = me.attributes.new("lum", "FLOAT", "POINT")
-        a.data.foreach_set("value", lum)
-        me.materials.append(self.mat)
-        old = self.obj.data
-        self.obj.data = me
-        if old.users == 0:
-            bpy.data.meshes.remove(old)
+        self._write_mesh(co, Bv, nr, nd)
         return dict(edges=int(len(E)), front=int(front.sum()), ribbons=int(nr), joins=int(nd),
                     occluded=float((bA < self.fade(A) * 0.999).mean()))

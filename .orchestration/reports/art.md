@@ -4,7 +4,36 @@
 - **Branch:** `ai-feat/art`
 - **Head commit:** see the commit that adds this file (`git log -1 ai-feat/art`)
 - **Pushed to origin:** yes
-- **Round:** 3 (round 2 and round 1 text kept below)
+- **Round:** 4 (earlier rounds kept below)
+
+## Round 4 note (Amendment 3: opaque wave ball, stacked alpha)
+
+Light process: no evidence tables or measurements.
+
+**Built**
+- Opaque rendering, switched on by `OPAQUE = True` in a subject. Only edges of
+  front-facing faces become ribbons, placed at their true depth (plus 8 half line widths
+  toward the camera); the solid mesh renders black in the same EEVEE pass, so its depth test
+  removes hidden lines per pixel (true hidden-line removal, no dimming). A second pass
+  renders the solid white on black as the matte, at the same 2x resolution, samples and
+  Lanczos downscale, so picture and matte edges line up.
+- Stacked-alpha delivery as in the shared contract: video frames are 1200 x 2400 (picture
+  on top, matte below), `meta.json` keeps 1200 x 1200 and adds `"alpha": "stacked"`,
+  `poster.png` is the 1200 x 1200 RGBA composite of frame 1 (lines over opaque black fill,
+  transparent outside), `blurDataUrl` is a 32 px RGBA blur of it.
+- `waveball` (14 s): the `waveball-life` form and motion, no tiles, no colour. The cube-face
+  seams are relaxed out (60 iterations of Laplacian smoothing kept on the sphere); the loop
+  terms are all whole cycles, as before.
+- Output: `public/art/waveball/` (`python3 art/cli.py waveball` ran end to end with 5 workers; loop check MAD 0.0000/255; mp4 2,508,500 B and webm 2,822,338 B, both 1200 x 2400; poster 1200 x 1200 RGBA). The first run wrote `meta.json` with 2400 x 2400 (it took the stacked frame's height); the code is fixed and the committed `meta.json` corrected to 1200 x 1200 by hand, not re-run.
+
+**Not checked**: no `--check`; looked at composited stills and a 300% crop of the silhouette
+(clean, no fringe between picture and matte).
+
+**Known issues**
+- `blurDataUrl` is 1986 characters (RGBA keeps it just under 2 KB).
+- Grid lines still converge gently toward the eight cube corners (smoothed, not removed).
+- Where a crest is very close in front of a surface behind it (within ~8 half line widths of
+  depth), a sliver of the hidden line can show; not seen in the frames I looked at.
 
 ## Round 3 note (Amendment 2: life on the surface)
 
