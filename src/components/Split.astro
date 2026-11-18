@@ -137,7 +137,8 @@ const textSide = mirror ? 'right' : 'left';
   @media (max-width: 799.98px) {
     .split {
       display: block;
-      --art-h: 62svh;
+      /* never a sliver in short viewports */
+      --art-h: max(62svh, 15rem);
     }
     .split-art {
       position: fixed;

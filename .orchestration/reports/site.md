@@ -6,6 +6,21 @@
 - **Pushed to origin:** yes
 - **Round:** 8 (Amendment 8: AC-39, AC-40). Round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
 
+## Round 8 follow-up (art size in short viewports, no test run by request)
+
+- **Fix:** with a menu, the art now fills 94% of the space above the icon row (capped at 90% of the pane width), instead of subtracting the menu space twice. The mobile art pane is also never shorter than 15rem. Measured with the menu shown:
+
+  | Viewport | Art (px) | Art bottom / menu top | Share of space above menu |
+  | --- | --- | --- | --- |
+  | 785×440 (stacked layout) | 190, was 150 | 205 / 215 | 0.92 |
+  | 800×440 | 347 | 367 / 382 | 0.93 |
+  | 390×844 | 337 | 404 / 467 | 0.73 (limited by width) |
+  | 768×1024 | 530 | 557 / 578 | 0.93 |
+  | 1280×720 | 584 | 626 / 659 | 0.91 |
+  | 1440×900 | 659 | 754 / 838 | 0.80 |
+
+  The icons clear the art at every size. `pnpm build` passes and 4321 serves.
+
 ## Round 8 (Amendment 8, no test run by request)
 
 - **AC-39 / AC-40:** `Art` now plays `meta.alpha: "stacked"` pieces. The video plays hidden, and a WebGL canvas composites each decoded frame (`requestVideoFrameCallback`, falling back to `requestAnimationFrame`).

@@ -106,8 +106,9 @@ const multi = pieces.length > 1;
   .art-set[data-multi] {
     --menu-room: 3.25rem;
   }
+  /* fill most of the space above the icon row (the piece's padding keeps it there) */
   .art-set[data-multi] :global(.art) {
-    width: min(84cqw, calc((100cqh - 2 * var(--menu-room)) * var(--art-ratio)));
+    width: min(90cqw, calc((100cqh - var(--menu-room)) * 0.94 * var(--art-ratio)));
   }
   .art-menu {
     position: absolute;
