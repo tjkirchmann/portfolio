@@ -7,3 +7,4 @@ art/.cache/
 
 # the original resume has a phone number; the site ships public/ty-kirchmann-resume.pdf
 /Ty Kirchmann Resume*.pdf
+.wrangler/

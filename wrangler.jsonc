@@ -1,0 +1,12 @@
+// Cloudflare deploy: the site is fully static, so the Worker is only the files in dist/.
+// With this file present `wrangler deploy` uploads dist/ as is. Without it, Wrangler tries to
+// set the project up itself and adds the @astrojs/cloudflare server adapter, which this site
+// does not need and which fails to bundle the markdown library.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
