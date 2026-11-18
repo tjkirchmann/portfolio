@@ -26,7 +26,7 @@ const tourSteps = [
     <Dither slot="art" />
     <ToolMenu slot="art" />
     <RoomPanel slot="art" />
-    {site.about && <SimAbout slot="art" title={site.about.title} body={site.about.body} />}
+    {site.about && <SimAbout slot="art" title={site.about.title} body={site.about.body} slots={site.links.length + (site.skills ? 1 : 0)} />}
     <Hints />
     <MobilePlay slot="art" />
 
@@ -46,7 +46,7 @@ const tourSteps = [
     </div>
 
     <footer class="home-foot">
-      <LinkRow links={site.links} below />
+      <LinkRow links={site.links} beside />
       {site.skills && <SkillsLink groups={site.skills} />}
     </footer>
   </Split>
@@ -92,34 +92,46 @@ const tourSteps = [
     gap: var(--space-3) var(--space-5);
     padding-top: var(--space-4);
   }
-  /* Desktop: the row of links and the skills icon leaves the text column and sits at the top
-     right of the simulation, in one bar beside the question mark (which is 2.25rem wide, at
-     --space-3 from the pane's corner). Phones keep it at the bottom of the page. */
+  /* Desktop: the links and the skills icon leave the text column and stack down the right
+     edge of the simulation, in one vertical bar with the question mark at its top. The bar's
+     panel is drawn by SimAbout (inside the pane, --space-3 from its corner, --space-1 of
+     padding, 2.25rem slots); these icons are placed over the slots under the question mark.
+     Phones keep the row at the bottom of the page. */
   @media (min-width: 800px) {
     /* the text column is its own layer and the art pane is laid out after it, so lift the
-       column for the bar to show over the pane (the two never overlap otherwise) */
+       column for the icons to show over the pane (the two never overlap otherwise) */
     :global(.split-text) {
       z-index: 1;
     }
     .home-foot {
       position: fixed;
       z-index: 3;
-      top: calc(var(--pane-inset) + var(--space-3));
-      right: calc(var(--pane-inset) + var(--space-3) + 2.25rem + var(--space-2));
-      width: auto;
+      top: calc(var(--pane-inset) + var(--space-3) + var(--space-1) + 2.25rem);
+      right: calc(var(--pane-inset) + var(--space-3) + var(--space-1));
+      width: 2.25rem;
       max-width: none;
-      height: 2.25rem;
+      flex-direction: column;
       flex-wrap: nowrap;
       align-items: center;
-      gap: var(--space-3);
-      padding: 0 var(--space-3);
-      border-radius: 999px;
-      background: color-mix(in oklab, var(--bg) 82%, transparent);
-      box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 22%, transparent);
+      gap: 0;
+      padding: 0;
     }
     .home-foot :global(.linkrow ul) {
+      flex-direction: column;
       flex-wrap: nowrap;
-      gap: var(--space-3);
+      gap: 0;
+    }
+    .home-foot :global(.linkrow a.is-icon),
+    .home-foot :global(.skills-btn) {
+      width: 2.25rem;
+      height: 2.25rem;
+      margin: 0;
+      padding: 0;
+      border-radius: 999px;
+    }
+    .home-foot :global(.linkrow a.is-icon:hover),
+    .home-foot :global(.skills-btn:hover) {
+      background: color-mix(in oklab, var(--emerald) 18%, transparent);
     }
     .home-half[data-half='companies'] {
       padding-bottom: 0;

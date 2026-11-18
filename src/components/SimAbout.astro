@@ -11,13 +11,19 @@ import { markdownToHtml } from 'satteri';
 interface Props {
   title: string;
   body?: string;
+  /**
+   * How many icon links share this panel. With a number, the question mark is the top slot of
+   * a vertical bar and that many 2.25rem slots are left under it; the page places its links
+   * over them (see the home page).
+   */
+  slots?: number;
 }
-const { title, body = '' } = Astro.props;
+const { title, body = '', slots = 0 } = Astro.props;
 const html = body.trim() ? markdownToHtml(body).html : '';
 ---
 
-<div class="about" data-tl-item="about">
-  <span class="hint about-hint" data-hint="about" data-tail="up" data-tail-at="end" hidden>What is this?</span>
+<div class="about" data-tl-item="about" data-bar={slots ? '' : undefined} style={slots ? `--bar-slots:${slots}` : undefined}>
+  <span class="hint about-hint" data-hint="about" data-tail="right" hidden>What is this?</span>
   <button type="button" class="about-btn" data-tl-open aria-expanded="false" aria-label={title} set:html={icon('circle-question', 24)} />
   <span class="tl-title" hidden>{title}</span>
   {
@@ -46,8 +52,9 @@ const html = body.trim() ? markdownToHtml(body).html : '';
   }
   .about-hint {
     position: absolute;
-    right: 0;
-    top: calc(100% + var(--space-3));
+    right: calc(100% + var(--space-3));
+    top: calc(var(--bar-pad, 0px) + 1.125rem);
+    transform: translateY(-50%);
   }
   .about-btn {
     display: grid;
@@ -69,6 +76,24 @@ const html = body.trim() ? markdownToHtml(body).html : '';
   }
   .about-btn :global(svg) {
     display: block;
+  }
+  /* as a bar: the panel is the tall pill, the question mark its first slot */
+  .about[data-bar] {
+    --bar-pad: var(--space-1);
+    width: calc(2.25rem + 2 * var(--bar-pad));
+    height: calc((var(--bar-slots) + 1) * 2.25rem + 2 * var(--bar-pad));
+    padding: var(--bar-pad);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 22%, transparent);
+  }
+  .about[data-bar] .about-btn {
+    background: none;
+    box-shadow: none;
+  }
+  .about[data-bar] .about-btn:hover,
+  .about[data-bar][data-open] .about-btn {
+    background: color-mix(in oklab, var(--emerald) 18%, transparent);
   }
   .about-btn:focus-visible {
     outline: 2px solid var(--emerald);

@@ -19,7 +19,7 @@ const { groups, label = 'My Skills' } = Astro.props;
 ---
 
 <div class="skills-link" data-tl-item="skills" data-room-grace="1200">
-  <span class="hint skills-hint" data-hint="skills" data-tail="up" data-tail-at="end" hidden>Hover to see my skills</span>
+  <span class="hint skills-hint" data-hint="skills" data-tail="right" hidden>Hover to see my skills</span>
   <button type="button" class="skills-btn" data-tl-open aria-expanded="false" aria-label={label} set:html={icon('chart-bar', 24)} />
   <span class="tl-title" hidden>{label}</span>
   <div class="skills-more" data-tl-more hidden>
@@ -90,8 +90,9 @@ const { groups, label = 'My Skills' } = Astro.props;
   }
   .skills-hint {
     position: absolute;
-    right: calc(-1 * var(--space-2));
-    top: calc(100% + var(--space-3));
+    right: calc(100% + var(--space-3));
+    top: 50%;
+    transform: translateY(-50%);
   }
   /* narrow screens: the list opens inline, above the button */
   .skills-more {
