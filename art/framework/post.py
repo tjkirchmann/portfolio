@@ -93,7 +93,7 @@ def load_png(path):
     return px.reshape(h, w, 4)[::-1]
 
 
-def finish_frame(lin2x, master_path, black_path, tiles2x=None):
+def finish_frame(lin2x, master_path, black_path, tiles2x=None, matte2x=None):
     """2x linear render -> master RGBA + over-black PNG. Returns display (H, W) and stats.
     With `tiles2x` (2x premultiplied linear RGBA of the life tiles) the wire is composited
     over the tiles and the frames are colour."""
@@ -102,6 +102,22 @@ def finish_frame(lin2x, master_path, black_path, tiles2x=None):
     alpha = np.clip(disp / COLOR_DISPLAY, 0, 1)
     disp = alpha * COLOR_DISPLAY
     h, w = alpha.shape
+    if matte2x is not None:
+        # stacked alpha: picture (lines over the black solid, on black) on top, matte below
+        m = np.clip(to_display(downscale2(matte2x)), 0, 1)
+        if black_path:
+            stacked = np.concatenate([disp, m], 0)
+            save_png(black_path, np.clip(stacked, 0, 1), "BW")
+        a_all = np.maximum(m, alpha)
+        if master_path:  # RGBA composited: lines over an opaque black fill
+            rgba = np.zeros((h, w, 4))
+            rgba[:, :, :3] = np.where(a_all[:, :, None] > 1e-6, (disp / np.maximum(a_all, 1e-6))[:, :, None], 0)
+            rgba[:, :, 3] = a_all
+            save_png(master_path, np.clip(rgba, 0, 1), "RGBA")
+        ys, xs = np.nonzero(a_all > 2.5 / 255)
+        stats = dict(bbox=[int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())] if len(xs) else None,
+                     alpha_zero=float((np.round(a_all * 255) == 0).mean()))
+        return disp, stats
     if tiles2x is not None:
         t = np.stack([downscale2(tiles2x[:, :, k]) for k in range(4)], 2)
         t = np.clip(t, 0, None)
@@ -134,12 +150,25 @@ def finish_frame(lin2x, master_path, black_path, tiles2x=None):
     return disp, stats
 
 
-def blur_data_url(disp, path, size=32):
-    h, w = disp.shape
-    f = h // size
-    small = disp[: f * size, : f * size].reshape(size, f, size, f).mean((1, 3))
-    small = np.clip(small / max(small.max(), 1e-6) * 0.6, 0, 1)  # visible placeholder glow
-    save_png(path, small, "BW")
+def blur_data_url(disp, path, size=32, rgba=None):
+    """32 px blur placeholder. With `rgba` (H, W, 4 straight alpha, from a composited
+    poster) the placeholder keeps the alpha."""
+    if rgba is not None:
+        h, w = rgba.shape[:2]
+        f = h // size
+        pre = rgba[:, :, :3] * rgba[:, :, 3:4]
+        a = rgba[: f * size, : f * size, 3].reshape(size, f, size, f).mean((1, 3))
+        c = pre[: f * size, : f * size].reshape(size, f, size, f, 3).mean((1, 3))
+        out = np.zeros((size, size, 4))
+        out[:, :, :3] = np.where(a[:, :, None] > 1e-6, c / np.maximum(a, 1e-6)[:, :, None], 0)
+        out[:, :, 3] = a
+        save_png(path, np.clip(out, 0, 1), "RGBA")
+    else:
+        h, w = disp.shape
+        f = h // size
+        small = disp[: f * size, : f * size].reshape(size, f, size, f).mean((1, 3))
+        small = np.clip(small / max(small.max(), 1e-6) * 0.6, 0, 1)  # visible placeholder glow
+        save_png(path, small, "BW")
     with open(path, "rb") as fh:
         data = fh.read()
     return "data:image/png;base64," + base64.b64encode(data).decode("ascii")

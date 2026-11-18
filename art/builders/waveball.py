@@ -16,7 +16,7 @@ from .mesh import MeshBuilder
 from .spikeball import FACES, REST, Motion
 
 
-def cube_sphere(G=32, R=1.0):
+def cube_sphere(G=32, R=1.0, relax=0):
     """All-quad equal-angle cube sphere with G x G cells per face, shared seams."""
     mb = MeshBuilder()
     index = {}
@@ -37,8 +37,31 @@ def cube_sphere(G=32, R=1.0):
         for i in range(G):
             for j in range(G):
                 mb.quad(V[i][j], V[i + 1][j], V[i + 1][j + 1], V[i][j + 1])
-    P = np.array(mb.verts) @ REST.T
-    return P, np.array(mb.faces, dtype=np.int64)
+    P = np.array(mb.verts)
+    F = np.array(mb.faces, dtype=np.int64)
+    if relax:
+        P = relax_on_sphere(P, F, relax, R)
+    return P @ REST.T, F
+
+
+def relax_on_sphere(P, F, iterations, R):
+    """Laplacian relaxation kept on the sphere: smooths the kinks where grid lines cross
+    cube-face seams, so the seams no longer read as lines in the wire."""
+    nv = len(P)
+    a = np.concatenate([F[:, k] for k in range(4)])
+    b = np.concatenate([F[:, (k + 1) % 4] for k in range(4)])
+    i = np.concatenate([a, b])
+    j = np.concatenate([b, a])
+    key = np.unique(i * nv + j)
+    i, j = key // nv, key % nv
+    deg = np.bincount(i, minlength=nv)[:, None]
+    for _ in range(iterations):
+        avg = np.zeros_like(P)
+        np.add.at(avg, i, P[j])
+        avg /= deg
+        P = P + 0.5 * (avg - P)
+        P = P / np.linalg.norm(P, axis=1)[:, None] * R
+    return P
 
 
 class WaveBall:
@@ -46,8 +69,8 @@ class WaveBall:
     # sideways slide is q / k, so q < 1 keeps crests from folding over)
     TRAINS = [(1.6, 1, 0.045, 0.30), (2.7, -2, 0.026, 0.22), (4.1, 2, 0.015, 0.16), (6.3, -3, 0.008, 0.10)]
 
-    def __init__(self, name, G=32, R=1.0, seed=11):
-        P, F = cube_sphere(G, R)
+    def __init__(self, name, G=32, R=1.0, seed=11, relax=0):
+        P, F = cube_sphere(G, R, relax)
         a, b, c, d = (P[F[:, k]] for k in range(4))
         out = (np.cross(c - a, d - b) * (a + b + c + d)).sum(1) < 0
         F[out] = F[out][:, ::-1]

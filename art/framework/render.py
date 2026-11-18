@@ -41,6 +41,20 @@ def depth_material():
     return mat
 
 
+def flat_material(name, value):
+    """Emission of a constant grey value (0 = black solid, 1 = white matte)."""
+    mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (value, value, value, 1)
+    em.inputs["Strength"].default_value = 1.0 if value > 0 else 0.0
+    nt.links.new(em.outputs[0], out.inputs["Surface"])
+    return mat
+
+
 class Renderer:
     def __init__(self, stage, quality="final", tmp_dir=None, back_dim=True):
         q = QUALITY[quality]
@@ -57,6 +71,32 @@ class Renderer:
         self.back_dim = back_dim
         self.depth_mat = depth_material()
         self.depth_res = q["size"] // 2
+        self.opaque = bool(getattr(stage.subject, "OPAQUE", False))
+        self.matte = None
+        if self.opaque:
+            # the solid renders black in the line pass, so lines behind it fail the depth test
+            self.lines.opaque = True
+            self.black = flat_material("opaque_black", 0.0)
+            self.white = flat_material("opaque_white", 1.0)
+            for o in stage.objects:
+                o.data.materials.clear()
+                o.data.materials.append(self.black)
+            self.back_dim = False
+
+    def matte_pass(self, samples):
+        """Solid silhouette, white on black, same resolution and filter as the picture."""
+        sc = self.stage.scene
+        r = sc.render
+        vl = bpy.context.view_layer
+        self.lines.obj.hide_render = True
+        vl.material_override = self.white
+        sc.eevee.taa_render_samples = samples
+        exr = os.path.join(self.tmp, "matte.exr")
+        r.filepath = exr
+        bpy.ops.render.render(write_still=True)
+        vl.material_override = None
+        self.lines.obj.hide_render = False
+        return post.load_exr(exr)
 
     def depth_pass(self):
         """Render the real meshes' distance-from-camera at depth_res (1 sample, no filter)."""
@@ -129,6 +169,9 @@ class Renderer:
         tm.append(time.time())
         self.tiles = self.tiles_pass(samples or self.q["samples"]) if self.stage.life else None
         tm.append(time.time())
+        if self.opaque:
+            for o in self.stage.objects:
+                o.hide_render = False
         info = self.lines.update(back_dim=self.back_dim)
         tm.append(time.time())
         sc.eevee.taa_render_samples = samples or self.q["samples"]
@@ -137,6 +180,10 @@ class Renderer:
         bpy.ops.render.render(write_still=True)
         sc.eevee.taa_render_samples = self.q["samples"]
         img = post.load_exr(exr)
+        if self.opaque:
+            self.matte = self.matte_pass(samples or self.q["samples"])
+            for o in self.stage.objects:
+                o.hide_render = True
         tm.append(time.time())
         info["timing"] = dict(zip(("depth", "tiles", "lines_build", "lines_render"),
                                   [round(b - a, 2) for a, b in zip(tm, tm[1:])]))
@@ -160,7 +207,8 @@ class Renderer:
                 lin = img if lin is None else lin + img
             lin /= sub
             self.stage.pose(t)
-        disp, stats = post.finish_frame(lin, master_path, black_path, tiles)
+        disp, stats = post.finish_frame(lin, master_path, black_path, tiles,
+                                        matte2x=self.matte if self.opaque else None)
         stats.update(info)
         stats["sub"] = sub
         stats["zoom"] = round(self.stage.view[0], 4)
