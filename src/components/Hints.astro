@@ -91,6 +91,11 @@
     --nudge: 0 0;
     animation: hint-in 400ms var(--ease) both, hint-nudge 1.5s steps(3, end) 500ms infinite alternate;
   }
+  /* on arrival the bubble's fill (body and tail) blinks a soft yellow, twice */
+  .hint[data-hint]::before,
+  .hint[data-hint]::after {
+    animation: hint-blink 520ms ease-in-out 450ms 2;
+  }
   .hint[data-hint][data-tail='down'] {
     --nudge: 0 3px;
   }
@@ -105,6 +110,11 @@
     animation: none;
     opacity: 0;
     transition: opacity 260ms var(--ease);
+  }
+  @keyframes hint-blink {
+    50% {
+      background-color: #f3e9a6;
+    }
   }
   @keyframes hint-nudge {
     to {
@@ -123,7 +133,9 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .hint,
-    .hint[data-hint] {
+    .hint[data-hint],
+    .hint[data-hint]::before,
+    .hint[data-hint]::after {
       animation: none;
     }
   }
