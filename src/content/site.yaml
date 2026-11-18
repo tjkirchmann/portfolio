@@ -10,9 +10,9 @@ experiences:
     year: 2026
     icon: users
     body: |
-      The lessons I learned during my tenure at Finch will last a lifetime. My role was one that carried a lot of different repsonsibility; scale an ops team composed of people from across the globe, scope and build integration technology, develop partnerships with new customers and help them onboard into our platform, just to name a few. Juggling all of this was an exercise in ruthless prioritization. 
+      The lessons I learned during my tenure at Finch will last a lifetime. My role was one that carried a lot of different responsibilities; scale an ops team composed of people from across the globe, scope and build integration technology, develop partnerships with new customers and help them onboard into our platform, just to name a few. Juggling all of this was an exercise in ruthless prioritization. 
       
-      What is the highest impact work I can be doing at any given moment? How can I be a better leader for 30+ practicioners? How can my team be put in a better position? Is there an end to end engineering solution to my problem? If not, how to I put process in place to cover gaps?
+      What is the highest impact work I can be doing at any given moment? How can I be a better leader for 30+ practitioners? How can my team be put in a better position? Is there an end to end engineering solution to my problem? If not, how do I put process in place to cover gaps?
 
       All of these questions were relevant to me every day, and getting the answers mostly right allowed us to cover 150 firms with "white glove" integrations, even when engineering solutions were not possible.
       
@@ -20,13 +20,13 @@ experiences:
     year: 2025
     icon: git-merge
     body: |
-      In May of 2025, Parrot was acquired by Filevine. I treasure this experience because it was a challenge that I believe most professionals don't get to see, at least not within the first 5 years of their career. Understanding where the synergies, white space, and potential pit falls were was important to transition of both Parrot's services offering and back office functions.
+      In May of 2025, Parrot was acquired by Filevine. I treasure this experience because it was a challenge that I believe most professionals don't get to see, at least not within the first 5 years of their career. Understanding where the synergies, white space, and potential pitfalls were was important to the transition of both Parrot's services offering and back office functions.
 
       Some lessons I took from this experience: 
 
       1) Fresh takes on strategy and positioning are invaluable - don't get stuck in local maxima.
       2) Learning or teaching a business is more about developing perspective than defining nuts and bolts.
-      3) Services businesses and SaaS businesses require different positioning and focus. At top of funnel, the very real COGS of a services business means giving freebies has a impact magnitudes higher. In terms of product, quality and functionality matters a great deal more as your relationship with the customer is deeply personal.
+      3) Services businesses and SaaS businesses require different positioning and focus. At top of funnel, the very real COGS of a services business means giving freebies has an impact orders of magnitude higher. In terms of product, quality and functionality matters a great deal more as your relationship with the customer is deeply personal.
   - title: Spinning Up Digital Marketing
     year: 2025
     icon: megaphone
@@ -41,9 +41,9 @@ experiences:
     year: 2024
     icon: tools
     body: |
-      At Parrot, I my role was Strategy and Operations Associate - this can mean a lot of things in the startup world. In addition to built in responsibilities regarding managing the data stack (DBT, Redshift, Postgres, Dagster, Retool), the best way to describe my role was being a drop in resource that can tackle a particular problem. Some of the problems I solved while at Parrot include:
+      At Parrot, my role was Strategy and Operations Associate - this can mean a lot of things in the startup world. In addition to built in responsibilities regarding managing the data stack (DBT, Redshift, Postgres, Dagster, Retool), the best way to describe my role was being a drop in resource that can tackle a particular problem. Some of the problems I solved while at Parrot include:
 
-      1) Efficiently and systematically recover aging accounts receiveable, with only partial resourcing from a billing analyst.
+      1) Efficiently and systematically recover aging accounts receivable, with only partial resourcing from a billing analyst.
       2) Orchestrating email marketing campaigns to users based on usage data to drive activation.
       3) Building out systematic reporting that could be used to serve enterprise customer needs on a quarterly basis.
 
@@ -56,7 +56,7 @@ experiences:
 
       The organization as a whole tried various off the shelf technology from a variety of household names but they provided lackluster results on being able to properly understand our issues. During that year, a coworker and myself saw an opportunity to leverage LLMs, which had just hit the cloud environments, in a unique and interesting way. In this era, the models were pretty poor - this was pre-ChatGPT-3.5 Turbo.
       
-      We used a mixture of modern LLM technology mixed with a variety of what would now be considered "old-school" NLP techniques to manipulate vector embeddings from the LLMs such as BERT models, dimensionality reduction, vector embeddings, MLPs, and clustering methods. What we ended up with was network scale intelligence on our precise issues. Pushing the results to our ops team helped them target the largest opportunities for cost savings available across millions of calls, outperforming solutions from billion dollar comapnies.
+      We used a mixture of modern LLM technology mixed with a variety of what would now be considered "old-school" NLP techniques to manipulate vector embeddings from the LLMs such as BERT models, dimensionality reduction, vector embeddings, MLPs, and clustering methods. What we ended up with was network scale intelligence on our precise issues. Pushing the results to our ops team helped them target the largest opportunities for cost savings available across millions of calls, outperforming solutions from billion dollar companies.
   - title: Game Engine Analytics
     year: 2022
     icon: gamepad
