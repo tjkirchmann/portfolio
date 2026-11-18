@@ -108,6 +108,7 @@ export interface Metal {
   resize(cols: number, rows: number, cellDev: number): void;
   upload(cells: Uint8Array): void;
   draw(time: number): void;
+  setIntensity(v: number): void;
   readonly gl: WebGLRenderingContext;
 }
 
@@ -164,6 +165,9 @@ export function createMetal(canvas: HTMLCanvasElement, intensity: number): Metal
     upload(cells) {
       gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, cols, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, cells);
+    },
+    setIntensity(v) {
+      gl.uniform1f(uInt, v);
     },
     draw(time) {
       gl.uniform1f(uTime, time);

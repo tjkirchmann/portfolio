@@ -6,6 +6,16 @@
 - **Pushed to origin:** yes
 - **Round:** 8 (Amendment 8: AC-39, AC-40). Round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
 
+## Life-only view and green icons (no test run by request)
+
+- **Life-only view:**
+  - An `art:` entry may be `{ none: true, icon, label }`: no video, poster or blur-in, and the backdrop always on.
+  - The simulation draws at full strength while that view shows, and drops back to 0.7 behind real pieces.
+  - It is first in `site.yaml` (Life, `grid-3-x-3`), followed by waveball, spikeball, spikeball-life, waveball-life.
+  - The remembered choice now uses the key `art:v2:<path>`, so returning visitors land on the new default once.
+- **Icons:** all icons are emerald: switcher icons (others at 45% opacity, the current one at full), every timeline step icon, and the back arrow.
+- **Checked:** in Chromium the old `art:/` key was ignored, switching to waveball and reloading kept it, and going back to Life stopped every video. `pnpm build` passes and 4321 serves.
+
 ## Round 8 follow-up (art size in short viewports, no test run by request)
 
 - **Fix:** with a menu, the art now fills 94% of the space above the icon row (capped at 90% of the pane width), instead of subtracting the menu space twice. The mobile art pane is also never shorter than 15rem. Measured with the menu shown:

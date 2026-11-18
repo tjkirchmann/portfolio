@@ -7,7 +7,7 @@ import BackLink from '../../components/BackLink.astro';
 import PostList from '../../components/PostList.astro';
 import { getPosts } from '../../lib/posts';
 import { loadSite } from '../../lib/site';
-import { artList } from '../../lib/art-set';
+import { firstPiece } from '../../lib/art-set';
 
 const site = loadSite();
 const posts = await getPosts();
@@ -18,7 +18,7 @@ const posts = await getPosts();
     <BackLink slot="art-top" href="/" label="Home" />
     <Fragment slot="art">
       <Dither intensity={0.7} />
-      <ArtSet art={artList(site.art)[0].slug} />
+      <ArtSet art={firstPiece(site.art)} />
     </Fragment>
 
     <header class="page-head">

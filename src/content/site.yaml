@@ -3,6 +3,9 @@
 name: Your Name
 role: Your role
 art:
+  - none: true
+    icon: grid-3-x-3
+    label: Life
   - slug: waveball
     icon: globe
     label: Wave ball

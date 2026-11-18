@@ -23,10 +23,11 @@ const multi = pieces.length > 1;
         class="art-piece"
         data-art-piece={p.slug}
         data-backdrop={p.backdrop === false ? 'off' : 'on'}
+        data-none={p.none ? '' : undefined}
         data-inactive={i === 0 ? undefined : ''}
         aria-hidden={i === 0 ? undefined : 'true'}
       >
-        <Art slug={p.slug} />
+        {!p.none && <Art slug={p.slug} />}
       </div>
     ))
   }
@@ -57,7 +58,7 @@ const multi = pieces.length > 1;
         var set = document.currentScript && document.currentScript.previousElementSibling;
         if (!set || !set.matches('[data-art-set]')) return;
         var want;
-        try { want = localStorage.getItem('art:' + location.pathname); } catch (e) {}
+        try { want = localStorage.getItem('art:v2:' + location.pathname); } catch (e) {}
         if (!want || !set.querySelector('[data-art-piece="' + want + '"]')) return;
         set.querySelectorAll('[data-art-piece]').forEach(function (p) {
           var on = p.getAttribute('data-art-piece') === want;
@@ -135,8 +136,8 @@ const multi = pieces.length > 1;
     border: 0;
     border-radius: 999px;
     background: transparent;
-    color: var(--ink);
-    opacity: 0.42;
+    color: var(--emerald);
+    opacity: 0.45;
     cursor: pointer;
     transition: opacity var(--dur-1) var(--ease);
   }
@@ -175,6 +176,8 @@ const multi = pieces.length > 1;
 
     const applyBackdrop = () => {
       pane.toggleAttribute('data-no-backdrop', current().dataset.backdrop === 'off');
+      // the simulation-only view shows the life field at full strength
+      pane.toggleAttribute('data-art-none', current().hasAttribute('data-none'));
       document.dispatchEvent(new CustomEvent('dither:check'));
     };
     applyBackdrop();
@@ -233,8 +236,10 @@ const multi = pieces.length > 1;
       if (toArt) document.dispatchEvent(new CustomEvent('art:activate', { detail: toArt }));
       applyBackdrop();
       try {
-        if (slug === set.dataset.default) localStorage.removeItem(`art:${location.pathname}`);
-        else localStorage.setItem(`art:${location.pathname}`, slug);
+        // v2: the default changed (life view first), so older choices are ignored once
+        if (slug === set.dataset.default) localStorage.removeItem(`art:v2:${location.pathname}`);
+        else localStorage.setItem(`art:v2:${location.pathname}`, slug);
+        localStorage.removeItem(`art:${location.pathname}`);
       } catch {}
       if (e.detail > 0) open(); // keep the menu up while the pointer is on it
       if (pane.matches(':hover')) hovering = true;
