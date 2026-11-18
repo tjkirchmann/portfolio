@@ -1,8 +1,8 @@
 ---
 /**
- * First-visit hints. Any element with `data-hint="<name>" hidden` is shown shortly after load
- * and put away for good (remembered in localStorage) once the thing it points at has been
- * used: `experiences` when one is first hovered or focused, `tools` when a tool is first used.
+ * Hints. Any element with `data-hint="<name>" hidden` is shown shortly after every page load
+ * and put away, until the next load, once the thing it points at has been used:
+ * `experiences` when one is first hovered or focused, `tools` when a tool is first used.
  * Wide pointer screens only. The bubble style is global so other components can place a hint.
  */
 ---
@@ -97,29 +97,15 @@
 </style>
 
 <script>
-  const KEY = 'hints:v1:';
-  const seen = (name: string) => {
-    try {
-      return localStorage.getItem(KEY + name) === '1';
-    } catch {
-      return false;
-    }
-  };
-  const done = (name: string) => {
-    try {
-      localStorage.setItem(KEY + name, '1');
-    } catch {
-      /* private mode: the hint just comes back next visit */
-    }
+  const done = (name: string) =>
     document.querySelectorAll<HTMLElement>(`[data-hint="${name}"]`).forEach((el) => (el.hidden = true));
-  };
 
   let showT = 0;
   document.addEventListener('astro:page-load', () => {
     clearTimeout(showT);
     showT = window.setTimeout(() => {
       document.querySelectorAll<HTMLElement>('[data-hint]').forEach((el) => {
-        if (!seen(el.dataset.hint!)) el.hidden = false;
+        el.hidden = false;
       });
     }, 1200);
   });
