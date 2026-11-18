@@ -118,7 +118,11 @@
     const items = Array.from(document.querySelectorAll<HTMLElement>('[data-tl-item]'));
     if (!room || !items.length) return;
     const pane = room.closest<HTMLElement>('[data-split-art]') ?? room.parentElement!;
-    const zone = items[0].closest<HTMLElement>('[data-home-timelines]') ?? items[0].parentElement!.parentElement!;
+    // the panel stays up while the pointer is in the zone: the list that has panel items
+    const zone =
+      items[0].closest<HTMLElement>('[data-room-zone]') ??
+      items[0].closest<HTMLElement>('[data-home-timelines]') ??
+      items[0].parentElement!.parentElement!;
     const $ = (k: string) => room.querySelector<HTMLElement>(`[data-room-${k}]`)!;
     const inner = $('inner');
 

@@ -23,11 +23,11 @@ const site = loadSite();
     </header>
 
     <div class="home-timelines" data-home-timelines>
-      <div class="home-half" data-half="experiences">
+      <div class="home-half" data-half="experiences" data-room-zone>
         <Timeline label="Experiences" items={site.experiences} panel />
       </div>
       <div class="home-half" data-half="companies">
-        <Timeline label="Companies" items={site.companies} panel />
+        <Timeline label="Companies" items={site.companies} />
       </div>
     </div>
 
