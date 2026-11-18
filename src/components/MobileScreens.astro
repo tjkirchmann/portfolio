@@ -70,7 +70,7 @@ const act = (s: Step) =>
       )
     }
   </div>
-  <p class="mtour-where">They sit along the bottom of the page.</p>
+  <p class="mtour-where">They sit at the top of the page, above my name.</p>
   <div class="mtour-pips" aria-hidden="true">
     {steps.map((_, i) => <span class="mtour-pip" data-mtour-pip={i} />)}
   </div>
@@ -315,7 +315,7 @@ const act = (s: Step) =>
   const narrow = window.matchMedia('(max-width: 799.98px)');
   const STEP_MS = 1700; // each tour step
   const DISSOLVE_MS = 700;
-  const NOTE_MS = 3200;
+  const NOTE_MS = 2400;
   let noteT = 0;
   let ac: AbortController | undefined;
   let tourOffered = false; // once per page load, not again on in-page navigation

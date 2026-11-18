@@ -197,7 +197,8 @@ const { groups, label = 'My Skills' } = Astro.props;
     background-repeat: no-repeat;
     background-attachment: fixed, scroll, scroll;
     background-position: 45% 0, 0 0, 0 0;
-    animation: skill-sheen 16s steps(160, end) var(--sheen-delay) infinite;
+    /* quicker than the simulation's 16s light, so the meters visibly glint while being read */
+    animation: skill-sheen 5s steps(50, end) infinite;
   }
   @keyframes skill-sheen {
     from {

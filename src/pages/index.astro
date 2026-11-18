@@ -96,7 +96,7 @@ const tourSteps = [
      edge of the simulation, in one vertical bar with the question mark at its top. The bar's
      panel is drawn by SimAbout (inside the pane, --space-3 from its corner, --space-1 of
      padding, 2.25rem slots); these icons are placed over the slots under the question mark.
-     Phones keep the row at the bottom of the page. */
+     Phones show the row at the top of the text, above the name. */
   @media (min-width: 800px) {
     /* the text column is its own layer and the art pane is laid out after it, so lift the
        column for the icons to show over the pane (the two never overlap otherwise) */
@@ -149,8 +149,11 @@ const tourSteps = [
       overflow: visible;
       mask-image: none;
     }
+    /* phones: the icon row sits at the top of the text, above the name */
     .home-foot {
-      padding-top: var(--space-4);
+      order: -1;
+      padding-top: 0;
+      margin-bottom: var(--space-5);
     }
   }
 </style>
