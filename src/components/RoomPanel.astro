@@ -222,11 +222,11 @@
       }, wasShown ? OUT : 0);
     }
 
-    function later() {
+    function later(ms = GRACE) {
       clearTimeout(closeT);
       closeT = window.setTimeout(() => {
         if (!overRoom) close();
-      }, GRACE);
+      }, ms);
     }
 
     pane.addEventListener('dither:room', (e) => {
@@ -253,8 +253,10 @@
       li.addEventListener('focusin', () => show(li));
       if (!zone.contains(li)) {
         // an opener outside the list (the simulation's question mark) closes on its own
-        li.addEventListener('pointerleave', later);
-        li.addEventListener('focusout', later);
+        // `data-room-grace` (ms) gives the pointer time to travel into the panel
+        const grace = Number(li.dataset.roomGrace) || GRACE;
+        li.addEventListener('pointerleave', () => later(grace));
+        li.addEventListener('focusout', () => later(grace));
       }
       // narrow screens: a tap opens the body under the item, one at a time
       li.querySelector('[data-tl-open]')?.addEventListener('click', () => {
@@ -271,7 +273,7 @@
         }
       });
     }
-    zone.addEventListener('pointerleave', later);
+    zone.addEventListener('pointerleave', () => later());
     zone.addEventListener('focusout', (e) => {
       const to = (e as FocusEvent).relatedTarget as Node | null;
       if (!to || (!zone.contains(to) && !room.contains(to))) later();

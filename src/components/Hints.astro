@@ -120,6 +120,7 @@
       const t = e.target as Element | null;
       if (t?.closest?.('[data-room-zone] [data-tl-item]')) done('experiences');
       if (t?.closest?.('[data-tl-item="about"]')) done('about');
+      if (t?.closest?.('[data-tl-item="skills"]')) done('skills');
     });
   document.addEventListener('dither:tool', (e) => {
     if ((e as CustomEvent).detail?.tool) done('tools');

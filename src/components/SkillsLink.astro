@@ -3,7 +3,9 @@
  * "My Skills" in the home bottom row. Hovering or focusing it opens the same text panel the
  * experiences use (RoomPanel copies the hidden title and list from here), showing the skill
  * groups from `skills` in site.yaml. Each row is a logo, a name and a stepped meter whose
- * filled segments run blue to bright green. On narrow screens a tap opens the list inline.
+ * filled segments run blue to bright green, drawn as bevelled metal tiles that catch the same
+ * sweeping light as the simulation. A row with a `note` shows it in a bubble while hovered.
+ * On narrow screens a tap opens the list inline.
  */
 import { icon } from '../lib/icons';
 import { SKILL_GRADIENT, SKILL_LEVELS } from '../lib/skills';
@@ -16,8 +18,9 @@ interface Props {
 const { groups, label = 'My Skills' } = Astro.props;
 ---
 
-<div class="skills-link" data-tl-item="skills">
-  <button type="button" class="skills-btn" data-tl-open aria-expanded="false">{label}</button>
+<div class="skills-link" data-tl-item="skills" data-room-grace="1200">
+  <span class="hint skills-hint" data-hint="skills" data-tail="right" hidden>Hover to see my skills</span>
+  <button type="button" class="skills-btn" data-tl-open aria-expanded="false" aria-label={label} set:html={icon('chart-bar', 24)} />
   <span class="tl-title" hidden>{label}</span>
   <div class="skills-more" data-tl-more hidden>
     {/* RoomPanel reads the element with class `prose` */}
@@ -30,11 +33,16 @@ const { groups, label = 'My Skills' } = Astro.props;
               {g.items.map((s) =>
                 s.level ? (
                   <div class="skill" role="listitem">
+                    {s.note && (
+                      <span class="hint skill-note" data-tail="down">
+                        {s.note}
+                      </span>
+                    )}
                     <span class="skill-logo" set:html={icon(s.icon, 24)} />
                     <span class="skill-name">{s.name}</span>
                     <span class="skill-meter" role="img" aria-label={`${s.level} of ${SKILL_LEVELS}`}>
                       {SKILL_GRADIENT.map((c, i) => (
-                        <span class="skill-seg" style={i < s.level! ? `background:${c}` : undefined} data-on={i < s.level! ? '' : undefined} />
+                        <span class="skill-seg" style={i < s.level! ? `--c:${c}` : undefined} data-on={i < s.level! ? '' : undefined} />
                       ))}
                     </span>
                   </div>
@@ -58,16 +66,18 @@ const { groups, label = 'My Skills' } = Astro.props;
     position: relative;
   }
   .skills-btn {
-    padding: var(--space-1) 0;
+    display: grid;
+    place-items: center;
+    padding: var(--space-1);
+    margin: 0 calc(-1 * var(--space-1));
     border: 0;
     background: none;
     color: var(--emerald);
-    font: inherit;
-    font-size: var(--text-md);
-    font-weight: 600;
-    letter-spacing: -0.01em;
     cursor: default;
     transition: color var(--dur-1) var(--ease);
+  }
+  .skills-btn :global(svg) {
+    display: block;
   }
   .skills-btn:hover,
   .skills-link[data-open] .skills-btn {
@@ -76,6 +86,12 @@ const { groups, label = 'My Skills' } = Astro.props;
   .skills-btn:focus-visible {
     outline: 2px solid var(--emerald);
     outline-offset: 2px;
+  }
+  .skills-hint {
+    position: absolute;
+    right: calc(100% + var(--space-3));
+    top: 50%;
+    transform: translateY(-50%);
   }
   /* narrow screens: the list opens inline, above the button */
   .skills-more {
@@ -120,7 +136,34 @@ const { groups, label = 'My Skills' } = Astro.props;
   .skill-plain .skill-name {
     color: var(--ink-3);
   }
-  /* a stepped meter: one hard-edged block per level, blue up to bright green */
+  /* the note for a hovered row, in a bubble above it */
+  .skill {
+    position: relative;
+  }
+  .skill-note {
+    position: absolute;
+    left: 36px;
+    bottom: calc(100% + 4px);
+    z-index: 2;
+    width: max-content;
+    max-width: min(26em, calc(100% - 36px));
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    animation: none;
+    transition: opacity var(--dur-1) var(--ease), visibility 0s linear var(--dur-1);
+  }
+  .skill-note[data-tail='down']::after {
+    left: calc(var(--px) * 4);
+  }
+  .skill:hover > .skill-note {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  /* a stepped meter: one block per level, blue up to bright green. Each filled block is a
+     bevelled metal tile in hard-stepped tones (lit top and left edges, dark bottom and right),
+     and a narrow specular band crosses them in step with the simulation's light. */
   .skill-meter {
     display: grid;
     grid-auto-flow: column;
@@ -128,11 +171,34 @@ const { groups, label = 'My Skills' } = Astro.props;
     gap: 3px;
   }
   .skill-seg {
-    height: 0.62em;
-    min-height: 6px;
+    height: 0.78em;
+    min-height: 8px;
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--deep) 55%, transparent);
   }
   .skill-seg[data-on] {
     box-shadow: none;
+    background-color: color-mix(in oklab, var(--c), black 18%);
+    background-image:
+      linear-gradient(110deg, transparent 0 46.4%, rgb(228 255 245 / 0.55) 46.4% 47.4%, rgb(255 255 255 / 0.95) 47.4% 48.6%, rgb(190 225 255 / 0.5) 48.6% 49.8%, transparent 49.8%),
+      linear-gradient(to bottom, color-mix(in oklab, var(--c), white 42%) 0 2px, transparent 2px calc(100% - 2px), color-mix(in oklab, var(--c), black 55%) calc(100% - 2px)),
+      linear-gradient(to right, color-mix(in oklab, var(--c), white 22%) 0 2px, transparent 2px calc(100% - 2px), color-mix(in oklab, var(--c), black 42%) calc(100% - 2px));
+    background-size: var(--metal-size), 100% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    background-attachment: fixed, scroll, scroll;
+    background-position: 45% 0, 0 0, 0 0;
+    animation: skill-sheen 16s steps(160, end) var(--sheen-delay) infinite;
+  }
+  @keyframes skill-sheen {
+    from {
+      background-position: 100% 0, 0 0, 0 0;
+    }
+    to {
+      background-position: 0% 0, 0 0, 0 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skill-seg[data-on] {
+      animation: none;
+    }
   }
 </style>

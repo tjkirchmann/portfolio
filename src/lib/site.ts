@@ -58,6 +58,8 @@ const skill = z
       .max(SKILL_LEVELS, { error: `level goes up to ${SKILL_LEVELS}, the number of colours in the meter` })
       .optional(),
     icon: iconName,
+    /** a line of commentary shown in a bubble above the row while it is hovered */
+    note: z.string().optional(),
   })
   .strict();
 const skillGroup = z.object({ title: z.string().min(1), items: z.array(skill) }).strict();

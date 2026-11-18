@@ -7,6 +7,7 @@
  * wider only. The Dither in the same pane does the painting (events `dither:tool`, `dither:reset`).
  */
 import { icon } from '../lib/icons';
+import Hints from './Hints.astro';
 
 const tools = [
   { id: 'brush', icon: 'brush', label: 'Brush' },
@@ -33,6 +34,8 @@ const tools = [
   }
   <button type="button" class="tool" data-tool-reset aria-label="Reset" title="Reset" set:html={icon('refresh', 24)} />
 </div>
+{/* the hint's bubble style and script, on every page that has this menu */}
+<Hints />
 
 <style>
   .tools {

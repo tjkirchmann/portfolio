@@ -101,13 +101,15 @@ companies:
 # "My Skills" in the bottom row opens these. level is 1 to 5 (5 is best, the brightest green).
 # icon is a Pixelarticons name, or simple-icons:<name> for a technology logo
 # (browse https://simpleicons.org). A row with no level is a plain line.
-# The levels below are placeholders: set your own.
+# note is optional: a line shown in a bubble above the row while it is hovered.
+# The levels and the one note below are placeholders: set your own.
 skills:
   - title: Technical Skills
     items:
       - name: Python
         level: 5
         icon: simple-icons:python
+        note: Placeholder note. Say something about this skill.
       - name: Analytics
         level: 5
         icon: simple-icons:jupyter
