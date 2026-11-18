@@ -120,8 +120,8 @@
     const pane = room.closest<HTMLElement>('[data-split-art]') ?? room.parentElement!;
     // the panel stays up while the pointer is in the zone: the list that has panel items
     const zone =
-      items[0].closest<HTMLElement>('[data-room-zone]') ??
-      items[0].closest<HTMLElement>('[data-home-timelines]') ??
+      document.querySelector<HTMLElement>('[data-room-zone]') ??
+      document.querySelector<HTMLElement>('[data-home-timelines]') ??
       items[0].parentElement!.parentElement!;
     const $ = (k: string) => room.querySelector<HTMLElement>(`[data-room-${k}]`)!;
     const inner = $('inner');
@@ -251,6 +251,11 @@
         if ((e as PointerEvent).pointerType !== 'touch') show(li);
       });
       li.addEventListener('focusin', () => show(li));
+      if (!zone.contains(li)) {
+        // an opener outside the list (the simulation's question mark) closes on its own
+        li.addEventListener('pointerleave', later);
+        li.addEventListener('focusout', later);
+      }
       // narrow screens: a tap opens the body under the item, one at a time
       li.querySelector('[data-tl-open]')?.addEventListener('click', () => {
         if (wide.matches) return show(li);

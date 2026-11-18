@@ -1,0 +1,71 @@
+---
+/**
+ * The question mark at the top right of the home life simulation. Hovering or focusing it
+ * opens the same text panel the experiences use (RoomPanel reads the hidden title and body
+ * here), with the text from `about` in site.yaml. Wide pointer screens only.
+ */
+import Prose from './Prose.astro';
+import { icon } from '../lib/icons';
+import { markdownToHtml } from 'satteri';
+
+interface Props {
+  title: string;
+  body?: string;
+}
+const { title, body = '' } = Astro.props;
+const html = body.trim() ? markdownToHtml(body).html : '';
+---
+
+<div class="about" data-tl-item="about">
+  <button type="button" class="about-btn" data-tl-open aria-expanded="false" aria-label={title} set:html={icon('circle-question', 24)} />
+  <span class="tl-title" hidden>{title}</span>
+  {
+    html && (
+      <div data-tl-more hidden>
+        <Prose>
+          <Fragment set:html={html} />
+        </Prose>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .about {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    z-index: 2;
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) and (min-width: 800px) {
+    .about {
+      display: block;
+    }
+  }
+  .about-btn {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 22%, transparent);
+    color: var(--emerald);
+    cursor: help;
+    transition: background-color var(--dur-1) var(--ease);
+  }
+  .about-btn:hover,
+  .about[data-open] .about-btn {
+    background: color-mix(in oklab, var(--emerald) 18%, var(--bg));
+  }
+  .about-btn :global(svg) {
+    display: block;
+  }
+  .about-btn:focus-visible {
+    outline: 2px solid var(--emerald);
+    outline-offset: 0;
+  }
+</style>

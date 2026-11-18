@@ -1,0 +1,81 @@
+---
+/**
+ * First-visit hints. Any element with `data-hint="<name>" hidden` is shown shortly after load
+ * and put away for good (remembered in localStorage) once the thing it points at has been
+ * used: `experiences` when one is first hovered or focused, `tools` when a tool is first used.
+ * Wide pointer screens only. The pill style is global so other components can place a hint.
+ */
+---
+
+<style is:global>
+  .hint {
+    display: inline-block;
+    padding: 0.2em 0.7em;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--emerald) 16%, var(--bg));
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 40%, transparent);
+    color: var(--emerald);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: hint-in 400ms var(--ease) both;
+  }
+  .hint[hidden] {
+    display: none;
+  }
+  @keyframes hint-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @media not ((hover: hover) and (pointer: fine) and (min-width: 800px)) {
+    .hint {
+      display: none !important;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hint {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const KEY = 'hints:v1:';
+  const seen = (name: string) => {
+    try {
+      return localStorage.getItem(KEY + name) === '1';
+    } catch {
+      return false;
+    }
+  };
+  const done = (name: string) => {
+    try {
+      localStorage.setItem(KEY + name, '1');
+    } catch {
+      /* private mode: the hint just comes back next visit */
+    }
+    document.querySelectorAll<HTMLElement>(`[data-hint="${name}"]`).forEach((el) => (el.hidden = true));
+  };
+
+  let showT = 0;
+  document.addEventListener('astro:page-load', () => {
+    clearTimeout(showT);
+    showT = window.setTimeout(() => {
+      document.querySelectorAll<HTMLElement>('[data-hint]').forEach((el) => {
+        if (!seen(el.dataset.hint!)) el.hidden = false;
+      });
+    }, 1200);
+  });
+  // an experience has been hovered or focused (the panel opens from there)
+  for (const type of ['pointerover', 'focusin'])
+    document.addEventListener(type, (e) => {
+      if ((e.target as Element | null)?.closest?.('[data-room-zone] [data-tl-item]')) done('experiences');
+    });
+  document.addEventListener('dither:tool', (e) => {
+    if ((e as CustomEvent).detail?.tool) done('tools');
+  });
+  document.addEventListener('dither:reset', () => done('tools'));
+</script>

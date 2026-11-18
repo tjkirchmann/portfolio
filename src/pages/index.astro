@@ -4,6 +4,8 @@ import Split from '../components/Split.astro';
 import Dither from '../components/Dither.astro';
 import ToolMenu from '../components/ToolMenu.astro';
 import RoomPanel from '../components/RoomPanel.astro';
+import SimAbout from '../components/SimAbout.astro';
+import Hints from '../components/Hints.astro';
 import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
 import { loadSite } from '../lib/site';
@@ -16,6 +18,8 @@ const site = loadSite();
     <Dither slot="art" />
     <ToolMenu slot="art" />
     <RoomPanel slot="art" />
+    {site.about && <SimAbout slot="art" title={site.about.title} body={site.about.body} />}
+    <Hints />
 
     <header class="page-head home-head">
       <h1 class="page-title">{site.name}</h1>
@@ -24,6 +28,7 @@ const site = loadSite();
 
     <div class="home-timelines" data-home-timelines>
       <div class="home-half" data-half="experiences" data-room-zone>
+        <span class="hint home-hint" data-hint="experiences" hidden>Hover one to read more</span>
         <Timeline label="Experiences" items={site.experiences} panel />
       </div>
       <div class="home-half" data-half="companies">
@@ -53,6 +58,15 @@ const site = loadSite();
     display: flex;
     flex-direction: column;
     padding-bottom: var(--space-5);
+  }
+  .home-half {
+    position: relative;
+  }
+  /* sits on the label's row, after the word */
+  .home-hint {
+    position: absolute;
+    top: -0.15em;
+    left: 6.5rem;
   }
   .home-half > :global(.tl) {
     flex: 1 1 auto;

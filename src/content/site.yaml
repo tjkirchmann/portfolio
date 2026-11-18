@@ -98,6 +98,18 @@ companies:
     icon: trophy
     body: ""
 
+# The question mark on the simulation opens this. Placeholder text: replace with your own.
+about:
+  title: About this simulation
+  body: |
+    This is Conway's Game of Life. Every square is one cell on a grid. Each step, a live cell with two or three live neighbours survives, an empty cell with exactly three becomes alive, and everything else dies. Nothing else is scripted: the gliders, blinkers and still lifes come out of those rules.
+
+    The grid steps about ten times a second and wraps at its edges. When a cell dies it leaves a trail that thins out through an ordered dither pattern, which is where the halftone texture comes from. When activity drops, a few small long-lived seed patterns are planted to keep it going.
+
+    The cells are drawn by a WebGL shader. Each one is a bevelled tile in a few hard-stepped tones, and a shared light sweeps across so clusters catch it in sequence and read as metal. Colour comes from the region a cell was born in.
+
+    The tools write straight into the same grid, so what you paint lives and dies by the same rules. Hovering an experience asks the cells to walk out of the middle and form the frame around this text.
+
 links:
   - label: Blog
     href: /blog/

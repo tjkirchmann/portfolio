@@ -16,6 +16,7 @@ const tools = [
 ---
 
 <div class="tools" role="toolbar" aria-label="Paint tools" data-tools>
+  <span class="hint tools-hint" data-hint="tools" hidden>Try the tools</span>
   {
     tools.map((t) => (
       <button
@@ -42,9 +43,25 @@ const tools = [
     z-index: 2;
     display: none;
     gap: var(--space-1);
+    padding: var(--space-1);
+    border-radius: 999px;
+    /* a dark backing so the icons read over bright cells */
+    background: color-mix(in oklab, var(--bg) 82%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 22%, transparent);
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--dur-1) var(--ease);
+  }
+  /* first visit: the menu shows itself with its hint until a tool is used */
+  .tools:has(.hint:not([hidden])) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .tools-hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + var(--space-2));
+    transform: translateX(-50%);
   }
   @media (hover: hover) and (pointer: fine) and (min-width: 800px) {
     .tools {
@@ -57,7 +74,8 @@ const tools = [
     pointer-events: auto;
   }
   /* the text panel is up: out of the way, whatever the pointer does */
-  :global([data-room-open]) .tools {
+  :global([data-room-open]) .tools,
+  :global([data-room-open]) .tools:has(.hint:not([hidden])) {
     opacity: 0;
     pointer-events: none;
   }
@@ -71,15 +89,18 @@ const tools = [
     border-radius: 999px;
     background: transparent;
     color: var(--emerald);
-    opacity: 0.65;
+    opacity: 0.9;
     cursor: pointer;
-    transition: opacity var(--dur-1) var(--ease);
+    transition: opacity var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
   }
   .tool:hover {
-    opacity: 0.85;
+    opacity: 1;
+    background: color-mix(in oklab, var(--emerald) 12%, transparent);
   }
+  /* the tool in hand */
   .tool[aria-pressed='true'] {
     opacity: 1;
+    background: color-mix(in oklab, var(--emerald) 24%, transparent);
   }
   .tool:disabled {
     opacity: 0.18;

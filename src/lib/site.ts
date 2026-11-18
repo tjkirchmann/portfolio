@@ -44,6 +44,11 @@ const schema = z
     art: artField.optional(),
     experiences: z.array(step),
     companies: z.array(step),
+    /** shown in the hover panel from the question mark on the life simulation */
+    about: z
+      .object({ title: z.string().min(1), body: z.string().nullish().transform((v) => v ?? '') })
+      .strict()
+      .optional(),
     links: z.array(link),
   })
   .strict();
