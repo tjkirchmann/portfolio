@@ -177,18 +177,23 @@
   let steps: string[] = [];
   let finished = new Set<string>();
   let started = false;
-  let showT = 0, nextT = 0;
+  let waiting = false; // between a step being satisfied and the next hint appearing
+  let showT = 0, nextT = 0, roomT = 0;
+  const ROOM_SETTLE = 700; // after the text panel closes: its frame walks back, the tool menu returns
+  const roomOpen = () => !!document.querySelector('[data-room-open]');
 
   const all = (name: string) => Array.from(document.querySelectorAll<HTMLElement>(`[data-hint="${name}"]`));
   const current = () => steps.find((n) => !finished.has(n));
 
   /** show the current step's bubble and nothing else */
   function render() {
-    if (!started) return;
+    if (!started || waiting) return;
     const cur = current();
+    // the tools hint sits on the tool menu, which is away while the text panel is up
+    const held = cur === 'tools' && roomOpen();
     document.querySelectorAll<HTMLElement>('[data-hint]').forEach((el) => {
       if (el.hasAttribute('data-out')) return;
-      el.hidden = el.dataset.hint !== cur;
+      el.hidden = held || el.dataset.hint !== cur;
     });
   }
 
@@ -205,14 +210,20 @@
       }, OUT);
     }
     clearTimeout(nextT);
-    nextT = window.setTimeout(render, NEXT);
+    waiting = true;
+    nextT = window.setTimeout(() => {
+      waiting = false;
+      render();
+    }, NEXT);
   }
 
   document.addEventListener('astro:page-load', () => {
     clearTimeout(showT);
     clearTimeout(nextT);
+    clearTimeout(roomT);
     finished = new Set();
     started = false;
+    waiting = false;
     steps = ORDER.filter((n) => all(n).length);
     showT = window.setTimeout(() => {
       started = true;
@@ -240,4 +251,10 @@
 
   // the panel copies its text from the page, so a bubble inside it needs syncing when it fills
   new MutationObserver(render).observe(document.documentElement, { subtree: true, childList: true });
+  // the text panel opened or closed: hide a held hint at once, bring it back once things settle
+  new MutationObserver(() => {
+    clearTimeout(roomT);
+    if (roomOpen()) render();
+    else roomT = window.setTimeout(render, ROOM_SETTLE);
+  }).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['data-room-open'] });
 </script>
