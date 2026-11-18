@@ -3,6 +3,9 @@
 name: Your Name
 role: Your role
 art:
+  - slug: waveball
+    icon: globe
+    label: Wave ball
   - slug: spikeball
     icon: asterisk
     label: Spike ball
