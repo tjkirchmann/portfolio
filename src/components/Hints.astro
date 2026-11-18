@@ -91,10 +91,11 @@
     --nudge: 0 0;
     animation: hint-in 400ms var(--ease) both, hint-nudge 1.5s steps(3, end) 500ms infinite alternate;
   }
-  /* on arrival the bubble's fill (body and tail) blinks a soft yellow, twice */
+  /* on arrival the bubble's fill (body and tail) flashes a soft yellow, twice: hard on, hard
+     off, no easing, so it catches the eye */
   .hint[data-hint]::before,
   .hint[data-hint]::after {
-    animation: hint-blink 520ms ease-in-out 450ms 2;
+    animation: hint-blink 340ms steps(1, end) 450ms 2;
   }
   .hint[data-hint][data-tail='down'] {
     --nudge: 0 3px;
@@ -112,8 +113,11 @@
     transition: opacity 260ms var(--ease);
   }
   @keyframes hint-blink {
-    50% {
+    0% {
       background-color: #f3e9a6;
+    }
+    50% {
+      background-color: var(--bubble);
     }
   }
   @keyframes hint-nudge {
@@ -144,8 +148,8 @@
 <script>
   /** the order the hints are shown in after each page load */
   const ORDER = ['experiences', 'skills', 'skill-rows', 'about', 'tools'];
-  const OUT = 260; // fade-out, then a short beat before the next one
-  const BEAT = 240;
+  const OUT = 260; // the satisfied hint's fade-out
+  const NEXT = 1500; // from a step being satisfied to the next hint appearing
 
   let steps: string[] = [];
   let finished = new Set<string>();
@@ -178,7 +182,7 @@
       }, OUT);
     }
     clearTimeout(nextT);
-    nextT = window.setTimeout(render, OUT + BEAT);
+    nextT = window.setTimeout(render, NEXT);
   }
 
   document.addEventListener('astro:page-load', () => {
