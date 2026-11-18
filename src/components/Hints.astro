@@ -78,6 +78,17 @@
     top: calc(50% - var(--px) * 1.5);
     clip-path: polygon(0 0, 0 100%, 33.34% 100%, 33.34% 66.67%, 66.67% 66.67%, 66.67% 33.34%, 100% 33.34%, 100% 0);
   }
+  .hint[data-tail='up']::after {
+    bottom: 100%;
+    left: calc(50% - var(--px) * 1.5);
+    clip-path: polygon(0 0, 33.34% 0, 33.34% 33.34%, 66.67% 33.34%, 66.67% 66.67%, 100% 66.67%, 100% 100%, 0 100%);
+  }
+  /* tail near the bubble's right end, for bubbles hung from an icon at the right */
+  .hint[data-tail='up'][data-tail-at='end']::after {
+    left: auto;
+    right: calc(var(--px) * 4);
+    clip-path: polygon(100% 0, 66.67% 0, 66.67% 33.34%, 33.34% 33.34%, 33.34% 66.67%, 0 66.67%, 0 100%, 100% 100%);
+  }
   .hint[data-tail='left']::after {
     right: 100%;
     top: calc(50% - var(--px) * 1.5);
@@ -103,6 +114,13 @@
   .hint[data-hint][data-tail='down'] {
     --nudge: 0 3px;
     transform-origin: 50% 100%;
+  }
+  .hint[data-hint][data-tail='up'] {
+    --nudge: 0 -3px;
+    transform-origin: 50% 0;
+  }
+  .hint[data-hint][data-tail='up'][data-tail-at='end'] {
+    transform-origin: 100% 0;
   }
   .hint[data-hint][data-tail='right'] {
     --nudge: 3px 0;

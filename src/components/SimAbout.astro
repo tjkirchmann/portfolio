@@ -17,7 +17,7 @@ const html = body.trim() ? markdownToHtml(body).html : '';
 ---
 
 <div class="about" data-tl-item="about">
-  <span class="hint about-hint" data-hint="about" data-tail="right" hidden>What is this?</span>
+  <span class="hint about-hint" data-hint="about" data-tail="up" data-tail-at="end" hidden>What is this?</span>
   <button type="button" class="about-btn" data-tl-open aria-expanded="false" aria-label={title} set:html={icon('circle-question', 24)} />
   <span class="tl-title" hidden>{title}</span>
   {
@@ -46,9 +46,8 @@ const html = body.trim() ? markdownToHtml(body).html : '';
   }
   .about-hint {
     position: absolute;
-    right: calc(100% + var(--space-3));
-    top: 50%;
-    transform: translateY(-50%);
+    right: 0;
+    top: calc(100% + var(--space-3));
   }
   .about-btn {
     display: grid;

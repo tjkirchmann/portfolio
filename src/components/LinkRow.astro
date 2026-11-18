@@ -11,8 +11,10 @@ import Hints from './Hints.astro';
 interface Props {
   links: { label: string; href: string; icon?: string; hint?: string; download?: boolean }[];
   label?: string;
+  /** hover bubbles hang below the links (for a row at the top of its area) instead of above */
+  below?: boolean;
 }
-const { links, label = 'Links' } = Astro.props;
+const { links, label = 'Links', below = false } = Astro.props;
 const external = (href: string) => /^https?:/.test(href);
 ---
 
@@ -32,7 +34,7 @@ const external = (href: string) => /^https?:/.test(href);
             {l.icon ? <Fragment set:html={icon(l.icon, 24)} /> : l.label}
           </a>
           {l.hint && (
-            <span class="hint link-hint" data-tail="down" aria-hidden="true">
+            <span class:list={['hint', 'link-hint', { 'link-hint-below': below }]} data-tail={below ? 'up' : 'down'} data-tail-at={below ? 'end' : undefined} aria-hidden="true">
               {l.hint}
             </span>
           )}
@@ -67,6 +69,14 @@ const external = (href: string) => /^https?:/.test(href);
     visibility: hidden;
     animation: none;
     transition: opacity var(--dur-1) var(--ease), visibility 0s linear var(--dur-1);
+  }
+  /* below: hung from the icon's right edge, so bubbles near the screen edge stay on screen */
+  .link-hint-below {
+    left: auto;
+    right: calc(-1 * var(--space-2));
+    top: calc(100% + var(--space-3));
+    bottom: auto;
+    transform: none;
   }
   .linkrow li:hover > .link-hint,
   .linkrow li:focus-within > .link-hint {
