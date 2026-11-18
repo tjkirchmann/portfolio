@@ -2,7 +2,7 @@
 /**
  * Hints. Any element with `data-hint="<name>" hidden` is shown shortly after every page load
  * and put away, until the next load, once the thing it points at has been used:
- * `experiences` when one is first hovered or focused, `tools` when a tool is first used.
+ * `experiences` when one is first hovered or focused, `tools` when a tool is first used, `about` when the question mark is hovered or focused.
  * Wide pointer screens only. The bubble style is global so other components can place a hint.
  */
 ---
@@ -71,6 +71,11 @@
     left: calc(50% - var(--px) * 1.5);
     clip-path: polygon(0 0, 100% 0, 100% 33.34%, 66.67% 33.34%, 66.67% 66.67%, 33.34% 66.67%, 33.34% 100%, 0 100%);
   }
+  .hint[data-tail='right']::after {
+    left: 100%;
+    top: calc(50% - var(--px) * 1.5);
+    clip-path: polygon(0 0, 0 100%, 33.34% 100%, 33.34% 66.67%, 66.67% 66.67%, 66.67% 33.34%, 100% 33.34%, 100% 0);
+  }
   .hint[data-tail='left']::after {
     right: 100%;
     top: calc(50% - var(--px) * 1.5);
@@ -112,7 +117,9 @@
   // an experience has been hovered or focused (the panel opens from there)
   for (const type of ['pointerover', 'focusin'])
     document.addEventListener(type, (e) => {
-      if ((e.target as Element | null)?.closest?.('[data-room-zone] [data-tl-item]')) done('experiences');
+      const t = e.target as Element | null;
+      if (t?.closest?.('[data-room-zone] [data-tl-item]')) done('experiences');
+      if (t?.closest?.('[data-tl-item="about"]')) done('about');
     });
   document.addEventListener('dither:tool', (e) => {
     if ((e as CustomEvent).detail?.tool) done('tools');
