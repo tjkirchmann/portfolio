@@ -496,3 +496,51 @@ inscribed in the overall game of life area."
   Companies: Finch Legal, subtitle "Strategy and operations", 2026. Parrot (acquired by
   Filevine), subtitle "Strategy and operations, data", 2024 – 2025. UPS, subtitle "Data
   analytics and data science", 2022 – 2024. Sports Interactive, subtitle "Freelance", 2023.
+
+## Amendment 10 (2026-11-17, from the owner)
+
+Light process: build and serve only, no test suite.
+
+The owner's words: "build me a second type of menu that shows when the image is not in
+frame mode. it should have little tools that paint different effects into the simulation.
+Tools to start with: Simple pixel brush (go back and forth through the gradient, just one
+simple icon tool). Gravity tool (it makes a circle of empty pixels with a ring of gradient
+outwards, follows mouse, not permanent). Click to make explosion. Reset."
+
+"Frame mode" is the hover text panel from amendment 9.
+
+- **AC-47 the tool menu.** A row of small emerald icon buttons over the life pane, in the
+  same transparent style as the archived art switcher (no panel, no boxes; lucide icons;
+  real buttons with labels). It is shown while the pointer is over the pane and fades out
+  shortly after it leaves, and it is hidden, with all tools suspended, whenever the text
+  panel is open or opening. One tool is active at a time; clicking the active tool again
+  puts it down. The active tool is shown by full opacity against dimmer neighbours and by
+  the pointer cursor changing over the pane; no rings. Pointer devices at 800px and wider
+  only: on touch or narrow layouts the menu does not appear and the pane behaves as now.
+  On the home page and the blog panes.
+- **AC-48 brush.** Press and drag paints live cells under the pointer into the simulation,
+  one cell wide with gaps filled between pointer samples so fast strokes are continuous.
+  The paint colour travels back and forth through the palette gradient as you draw (deep,
+  teal, emerald, aqua, blue, then back again), advancing with distance drawn, so a long
+  stroke shows the whole ramp. Painted cells are real: once the stroke moves on they live
+  and die by the Life rules, keep their painted hue, leave trails, and get the metallic
+  shading.
+- **AC-49 gravity.** While this tool is active the pointer carries a well: a circle around
+  it (about 6-8 cells radius) is kept empty, and the cells it displaces pile up just
+  outside as a ring whose density and colour fall off outward through the gradient
+  (brightest and bluest at the rim, fading through emerald and teal to nothing a few cells
+  out). It follows the pointer smoothly, cells are pushed aside as it moves and close in
+  behind it, and nothing is permanent: when the pointer leaves the pane or the tool is put
+  down the well dissolves and the simulation carries on with whatever cells are there.
+- **AC-50 explosion.** A click detonates at that cell: a ring of cells bursts outward from
+  the point over roughly half a second, sweeping existing cells along with it, bright and
+  blue-white at the front and cooling through the gradient behind, leaving a brief hollow
+  at the centre and debris that then lives by the Life rules. Clicks can overlap. It
+  should feel like a shockwave through the cells, not a sprite drawn on top.
+- **AC-51 reset.** Not a mode: a single click clears everything painted and reseeds the
+  pane to a fresh pre-evolved state (new seed), with a quick fade so it does not pop.
+- All of it runs inside the existing simulation and its WebGL renderer, at the cell grid,
+  so effects are made of cells and get the same metallic look. Keep the pane's pauses and
+  the reduced-motion still (under reduced motion: brush and reset work on the still frame,
+  gravity and explosion are disabled). Do not let tool state leak into the text panel's
+  room: opening the panel clears any well and lets explosions finish outside the room.
