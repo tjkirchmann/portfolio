@@ -89,28 +89,51 @@
   /* the current step leans toward what it points at, a few pixels, in steps */
   .hint[data-hint] {
     --nudge: 0 0;
-    animation: hint-in 400ms var(--ease) both, hint-nudge 1.5s steps(3, end) 500ms infinite alternate;
+    /* arrives with a pop: there at once, a small overshoot, then settles; it grows out of
+       the side its tail is on, so it seems to come from what it points at */
+    transform-origin: 50% 50%;
+    animation: hint-pop 340ms linear both, hint-nudge 1.5s steps(3, end) 700ms infinite alternate;
   }
   /* on arrival the bubble's fill (body and tail) flashes a soft yellow, twice: hard on, hard
      off, no easing, so it catches the eye */
   .hint[data-hint]::before,
   .hint[data-hint]::after {
-    animation: hint-blink 340ms steps(1, end) 450ms 2;
+    animation: hint-blink 340ms steps(1, end) 340ms 2;
   }
   .hint[data-hint][data-tail='down'] {
     --nudge: 0 3px;
+    transform-origin: 50% 100%;
   }
   .hint[data-hint][data-tail='right'] {
     --nudge: 3px 0;
+    transform-origin: 100% 50%;
   }
   .hint[data-hint][data-tail='left'] {
     --nudge: -3px 0;
+    transform-origin: 0 50%;
   }
   /* satisfied: fades away before the next one arrives */
   .hint[data-hint][data-out] {
     animation: none;
     opacity: 0;
     transition: opacity 260ms var(--ease);
+  }
+  @keyframes hint-pop {
+    0% {
+      scale: 0.72;
+    }
+    38% {
+      scale: 1.12;
+    }
+    62% {
+      scale: 0.96;
+    }
+    82% {
+      scale: 1.02;
+    }
+    100% {
+      scale: 1;
+    }
   }
   @keyframes hint-blink {
     0% {
