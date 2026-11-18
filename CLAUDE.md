@@ -54,7 +54,7 @@ The wireframe ball art is not reachable from the site. It is all still here: the
 `public/art/` (gyroscope, knot, spikeball, spikeball-life, waveball, waveball-life), the
 player and switcher (`Art.astro`, `ArtSet.astro`, including the stacked-alpha player for
 opaque pieces), and `art:` support in `site.yaml` and post frontmatter. `/blocks` shows
-them. `spikeball-zoom` is unfinished: 191 of 480 frames in the ignored cache.
+them, in `pnpm dev` only: the page lives in `src/dev/` and is left out of production builds. `spikeball-zoom` is unfinished: 191 of 480 frames in the ignored cache.
 
 Art rules when it is used again: one fixed isometric camera for every subject (zoom and
 pan allowed, angles fixed), light lines on black for screen blending, colour only in the

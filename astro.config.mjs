@@ -5,7 +5,18 @@ import { satteri } from '@astrojs/markdown-satteri';
 import { figurePlugin } from './src/lib/figure-plugin.mjs';
 import { chaferTheme } from './src/lib/shiki-theme.mjs';
 
+/** The /blocks review page (every UI block, the archived art) exists in `astro dev` only. */
+const devBlocks = {
+  name: 'dev-blocks',
+  hooks: {
+    'astro:config:setup': ({ command, injectRoute }) => {
+      if (command === 'dev') injectRoute({ pattern: '/blocks', entrypoint: './src/dev/blocks.astro' });
+    },
+  },
+};
+
 export default defineConfig({
+  integrations: [devBlocks],
   site: 'https://portfolio.tjkirchmann.workers.dev',
   output: 'static',
   trailingSlash: 'ignore',
