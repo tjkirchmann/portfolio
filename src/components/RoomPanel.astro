@@ -77,6 +77,17 @@
   .room-body:empty {
     display: none;
   }
+  /* the body text is sized to fill the room, between a smallest and a largest size (set by
+     the script below); beyond the smallest it scrolls */
+  .room-body.prose-chafer {
+    font-size: var(--room-fit, var(--text-base));
+  }
+  .room-body :where(h2, h3) {
+    font-size: 1.1em;
+  }
+  .room-body :where(blockquote, table) {
+    font-size: 0.92em;
+  }
   @media (max-width: 799.98px) {
     .room {
       display: none !important;
@@ -92,6 +103,9 @@
 <script>
   const GRACE = 250;
   const OUT = 110;
+  // body text is scaled to fit the room, clamped to these sizes (px)
+  const FIT_MIN = 13;
+  const FIT_MAX = 22;
   const wide = window.matchMedia('(min-width: 800px)');
 
   let ac: AbortController | undefined;
@@ -115,6 +129,25 @@
     let closeT = 0, showT = 0, swapT = 0, releaseT = 0;
     let overRoom = false;
 
+    /** Largest body size, within the clamp, at which the text fits the room without scrolling. */
+    function fit() {
+      const body = $('body');
+      if (!room.hasAttribute('data-placed') || !body.childElementCount) return;
+      const fits = (px: number) => {
+        body.style.setProperty('--room-fit', `${px}px`);
+        return inner.scrollHeight <= inner.clientHeight + 1;
+      };
+      if (fits(FIT_MAX)) return;
+      let lo = FIT_MIN, hi = FIT_MAX;
+      if (!fits(lo)) return; // too long even at the smallest: stays there and scrolls
+      for (let i = 0; i < 7; i++) {
+        const mid = (lo + hi) / 2;
+        if (fits(mid)) lo = mid;
+        else hi = mid;
+      }
+      body.style.setProperty('--room-fit', `${Math.floor(lo * 2) / 2}px`);
+    }
+
     const carve = (want: boolean) => document.dispatchEvent(new CustomEvent('dither:carve', { detail: { pane, open: want } }));
 
     function mark(li: HTMLElement | null) {
@@ -132,6 +165,7 @@
       $('year').textContent = li.querySelector('.tl-year')?.textContent?.trim() ?? '';
       const more = li.querySelector('[data-tl-more] .prose');
       $('body').innerHTML = more ? more.innerHTML : '';
+      fit();
       inner.scrollTop = 0;
     }
 
@@ -200,6 +234,7 @@
       // the box the field sits in shares the panel's containing block
       Object.assign(room.style, { left: `${d.left}px`, top: `${d.top}px`, width: `${d.width}px`, height: `${d.height}px` });
       room.setAttribute('data-placed', '');
+      fit(); // the room now has a size to measure against
       settleAt = d.settleAt;
       clearTimeout(showT);
       showT = window.setTimeout(() => {
