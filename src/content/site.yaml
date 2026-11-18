@@ -109,47 +109,58 @@ skills:
       - name: Python
         level: 5
         icon: simple-icons:python
-        note: Placeholder note. Say something about this skill.
+        note: My primary and best known language!
       - name: Analytics
         level: 5
         icon: simple-icons:jupyter
+        note: I have great intuition when working with data!
       - name: Machine Learning
-        level: 4
+        level: 3
         icon: simple-icons:jupyter
+        note: Not a galaxy brain researcher, but a good practicioner!
       - name: DBT
         level: 4
         icon: simple-icons:dbt
+        note: Have solo managed DBT before!
       - name: React
-        level: 3
+        level: 2
         icon: simple-icons:react
-      - name: Coding Agents
-        level: 5
-        icon: simple-icons:claudecode
-      - name: Git
+        note: Dangerous enough to know the basics, coding agents help!
+      - name: AI/Coding Agents
         level: 4
-        icon: simple-icons:git
-      - name: Cloud
+        icon: simple-icons:claudecode
+        note: Claude Code, Codex, Pi, Opencode, all in use!
+      - name: Git
         level: 3
+        icon: simple-icons:git
+        note: A good steward of repositories, but not a whiz!
+      - name: Cloud
+        level: 2
         icon: simple-icons:amazonwebservices
+        note: Working knowledge of cloud building blocks, IaC, permissioning, etc.
       - name: and more...
   - title: People Skills
     items:
       - name: Leadership
         level: 4
         icon: flag
+        note: I've lead a 30+ team before!
       - name: Management
         level: 4
         icon: users
+        note: I've managed managers!
       - name: Problem Solving
         level: 5
         icon: lightbulb
+        note: I know how to dig into deails and spec a solution!
       - name: Determination
         level: 5
         icon: zap
+        note: More than willing to go the extra mile!
 
 # The question mark on the simulation opens this. Placeholder text: replace with your own.
 about:
-  title: About this simulation
+  title: Conway's Game of Life
   body: |
     This is Conway's Game of Life. Every square is one cell on a grid. Each step, a live cell with two or three live neighbours survives, an empty cell with exactly three becomes alive, and everything else dies. Nothing else is scripted: the gliders, blinkers and still lifes come out of those rules.
 
