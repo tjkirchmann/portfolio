@@ -18,11 +18,22 @@ interface Step {
   label: string;
   icon?: string;
   hint: string;
+  /** what tapping the item does: follow this link (as the real one in the row does) ... */
+  href?: string;
+  download?: boolean;
+  /** ... or open the skills screen */
+  skills?: boolean;
 }
 interface Props {
   steps: Step[];
 }
 const { steps } = Astro.props;
+const external = (href?: string) => !!href && /^https?:/.test(href);
+/** attributes that make a tour item do what the real one does */
+const act = (s: Step) =>
+  s.skills
+    ? { 'data-mtour-skills': '' }
+    : { href: s.href, download: s.download ? '' : undefined, ...(external(s.href) ? { target: '_blank', rel: 'noopener' } : {}) };
 ---
 
 <div class="mtour" data-mtour hidden aria-live="polite">
@@ -34,21 +45,29 @@ const { steps } = Astro.props;
           <span class="hint hint-m mtour-bubble" data-tail="down">
             {s.hint}
           </span>
-          {s.icon ? <span class="mtour-big" set:html={icon(s.icon, 72)} /> : <span class="mtour-big">{s.label}</span>}
+          {s.skills ? (
+            <button type="button" class="mtour-big" aria-label={s.label} {...act(s)} set:html={icon(s.icon, 72)} />
+          ) : s.icon ? (
+            <a class="mtour-big" aria-label={s.label} {...act(s)} set:html={icon(s.icon, 72)} />
+          ) : (
+            <a class="mtour-big" {...act(s)}>{s.label}</a>
+          )}
           {s.icon && <span class="mtour-label">{s.label}</span>}
         </div>
       ))
     }
   </div>
-  <div class="mtour-row" aria-hidden="true">
+  <div class="mtour-row">
     {
-      steps.map((s, i) => (
-        s.icon ? (
-          <span class="mtour-item" data-mtour-item={i} set:html={icon(s.icon, 24)} />
+      steps.map((s, i) =>
+        s.skills ? (
+          <button type="button" class="mtour-item" data-mtour-item={i} aria-label={s.label} {...act(s)} set:html={icon(s.icon, 24)} />
+        ) : s.icon ? (
+          <a class="mtour-item" data-mtour-item={i} aria-label={s.label} {...act(s)} set:html={icon(s.icon, 24)} />
         ) : (
-          <span class="mtour-item" data-mtour-item={i}>{s.label}</span>
-        )
-      ))
+          <a class="mtour-item" data-mtour-item={i} {...act(s)}>{s.label}</a>
+        ),
+      )
     }
   </div>
   <p class="mtour-where">They sit along the bottom of the page.</p>
@@ -132,10 +151,26 @@ const { steps } = Astro.props;
       font-size: var(--text-base);
       transform-origin: 50% 100%;
     }
+    /* the tour's items are the real thing: tapping one does what it does on the page */
+    .mtour-big,
+    .mtour-item {
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mtour-item {
+      /* a thumb-sized target around the 24px icon */
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+    }
     .mtour-big {
       display: grid;
       place-items: center;
       min-height: 72px;
+      min-width: 72px;
       color: var(--emerald);
       font-size: var(--text-xl);
       font-weight: 560;
@@ -151,8 +186,8 @@ const { steps } = Astro.props;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: var(--space-5);
-      padding: var(--space-3) var(--space-4);
+      gap: var(--space-1);
+      padding: var(--space-1) var(--space-2);
       border-radius: 999px;
       box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 18%, transparent);
     }
@@ -322,6 +357,15 @@ const { steps } = Astro.props;
       }, DISSOLVE_MS);
     }
     tour.querySelector('[data-mtour-skip]')!.addEventListener('click', close, { signal });
+    // the skills item ends the tour and opens the skills screen, as the real icon does
+    tour.querySelectorAll('[data-mtour-skills]').forEach((b) =>
+      b.addEventListener('click', () => {
+        clearTimeout(tourT);
+        lock(false);
+        tour.hidden = true;
+        location.hash = 'skills';
+      }, { signal }),
+    );
 
     if (!tourOffered && narrow.matches && steps.length && !location.hash) {
       tourOffered = true;
