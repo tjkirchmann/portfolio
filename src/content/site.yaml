@@ -115,12 +115,21 @@ about:
 links:
   - label: Blog
     href: /blog/
+    hint: My blog, I guess?
   - label: GitHub
     href: https://github.com/tjkirchmann
     icon: github
+    hint: Mostly personal projects
   - label: LinkedIn
     href: https://www.linkedin.com/in/tylerkirchmann
     icon: linkedin
+    hint: Connect with me!
   - label: Email
     href: mailto:tjkirchmann@gmail.com
     icon: mail
+    hint: Hit me up!
+  - label: Resume
+    href: /ty-kirchmann-resume.pdf
+    icon: file-text
+    download: true
+    hint: A formal resume if you wish

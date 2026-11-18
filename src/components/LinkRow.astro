@@ -2,12 +2,14 @@
 /**
  * A row of links along the bottom of the home text pane. A link with an `icon` shows as the
  * icon alone, in emerald, with its label as the accessible name and tooltip; others are text.
- * External links open in a new tab.
+ * External links open in a new tab. A link with a `hint` shows it in a speech bubble above
+ * the link while hovered or focused; one with `download` saves its file.
  */
 import { icon } from '../lib/icons';
+import Hints from './Hints.astro';
 
 interface Props {
-  links: { label: string; href: string; icon?: string }[];
+  links: { label: string; href: string; icon?: string; hint?: string; download?: boolean }[];
   label?: string;
 }
 const { links, label = 'Links' } = Astro.props;
@@ -23,16 +25,23 @@ const external = (href: string) => /^https?:/.test(href);
             href={l.href}
             class:list={[{ 'is-icon': !!l.icon }]}
             aria-label={l.icon ? l.label : undefined}
-            title={l.icon ? l.label : undefined}
+            title={l.icon && !l.hint ? l.label : undefined}
+            download={l.download ? '' : undefined}
             {...(external(l.href) ? { target: '_blank', rel: 'noopener' } : {})}
           >
             {l.icon ? <Fragment set:html={icon(l.icon, 24)} /> : l.label}
           </a>
+          {l.hint && (
+            <span class="hint link-hint" data-tail="down" aria-hidden="true">
+              {l.hint}
+            </span>
+          )}
         </li>
       ))
     }
   </ul>
 </nav>
+<Hints />
 
 <style>
   .linkrow ul {
@@ -43,6 +52,27 @@ const external = (href: string) => /^https?:/.test(href);
     list-style: none;
     margin: 0;
     padding: 0;
+  }
+  .linkrow li {
+    position: relative;
+  }
+  /* the bubble above a hovered or focused link */
+  .link-hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + var(--space-3));
+    z-index: 3;
+    transform: translateX(-50%);
+    opacity: 0;
+    visibility: hidden;
+    animation: none;
+    transition: opacity var(--dur-1) var(--ease), visibility 0s linear var(--dur-1);
+  }
+  .linkrow li:hover > .link-hint,
+  .linkrow li:focus-within > .link-hint {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
   }
   .linkrow a {
     display: inline-block;

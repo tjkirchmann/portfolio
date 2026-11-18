@@ -14,7 +14,17 @@ const iconName = z
   });
 
 /** with an icon, the link shows as the icon alone (label kept for screen readers and tooltip) */
-const link = z.object({ label: z.string(), href: z.string(), icon: iconName }).strict();
+const link = z
+  .object({
+    label: z.string(),
+    href: z.string(),
+    icon: iconName,
+    /** a short line shown in a bubble while the link is hovered or focused */
+    hint: z.string().optional(),
+    /** the link downloads its file instead of opening it */
+    download: z.boolean().optional(),
+  })
+  .strict();
 
 const step = z
   .object({
