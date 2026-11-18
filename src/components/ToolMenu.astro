@@ -16,7 +16,7 @@ const tools = [
 ---
 
 <div class="tools" role="toolbar" aria-label="Paint tools" data-tools>
-  <span class="hint tools-hint" data-hint="tools" hidden>Try the tools</span>
+  <span class="hint tools-hint" data-hint="tools" data-tail="down" hidden>Try the tools</span>
   {
     tools.map((t) => (
       <button
@@ -60,7 +60,7 @@ const tools = [
   .tools-hint {
     position: absolute;
     left: 50%;
-    bottom: calc(100% + var(--space-2));
+    bottom: calc(100% + var(--space-3));
     transform: translateX(-50%);
   }
   @media (hover: hover) and (pointer: fine) and (min-width: 800px) {

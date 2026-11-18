@@ -28,7 +28,7 @@ const site = loadSite();
 
     <div class="home-timelines" data-home-timelines>
       <div class="home-half" data-half="experiences" data-room-zone>
-        <span class="hint home-hint" data-hint="experiences" hidden>Hover one to read more</span>
+        <span class="hint home-hint" data-hint="experiences" data-tail="left" hidden>Hover one to read more</span>
         <Timeline label="Experiences" items={site.experiences} panel />
       </div>
       <div class="home-half" data-half="companies">
@@ -65,8 +65,8 @@ const site = loadSite();
   /* sits on the label's row, after the word */
   .home-hint {
     position: absolute;
-    top: -0.15em;
-    left: 6.5rem;
+    top: -0.45em;
+    left: 7rem;
   }
   .home-half > :global(.tl) {
     flex: 1 1 auto;
