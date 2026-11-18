@@ -261,6 +261,8 @@
       // narrow screens: a tap opens the body under the item, one at a time
       li.querySelector('[data-tl-open]')?.addEventListener('click', () => {
         if (wide.matches) return show(li);
+        // on a phone the skills open as their own screen (MobileScreens)
+        if (li.dataset.tlItem === 'skills') return void (location.hash = 'skills');
         const more = li.querySelector<HTMLElement>('[data-tl-more]');
         if (!more) return;
         const opening = more.hidden;

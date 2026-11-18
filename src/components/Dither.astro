@@ -258,7 +258,9 @@ const state = encodeState(life);
 
   // ---- paint tools ----
   const fine = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 800px)');
-  const suspended = (it: Inst) => !!(it.carve || it.leaving) || !fine.matches;
+  /** the phone play screen: the pane is full screen and the tools take touch */
+  const playing = () => document.documentElement.hasAttribute('data-play');
+  const suspended = (it: Inst) => !!(it.carve || it.leaving) || !(fine.matches || playing());
   const motionTool = (t: string | null) => t === 'gravity' || t === 'explode';
 
   function toCell(it: Inst, e: PointerEvent) {
@@ -271,8 +273,18 @@ const state = encodeState(life);
     const pane = it.pane;
     let down = false;
     pane.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'touch' || e.button !== 0 || !it.tool || suspended(it) || onMenu(e)) return;
+      const touch = e.pointerType === 'touch';
+      if ((touch && !playing()) || e.button !== 0 || !it.tool || suspended(it) || onMenu(e) || (e.target as Element)?.closest?.('button, a')) return;
       const c = toCell(it, e);
+      if (it.tool === 'gravity' && touch && !reduce.matches) {
+        // a finger carries the well only while it is down
+        down = true;
+        pane.setPointerCapture(e.pointerId);
+        it.tools.well(c.x, c.y);
+        wake();
+        e.preventDefault();
+        return;
+      }
       if (it.tool === 'brush') {
         down = true;
         pane.setPointerCapture(e.pointerId);
@@ -287,8 +299,10 @@ const state = encodeState(life);
       }
     });
     pane.addEventListener('pointermove', (e) => {
-      if (e.pointerType === 'touch' || !it.tool) return;
+      const touch = e.pointerType === 'touch';
+      if ((touch && !playing()) || !it.tool) return;
       if (suspended(it)) return;
+      if (touch && !down) return;
       if (it.tool === 'brush' && down) {
         const evs = e.getCoalescedEvents?.() ?? [e];
         for (const ce of evs.length ? evs : [e]) {
@@ -303,10 +317,14 @@ const state = encodeState(life);
         wake();
       }
     });
-    const up = () => {
+    const up = (e: PointerEvent) => {
       if (!down) return;
       down = false;
       it.tools.brushEnd();
+      if (e.pointerType === 'touch') {
+        it.tools.well(null, null);
+        wake();
+      }
     };
     pane.addEventListener('pointerup', up);
     pane.addEventListener('pointercancel', up);

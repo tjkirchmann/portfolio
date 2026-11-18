@@ -1,0 +1,232 @@
+---
+/**
+ * Phones only (below 800px). A question mark at the top right of the life simulation opens a
+ * full-screen, no-scroll play screen: the simulation fills the screen, the paint tools sit at
+ * the bottom and take touch, and a hint walks across the tools once, one at a time, then
+ * leaves the visitor to play. A back button returns to the page. Goes in the pane's `art` slot.
+ * The screen is the URL hash `#play`, so the phone's own back button closes it too.
+ */
+import { icon } from '../lib/icons';
+import Hints from './Hints.astro';
+
+const tips: Record<string, string> = {
+  brush: 'Brush: drag to paint cells',
+  gravity: 'Gravity: drag to push cells aside',
+  explode: 'Explosion: tap to set one off',
+  reset: 'Reset: start over',
+};
+---
+
+<button type="button" class="mplay-open" data-mplay-open aria-label="Play with the simulation" set:html={icon('circle-question', 24)} />
+<button type="button" class="mplay-back" data-mplay-back>
+  <span set:html={icon('chevron-left', 24)} />
+  Back
+</button>
+<span class="hint hint-m mplay-tip" data-mplay-tip data-tail="down" data-tips={JSON.stringify(tips)} hidden></span>
+<Hints />
+
+<style>
+  .mplay-open,
+  .mplay-back,
+  .mplay-tip {
+    display: none;
+  }
+  @media (max-width: 799.98px) {
+    .mplay-open {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--bg) 82%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 22%, transparent);
+      color: var(--emerald);
+    }
+    .mplay-open :global(svg),
+    .mplay-back :global(svg) {
+      display: block;
+    }
+    :global(html[data-play]) .mplay-open {
+      display: none;
+    }
+    :global(html[data-play]) .mplay-back {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 0px) + var(--space-3));
+      left: var(--space-3);
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      height: 2.75rem;
+      padding: 0 var(--space-4) 0 var(--space-2);
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--bg) 82%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 22%, transparent);
+      color: var(--emerald);
+      font: inherit;
+      font-size: var(--text-sm);
+    }
+    :global(html[data-play]) .mplay-tip:not([hidden]) {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-5) + 3.5rem + var(--space-4));
+      max-width: calc(100% - 2 * var(--space-4));
+      transform: translateX(-50%);
+      transform-origin: 50% 100%;
+      white-space: normal;
+      text-align: center;
+    }
+    /* the tail follows the tool being described */
+    :global(html[data-play]) .mplay-tip::after {
+      left: calc(50% + var(--tail-x, 0px) - var(--px) * 1.5);
+    }
+  }
+</style>
+
+<style is:global>
+  @media (max-width: 799.98px) {
+    /* the play screen: the art pane takes the whole screen and nothing scrolls */
+    html[data-play],
+    html[data-play] body {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    html[data-play] .split-art {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      height: 100dvh;
+      opacity: 1 !important;
+      filter: none !important;
+      visibility: visible !important;
+      animation: none !important;
+      touch-action: none;
+      background: var(--bg);
+    }
+    html[data-play] .split-text {
+      visibility: hidden;
+    }
+    /* the tool menu, shown and sized for thumbs */
+    html[data-play] .tools {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-5));
+      gap: var(--space-2);
+      padding: var(--space-2);
+    }
+    html[data-play] .tools .tool {
+      width: 3rem;
+      height: 3rem;
+    }
+    html[data-play] .tools .tool[data-tipping] {
+      background: color-mix(in oklab, var(--emerald) 24%, transparent);
+    }
+    /* phone bubbles: the desktop hints are hidden at this size, these are not */
+    .hint.hint-m:not([hidden]) {
+      display: inline-block !important;
+    }
+    .hint.hint-m[data-pop] {
+      animation: hint-pop 340ms linear both;
+    }
+    .hint.hint-m[data-pop]::before,
+    .hint.hint-m[data-pop]::after {
+      animation: hint-blink 340ms steps(1, end) 340ms 2;
+    }
+  }
+</style>
+
+<script>
+  const narrow = window.matchMedia('(max-width: 799.98px)');
+  const TIP_MS = 2800;
+  let tipT = 0;
+  let ac: AbortController | undefined;
+
+  function setup() {
+    ac?.abort();
+    ac = new AbortController();
+    const signal = ac.signal;
+    const root = document.documentElement;
+    const openBtn = document.querySelector<HTMLElement>('[data-mplay-open]');
+    const backBtn = document.querySelector<HTMLElement>('[data-mplay-back]');
+    const tip = document.querySelector<HTMLElement>('[data-mplay-tip]');
+    const pane = openBtn?.closest<HTMLElement>('[data-split-art]');
+    const menu = pane?.querySelector<HTMLElement>('[data-tools]');
+    if (!openBtn || !backBtn || !tip || !pane || !menu) return;
+    const tips = JSON.parse(tip.dataset.tips || '{}') as Record<string, string>;
+    const buttons = Array.from(menu.querySelectorAll<HTMLElement>('button'));
+    const idOf = (b: HTMLElement) => b.dataset.toolPick ?? 'reset';
+
+    function stopTips() {
+      clearTimeout(tipT);
+      tip.hidden = true;
+      for (const b of buttons) b.removeAttribute('data-tipping');
+    }
+    /** one pass across the tools, a bubble over each in turn, then nothing */
+    function runTips(i = 0) {
+      clearTimeout(tipT);
+      for (const b of buttons) b.removeAttribute('data-tipping');
+      const b = buttons[i];
+      if (!b || !root.hasAttribute('data-play')) return stopTips();
+      tip.textContent = tips[idOf(b)] ?? '';
+      tip.hidden = false;
+      b.setAttribute('data-tipping', '');
+      // the bubble stays centred; its tail slides over the tool
+      const pr = pane.getBoundingClientRect();
+      const br = b.getBoundingClientRect();
+      const tr = tip.getBoundingClientRect();
+      const want = br.left + br.width / 2 - (pr.left + pr.width / 2);
+      const limit = Math.max(0, tr.width / 2 - 18);
+      tip.style.setProperty('--tail-x', `${Math.max(-limit, Math.min(limit, want))}px`);
+      tip.removeAttribute('data-pop');
+      void tip.offsetWidth;
+      tip.setAttribute('data-pop', '');
+      tipT = window.setTimeout(() => runTips(i + 1), TIP_MS);
+    }
+
+    function sync() {
+      const want = narrow.matches && location.hash === '#play';
+      const on = root.hasAttribute('data-play');
+      if (want === on) return;
+      if (want) {
+        window.scrollTo(0, 0);
+        root.setAttribute('data-play', '');
+        window.setTimeout(() => runTips(0), 700);
+      } else {
+        stopTips();
+        // put any tool down on the way out
+        menu.querySelector<HTMLElement>('[aria-pressed="true"]')?.click();
+        root.removeAttribute('data-play');
+      }
+      // the pane changed size: let the simulation and the dissolve catch up
+      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('scroll'));
+    }
+
+    openBtn.addEventListener('click', () => (location.hash = 'play'), { signal });
+    backBtn.addEventListener('click', () => {
+      if (history.length > 1) history.back();
+      else location.hash = '';
+    }, { signal });
+    // a tool was touched: the visitor is playing, stop explaining
+    menu.addEventListener('pointerdown', stopTips, { signal });
+    window.addEventListener('hashchange', sync, { signal });
+    window.addEventListener('popstate', sync, { signal });
+    narrow.addEventListener('change', sync, { signal });
+    sync();
+  }
+
+  document.addEventListener('astro:page-load', setup);
+  document.addEventListener('astro:before-swap', () => {
+    clearTimeout(tipT);
+    document.documentElement.removeAttribute('data-play');
+  });
+</script>

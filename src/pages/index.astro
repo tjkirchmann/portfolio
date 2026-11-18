@@ -7,11 +7,18 @@ import RoomPanel from '../components/RoomPanel.astro';
 import SimAbout from '../components/SimAbout.astro';
 import Hints from '../components/Hints.astro';
 import SkillsLink from '../components/SkillsLink.astro';
+import MobilePlay from '../components/MobilePlay.astro';
+import MobileScreens from '../components/MobileScreens.astro';
 import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
 import { loadSite } from '../lib/site';
 
 const site = loadSite();
+// the phone tour: one step per item of the bottom row, in the row's order
+const tourSteps = [
+  ...site.links.filter((l) => l.hint).map((l) => ({ label: l.label, icon: l.icon, hint: l.hint! })),
+  ...(site.skills ? [{ label: 'My Skills', icon: 'chart-bar', hint: 'Tap to see my skills' }] : []),
+];
 ---
 
 <Base title={site.name} description={`${site.name}, ${site.role}`}>
@@ -21,6 +28,7 @@ const site = loadSite();
     <RoomPanel slot="art" />
     {site.about && <SimAbout slot="art" title={site.about.title} body={site.about.body} />}
     <Hints />
+    <MobilePlay slot="art" />
 
     <header class="page-head home-head">
       <h1 class="page-title">{site.name}</h1>
@@ -36,6 +44,8 @@ const site = loadSite();
         <Timeline label="Companies" items={site.companies} />
       </div>
     </div>
+
+    <MobileScreens steps={tourSteps} />
 
     <footer class="home-foot">
       <LinkRow links={site.links} />

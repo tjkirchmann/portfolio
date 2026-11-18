@@ -1,0 +1,418 @@
+---
+/**
+ * Phones only (below 800px): two full-screen, no-scroll screens over the home page.
+ *
+ * Tour: shown on arrival. There is no hover on a phone, so it explains each item of the bottom
+ * row in turn (what it is and the line a desktop visitor would see on hover), then drops the
+ * visitor onto the page as it is. "Skip" is there but quiet. It is remembered once seen or
+ * skipped; add `?tour` to the address to see it again.
+ *
+ * Skills: opened by the skills icon (URL hash `#skills`, so the phone's back button closes it).
+ * The list from site.yaml with its meters, and each skill's note shown in turn in a bubble at
+ * the bottom, cycling on its own; tapping a row jumps to its note.
+ */
+import { icon } from '../lib/icons';
+import Hints from './Hints.astro';
+
+interface Step {
+  label: string;
+  icon?: string;
+  hint: string;
+}
+interface Props {
+  steps: Step[];
+}
+const { steps } = Astro.props;
+---
+
+<div class="mtour" data-mtour hidden aria-live="polite">
+  <button type="button" class="mtour-skip" data-mtour-skip>Skip</button>
+  <div class="mtour-stage">
+    {
+      steps.map((s, i) => (
+        <div class="mtour-step" data-mtour-step={i} hidden>
+          <span class="hint hint-m mtour-bubble" data-tail="down">
+            {s.hint}
+          </span>
+          {s.icon ? <span class="mtour-big" set:html={icon(s.icon, 72)} /> : <span class="mtour-big">{s.label}</span>}
+          {s.icon && <span class="mtour-label">{s.label}</span>}
+        </div>
+      ))
+    }
+  </div>
+  <div class="mtour-row" aria-hidden="true">
+    {
+      steps.map((s, i) => (
+        s.icon ? (
+          <span class="mtour-item" data-mtour-item={i} set:html={icon(s.icon, 24)} />
+        ) : (
+          <span class="mtour-item" data-mtour-item={i}>{s.label}</span>
+        )
+      ))
+    }
+  </div>
+  <p class="mtour-where">They sit along the bottom of the page.</p>
+  <div class="mtour-foot">
+    <button type="button" class="mtour-next" data-mtour-next>Next</button>
+    <div class="mtour-pips" aria-hidden="true">
+      {steps.map((_, i) => <span class="mtour-pip" data-mtour-pip={i} />)}
+    </div>
+  </div>
+</div>
+
+<div class="mskills" data-mskills hidden>
+  <div class="mskills-head">
+    <button type="button" class="mskills-back" data-mskills-back>
+      <span set:html={icon('chevron-left', 24)} />
+      Back
+    </button>
+    <span class="mskills-title">My Skills</span>
+  </div>
+  <div class="mskills-list" data-mskills-list></div>
+  <div class="mskills-foot">
+    <span class="hint hint-m mskills-note" data-mskills-note data-tail="up" hidden></span>
+  </div>
+</div>
+<Hints />
+
+<style>
+  .mtour,
+  .mskills {
+    display: none;
+  }
+  @media (max-width: 799.98px) {
+    .mtour:not([hidden]),
+    .mskills:not([hidden]) {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding: calc(env(safe-area-inset-top, 0px) + var(--space-4)) var(--space-5) calc(env(safe-area-inset-bottom, 0px) + var(--space-5));
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    /* ---- tour ---- */
+    .mtour {
+      align-items: center;
+      text-align: center;
+    }
+    .mtour-skip {
+      align-self: flex-end;
+      padding: var(--space-2) var(--space-1);
+      border: 0;
+      background: none;
+      color: var(--ink-3);
+      font: inherit;
+      font-size: var(--text-sm);
+    }
+    .mtour-stage {
+      flex: 1 1 0;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      width: 100%;
+    }
+    .mtour-step:not([hidden]) {
+      display: grid;
+      justify-items: center;
+      gap: var(--space-5);
+    }
+    .mtour-bubble {
+      max-width: 16rem;
+      white-space: normal;
+      font-size: var(--text-base);
+      transform-origin: 50% 100%;
+    }
+    .mtour-big {
+      display: grid;
+      place-items: center;
+      min-height: 72px;
+      color: var(--emerald);
+      font-size: var(--text-xl);
+      font-weight: 560;
+    }
+    .mtour-big :global(svg) {
+      display: block;
+    }
+    .mtour-label {
+      color: var(--ink-2);
+      font-size: var(--text-md);
+    }
+    .mtour-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-5);
+      padding: var(--space-3) var(--space-4);
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 18%, transparent);
+    }
+    .mtour-item {
+      display: grid;
+      place-items: center;
+      color: var(--emerald);
+      font-size: var(--text-sm);
+      opacity: 0.28;
+      transition: opacity var(--dur-1) var(--ease);
+    }
+    .mtour-item :global(svg) {
+      display: block;
+    }
+    .mtour-item[data-on] {
+      opacity: 1;
+    }
+    .mtour-where {
+      margin-top: var(--space-3);
+      color: var(--ink-3);
+      font-size: var(--text-xs);
+    }
+    .mtour-foot {
+      display: grid;
+      justify-items: center;
+      gap: var(--space-4);
+      width: 100%;
+      margin-top: var(--space-6);
+    }
+    .mtour-next {
+      width: 100%;
+      max-width: 20rem;
+      padding: var(--space-3) var(--space-5);
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--emerald) 18%, var(--bg));
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 45%, transparent);
+      color: var(--emerald);
+      font: inherit;
+      font-size: var(--text-base);
+      font-weight: 600;
+    }
+    .mtour-pips {
+      display: flex;
+      gap: 6px;
+    }
+    .mtour-pip {
+      width: 6px;
+      height: 6px;
+      background: color-mix(in oklab, var(--emerald) 25%, transparent);
+    }
+    .mtour-pip[data-on] {
+      background: var(--emerald);
+    }
+
+    /* ---- skills ---- */
+    .mskills-head {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin: 0 calc(-1 * var(--space-2)) var(--space-4);
+    }
+    .mskills-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      height: 2.75rem;
+      padding: 0 var(--space-3) 0 0;
+      border: 0;
+      background: none;
+      color: var(--emerald);
+      font: inherit;
+      font-size: var(--text-sm);
+    }
+    .mskills-back :global(svg) {
+      display: block;
+    }
+    .mskills-title {
+      margin-left: auto;
+      padding-right: var(--space-2);
+      color: var(--ink);
+      font-size: var(--text-md);
+      font-weight: 560;
+    }
+    .mskills-list {
+      flex: 1 1 0;
+      min-height: 0;
+      /* sized off the screen height so the whole list fits with no scrolling */
+      font-size: clamp(12px, 2.05dvh, 18px);
+    }
+    .mskills-list :global(.skills) {
+      gap: 1.6dvh;
+    }
+    .mskills-list :global(.skill) {
+      min-height: 0;
+      padding: 0.55dvh 0.4em;
+      margin: 0 -0.4em;
+      transition: background-color var(--dur-1) var(--ease);
+    }
+    .mskills-list :global(.skill[data-active]) {
+      background: color-mix(in oklab, var(--emerald) 13%, transparent);
+    }
+    .mskills-list :global(.skill[data-active] .skill-name) {
+      color: var(--emerald);
+    }
+    .mskills-list :global(.skill-note),
+    .mskills-list :global(.skills-rows-hint) {
+      display: none !important;
+    }
+    .mskills-foot {
+      flex: none;
+      display: grid;
+      place-items: center;
+      min-height: 5.5rem;
+      padding-top: var(--space-4);
+    }
+    .mskills-note {
+      max-width: 100%;
+      white-space: normal;
+      text-align: center;
+      font-size: var(--text-sm);
+      transform-origin: 50% 0;
+    }
+    /* this bubble's tail points up, at the list */
+    .mskills-note[data-tail='up']::after {
+      bottom: 100%;
+      left: calc(50% - var(--px) * 1.5);
+      clip-path: polygon(0 0, 33.34% 0, 33.34% 33.34%, 66.67% 33.34%, 66.67% 66.67%, 100% 66.67%, 100% 100%, 0 100%);
+    }
+  }
+</style>
+
+<style is:global>
+  @media (max-width: 799.98px) {
+    html[data-mscreen],
+    html[data-mscreen] body {
+      overflow: hidden;
+    }
+  }
+</style>
+
+<script>
+  const narrow = window.matchMedia('(max-width: 799.98px)');
+  const TOUR_KEY = 'tour:v1';
+  const NOTE_MS = 3200;
+  let noteT = 0;
+  let ac: AbortController | undefined;
+  let tourOffered = false; // once per document, even when forced with ?tour
+
+  const pop = (el: HTMLElement) => {
+    el.removeAttribute('data-pop');
+    void el.offsetWidth;
+    el.setAttribute('data-pop', '');
+  };
+  const lock = (on: boolean) => document.documentElement.toggleAttribute('data-mscreen', on);
+
+  function setupTour(signal: AbortSignal) {
+    const tour = document.querySelector<HTMLElement>('[data-mtour]');
+    if (!tour) return;
+    const steps = Array.from(tour.querySelectorAll<HTMLElement>('[data-mtour-step]'));
+    const items = Array.from(tour.querySelectorAll<HTMLElement>('[data-mtour-item]'));
+    const pips = Array.from(tour.querySelectorAll<HTMLElement>('[data-mtour-pip]'));
+    const next = tour.querySelector<HTMLElement>('[data-mtour-next]')!;
+    let i = 0;
+
+    const seen = () => {
+      try {
+        return localStorage.getItem(TOUR_KEY) === '1';
+      } catch {
+        return false;
+      }
+    };
+    const remember = () => {
+      try {
+        localStorage.setItem(TOUR_KEY, '1');
+      } catch {
+        /* private mode: it shows again next visit */
+      }
+    };
+    function show(n: number) {
+      i = n;
+      steps.forEach((s, k) => (s.hidden = k !== n));
+      items.forEach((s, k) => s.toggleAttribute('data-on', k === n));
+      pips.forEach((s, k) => s.toggleAttribute('data-on', k <= n));
+      next.textContent = n === steps.length - 1 ? 'Got it' : 'Next';
+      const bubble = steps[n]?.querySelector<HTMLElement>('.mtour-bubble');
+      if (bubble) pop(bubble);
+    }
+    function close() {
+      remember();
+      tour.hidden = true;
+      lock(false);
+    }
+    next.addEventListener('click', () => (i >= steps.length - 1 ? close() : show(i + 1)), { signal });
+    tour.querySelector('[data-mtour-skip]')!.addEventListener('click', close, { signal });
+
+    const forced = new URLSearchParams(location.search).has('tour');
+    if (!tourOffered && narrow.matches && steps.length && !location.hash && (forced || !seen())) {
+      tourOffered = true;
+      tour.hidden = false;
+      lock(true);
+      show(0);
+    }
+  }
+
+  function setupSkills(signal: AbortSignal) {
+    const screen = document.querySelector<HTMLElement>('[data-mskills]');
+    const source = document.querySelector<HTMLElement>('[data-tl-item="skills"] [data-tl-more] .skills');
+    if (!screen || !source) return;
+    const list = screen.querySelector<HTMLElement>('[data-mskills-list]')!;
+    const note = screen.querySelector<HTMLElement>('[data-mskills-note]')!;
+    let rows: { el: HTMLElement; note: string }[] = [];
+    let at = -1;
+
+    function select(n: number, auto: boolean) {
+      clearTimeout(noteT);
+      if (!rows.length) return;
+      at = (n + rows.length) % rows.length;
+      list.querySelectorAll('.skill[data-active]').forEach((el) => el.removeAttribute('data-active'));
+      rows[at].el.setAttribute('data-active', '');
+      note.textContent = rows[at].note;
+      note.hidden = false;
+      pop(note);
+      if (auto) noteT = window.setTimeout(() => select(at + 1, true), NOTE_MS);
+    }
+    function sync() {
+      const want = narrow.matches && location.hash === '#skills';
+      if (want === !screen.hidden) return;
+      clearTimeout(noteT);
+      if (!want) {
+        screen.hidden = true;
+        lock(false);
+        return;
+      }
+      list.innerHTML = source.outerHTML;
+      rows = Array.from(list.querySelectorAll<HTMLElement>('.skill'))
+        .map((el) => ({ el, note: el.querySelector('.skill-note')?.textContent?.trim() ?? '' }))
+        .filter((r) => r.note);
+      note.hidden = true;
+      screen.hidden = false;
+      lock(true);
+      if (rows.length) noteT = window.setTimeout(() => select(0, true), 500);
+    }
+    // a tapped row shows its note and the cycle carries on from there
+    list.addEventListener('click', (e) => {
+      const el = (e.target as Element).closest('.skill');
+      const n = rows.findIndex((r) => r.el === el);
+      if (n >= 0) select(n, true);
+    }, { signal });
+    screen.querySelector('[data-mskills-back]')!.addEventListener('click', () => {
+      if (history.length > 1) history.back();
+      else location.hash = '';
+    }, { signal });
+    window.addEventListener('hashchange', sync, { signal });
+    window.addEventListener('popstate', sync, { signal });
+    narrow.addEventListener('change', sync, { signal });
+    sync();
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    ac?.abort();
+    ac = new AbortController();
+    clearTimeout(noteT);
+    lock(false);
+    setupSkills(ac.signal);
+    setupTour(ac.signal);
+  });
+</script>
