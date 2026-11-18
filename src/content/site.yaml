@@ -6,44 +6,89 @@ name: Ty Kirchmann
 role: Operator & Technical Generalist
 
 experiences:
-  - title: Scaling an Ops Team
+  - title: Scaling an Operations Team
     year: 2026
     icon: users
-    body: ""
+    body: |
+      The lessons I learned during my tenure at Finch will last a lifetime. My role was one that carried a lot of different repsonsibility; scale an ops team composed of people from across the globe, scope and build integration technology, develop partnerships with new customers and help them onboard into our platform, just to name a few. Juggling all of this was an exercise in ruthless prioritization. 
+      
+      What is the highest impact work I can be doing at any given moment? How can I be a better leader for 30+ practicioners? How can my team be put in a better position? Is there an end to end engineering solution to my problem? If not, how to I put process in place to cover gaps?
+
+      All of these questions were relevant to me every day, and getting the answers mostly right allowed us to cover 150 firms with "white glove" integrations, even when engineering solutions were not possible.
+      
   - title: Operating through Acquisition
     year: 2025
     icon: git-merge
-    body: ""
-  - title: Digital Marketing
+    body: |
+      In May of 2025, Parrot was acquired by Filevine. I treasure this experience because it was a challenge that I believe most professionals don't get to see, at least not within the first 5 years of their career. Understanding where the synergies, white space, and potential pit falls were was important to transition of both Parrot's services offering and back office functions.
+
+      Some lessons I took from this experience: 
+
+      1) Fresh takes on strategy and positioning are invaluable - don't get stuck in local maxima.
+      2) Learning or teaching a business is more about developing perspective than defining nuts and bolts.
+      3) Services businesses and SaaS businesses require different positioning and focus. At top of funnel, the very real COGS of a services business means giving freebies has a impact magnitudes higher. In terms of product, quality and functionality matters a great deal more as your relationship with the customer is deeply personal.
+  - title: Spinning Up Digital Marketing
     year: 2025
     icon: megaphone
-    body: ""
-  - title: Internal Tooling and Analytics
+    body: |
+      During my time at Parrot, we launched an accompanying SaaS suite that reached into the millions of dollars of ARR within 6 months. Part of my role in this launch was helping wire up the digital marketing that was driving growth. I got to learn and work with a lot of digital marketing tech and this taught me a lot about top of funnel dynamics. Some of the tools that I worked with were:
+
+      1) Google Analytics - for tracking performance of the website and landing pages.
+      2) Google/Meta/LinkedIn Ads - for serving ads to the right customers, keeping ads fresh and tracking performance across the portfolio.
+      3) Metabase - Marrying application data with data from the above helped us track CAC, CLV, and much more.
+      4) Clay - for taking my research on interesting customer profiles, and developing targeting strategies.
+  - title: Biz Ops, Internal Tooling, and Analytics
     year: 2024
     icon: tools
-    body: ""
+    body: |
+      At Parrot, I my role was Strategy and Operations Associate - this can mean a lot of things in the startup world. In addition to built in responsibilities regarding managing the data stack (DBT, Redshift, Postgres, Dagster, Retool), the best way to describe my role was being a drop in resource that can tackle a particular problem. Some of the problems I solved while at Parrot include:
+
+      1) Efficiently and systematically recover aging accounts receiveable, with only partial resourcing from a billing analyst.
+      2) Orchestrating email marketing campaigns to users based on usage data to drive activation.
+      3) Building out systematic reporting that could be used to serve enterprise customer needs on a quarterly basis.
+
+      These problems, and others, required a intuitive sense of right tool for the right job, build vs. buy discussions, and a deep understanding of the business problems themselves.
   - title: Network Intelligence
-    year: 2024
-    icon: globe
-    body: ""
-  - title: Game Engine Analytics
     year: 2023
+    icon: globe
+    body: |
+      In 2023, in the first year of my career in earnest, I had the opportunity to work on analytics and data science projects relating to the management of the UPS customer service network, one of the largest in the entire world. One second of average handle time saved had 5 digit implications on costs, so understanding our problems as a network was critical.
+
+      The organization as a whole tried various off the shelf technology from a variety of household names but they provided lackluster results on being able to properly understand our issues. During that year, a coworker and myself saw an opportunity to leverage LLMs, which had just hit the cloud environments, in a unique and interesting way. In this era, the models were pretty poor - this was pre-ChatGPT-3.5 Turbo.
+      
+      We used a mixture of modern LLM technology mixed with a variety of what would now be considered "old-school" NLP techniques to manipulate vector embeddings from the LLMs such as BERT models, dimensionality reduction, vector embeddings, MLPs, and clustering methods. What we ended up with was network scale intelligence on our precise issues. Pushing the results to our ops team helped them target the largest opportunities for cost savings available across millions of calls, outperforming solutions from billion dollar comapnies.
+  - title: Game Engine Analytics
+    year: 2022
     icon: gamepad
-    body: ""
+    body: |
+      After making analytics content for Zealand, a prominent Football Manager youtube personality, I was approached by Sports Interactive, the publisher of the Football Manager series. They saw my work with Zealand and said that they had an opportunity if I was interested.
+
+      Was I interested? Absolutely yes are you kidding this was my favorite game for years of my life srgjkbsndgrjkl
+
+      I was tasked with taking data outputs from the match engine building systems to compare them to real world stats. The idea was that they could run massive simulations and have an idea of how their engine performed against the real world at scale. I put together a solution that involved web scrapers, PowerBI, and a python engine that ingested all of the data and formatted it into something we could use.
+
+      At the time, I was happy with the solution, but now, with the power of modern coding agents, I wish I could go back and rewrite the entire project. But hindsight is hindsight. I still have a love for simulation games of all kinds, but I have a special soft spot for sports sims like football manager who attempt to deeply understand what truly makes us tick on and off the field.
+  - title: Content Creation for Youtube
+    year: 2022
+    icon: tv
+    body: |
+      In 2022, I had been following the lead up to international soccer tournaments. I had noticed this one youtuber, Zealand, had taken my favorite video game series, Football Manager, and done simulation analytics predicting who would come out on top. At the time I had taken an interest in data analytics and data science, and I knew that I could help.
+
+      So in a moonshot, I DM'd Zealand, explaining that I would like to help improve his simulation content. He responded. This led to a fruitful relationship that year where he put me in charge of the community who graciously helped us run save files at scale and export the data. I had to write proper procedures, rally up the troops, and clean the data as it came in from across the world. What came out was content that I had helped organize and analyze that ended up with over 500,000 views and placement on TIFO (of the Athletic) programming.
 
 companies:
   - title: Finch Legal
-    subtitle: Strategy and operations
+    subtitle: Strategy and Operations
     year: 2026
     icon: briefcase
     body: ""
-  - title: Parrot (acquired by Filevine)
-    subtitle: Strategy and operations, data
+  - title: Parrot, acquired by Filevine
+    subtitle: Strategy and Operations, Data
     year: 2024 – 2025
     icon: feather
     body: ""
   - title: UPS
-    subtitle: Data analytics and data science
+    subtitle: Data Analytics and Data Science
     year: 2022 – 2024
     icon: package
     body: ""
