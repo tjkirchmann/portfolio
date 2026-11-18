@@ -47,7 +47,7 @@ const bodyHtml = (b?: string) => (b && b.trim() ? markdownToHtml(b).html : '');
           const html = panel ? bodyHtml(it.body) : '';
           return (
             <li class="tl-step" data-tl-item={panel ? key : undefined} data-has-body={html ? '' : undefined}>
-              <span class="tl-node" set:html={icon(it.icon)} />
+              <span class="tl-node" set:html={icon(it.icon, 24)} />
               <div class="tl-body">
                 {it.href ? (
                   <a class="tl-title" href={it.href} data-tl-open={panel ? '' : undefined} {...(external(it.href) ? { rel: 'noopener' } : {})}>
@@ -80,7 +80,8 @@ const bodyHtml = (b?: string) => (b && b.trim() ? markdownToHtml(b).html : '');
 
 <style>
   .tl {
-    --node: 1.75rem;
+    /* 36px: whole pixels around a 24px pixel-grid icon */
+    --node: 36px;
     --step-pad: 0.5rem;
     display: flex;
     flex-direction: column;

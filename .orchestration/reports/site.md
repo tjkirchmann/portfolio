@@ -6,6 +6,23 @@
 - **Pushed to origin:** yes
 - **Round:** 10 (Amendment 10: AC-47 to AC-51, plus Amendment 11: AC-52 to AC-54). Round 9: AC-41 to AC-46; round 8: AC-39, AC-40; round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
 
+## Round 10, Pixelarticons switch (no test run by request)
+
+- **Pack:** the whole site uses Pixelarticons. `DEFAULT_PACK = 'pixelarticons'` in `src/lib/icons.ts`, and the `pack:name` lookup is kept. The other packs and `lucide-static` are uninstalled.
+- **Glyphs:**
+  - Experiences: `users`, `git-merge` (acquisition), `megaphone`, `tools`, `globe` (network intelligence), `gamepad`.
+  - Companies: `briefcase` (Finch Legal), `feather` (Parrot), `package` (UPS), `trophy` (Sports Interactive).
+  - Tools: `brush`, `bullseye` (gravity), `bomb`, `refresh` (reset).
+  - Links and back: `chevron-left`, `mail`, `github`, `linkedin`.
+  - Archived switcher: `grid-3x3`, `globe`, `sparkle`, `sparkles`, `waves`.
+  - Avoided: `scale` (it is a resize glyph) and `twitter-bird` (a brand).
+- **Crispness:**
+  - Every icon renders at 24px (its native grid) with `shape-rendering="crispEdges"` and no stroke tweaks. Timeline nodes grew to 36px.
+  - A small snap script in `Base.astro` nudges each icon onto whole device pixels with the CSS `translate` property. It runs on load, resize, scroll and font load.
+  - Checked at 1x and 2x: 0 of 17 icons sit off the device grid, and crops look sharp.
+- **/blocks:** the "Icon packs" section is removed.
+- **Checked:** `pnpm build` passes, and `/`, `/blog/`, a post and `/blocks/` serve.
+
 ## Round 10 additions (Amendment 11, no test run by request)
 
 - **AC-52:** tool icons rest at opacity 0.65 (was 0.45), with hover at 0.85 and the active tool at 1.

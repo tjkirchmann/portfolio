@@ -26,7 +26,7 @@ const external = (href: string) => /^https?:/.test(href);
             title={l.icon ? l.label : undefined}
             {...(external(l.href) ? { target: '_blank', rel: 'noopener' } : {})}
           >
-            {l.icon ? <Fragment set:html={icon(l.icon, 17)} /> : l.label}
+            {l.icon ? <Fragment set:html={icon(l.icon, 24)} /> : l.label}
           </a>
         </li>
       ))

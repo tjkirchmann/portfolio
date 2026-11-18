@@ -10,7 +10,7 @@ const iconName = z
   .optional()
   .superRefine((v, ctx) => {
     if (v !== undefined && !iconExists(v))
-      ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (a lucide name, or pack:name, e.g. simple-icons:github)` });
+      ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (a pixelarticons name, or pack:name)` });
   });
 
 /** with an icon, the link shows as the icon alone (label kept for screen readers and tooltip) */
@@ -28,7 +28,7 @@ const step = z
       .optional()
       .superRefine((v, ctx) => {
         if (v !== undefined && !iconExists(v))
-          ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (use a lucide icon name, see https://lucide.dev/icons)` });
+          ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (a pixelarticons name, see https://pixelarticons.com)` });
       }),
     href: z.string().optional(),
     /** markdown, shown in the home hover panel (or inline on narrow screens) */

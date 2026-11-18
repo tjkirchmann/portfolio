@@ -40,5 +40,33 @@ const { title, description, noindex = false } = Astro.props;
   </head>
   <body>
     <slot />
+    <script>
+      // Pixel icons only look right on whole device pixels. Layout puts many of them at
+      // fractional offsets (fluid gutters, centred rows), so nudge each by its remainder with the
+      // `translate` property (separate from any `transform` a hover uses).
+      const icons = () => document.querySelectorAll<SVGSVGElement>('svg[shape-rendering="crispEdges"]');
+      let queued = false;
+      function snap() {
+        queued = false;
+        const d = window.devicePixelRatio || 1;
+        const list = Array.from(icons());
+        list.forEach((s) => (s.style.translate = ''));
+        // read everything, then write, so there is one layout pass
+        const rs = list.map((s) => s.getBoundingClientRect());
+        list.forEach((s, i) => {
+          const fx = Math.round(rs[i].left * d) / d - rs[i].left;
+          const fy = Math.round(rs[i].top * d) / d - rs[i].top;
+          if (Math.abs(fx) > 0.001 || Math.abs(fy) > 0.001) s.style.translate = `${fx.toFixed(3)}px ${fy.toFixed(3)}px`;
+        });
+      }
+      const later = () => {
+        if (!queued) (queued = true), requestAnimationFrame(snap);
+      };
+      document.addEventListener('astro:page-load', later);
+      window.addEventListener('resize', later);
+      document.addEventListener('scroll', later, { capture: true, passive: true });
+      document.fonts?.ready.then(later);
+      new ResizeObserver(later).observe(document.documentElement);
+    </script>
   </body>
 </html>

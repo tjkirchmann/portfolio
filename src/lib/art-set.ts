@@ -1,6 +1,6 @@
 import { z } from 'astro/zod';
 
-/** One art piece in a pane: slug in public/art/, lucide icon and label for the switcher. */
+/** One art piece in a pane: slug in public/art/, icon and label for the switcher. */
 const pieceItem = z
   .object({
     slug: z.string().min(1),
@@ -37,8 +37,8 @@ export interface ArtItem {
 export const NONE_SLUG = '_none';
 
 export function artList(art: ArtField | undefined): ArtItem[] {
-  if (!art) return [{ slug: '_placeholder', icon: 'circle-dot', label: 'Art', backdrop: true, none: false }];
-  if (typeof art === 'string') return [{ slug: art, icon: 'circle-dot', label: 'Art', backdrop: true, none: false }];
+  if (!art) return [{ slug: '_placeholder', icon: 'circle', label: 'Art', backdrop: true, none: false }];
+  if (typeof art === 'string') return [{ slug: art, icon: 'circle', label: 'Art', backdrop: true, none: false }];
   return art.map((a) =>
     (a as { none?: boolean }).none === true
       ? { slug: NONE_SLUG, icon: a.icon, label: a.label, backdrop: true, none: true }

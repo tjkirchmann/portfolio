@@ -1,6 +1,6 @@
 # Home page content. Edit freely; the build validates the shape.
-# Icons are lucide names: https://lucide.dev/icons (default: circle-dot), or pack:name for an
-# installed Iconify pack, e.g. simple-icons:github
+# Icons are Pixelarticons names: https://pixelarticons.com (default: circle), or pack:name for
+# another installed Iconify pack
 # Multi-line body (markdown, blank line between paragraphs): `body: |` then indented lines below.
 name: Ty Kirchmann
 role: Operator & Technical Generalist
@@ -12,7 +12,7 @@ experiences:
     body: ""
   - title: Operating through Acquisition
     year: 2025
-    icon: handshake
+    icon: git-merge
     body: ""
   - title: Digital Marketing
     year: 2025
@@ -20,27 +20,27 @@ experiences:
     body: ""
   - title: Internal Tooling and Analytics
     year: 2024
-    icon: wrench
+    icon: tools
     body: ""
   - title: Network Intelligence
     year: 2024
-    icon: network
+    icon: globe
     body: ""
   - title: Game Engine Analytics
     year: 2023
-    icon: gamepad-2
+    icon: gamepad
     body: ""
 
 companies:
   - title: Finch Legal
     subtitle: Strategy and operations
     year: 2026
-    icon: scale
+    icon: briefcase
     body: ""
   - title: Parrot (acquired by Filevine)
     subtitle: Strategy and operations, data
     year: 2024 – 2025
-    icon: bird
+    icon: feather
     body: ""
   - title: UPS
     subtitle: Data analytics and data science
@@ -58,10 +58,10 @@ links:
     href: /blog/
   - label: GitHub
     href: https://github.com/tjkirchmann
-    icon: simple-icons:github
+    icon: github
   - label: LinkedIn
     href: https://www.linkedin.com/in/tylerkirchmann
-    icon: simple-icons:linkedin
+    icon: linkedin
   - label: Email
     href: mailto:tjkirchmann@gmail.com
     icon: mail

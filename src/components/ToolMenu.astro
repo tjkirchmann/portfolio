@@ -1,7 +1,7 @@
 ---
 /**
  * Paint tools for the pane's life simulation: a row of small icon buttons over the art, in the
- * archived art switcher's style. Shown while the pointer is over the pane, fading out shortly
+ * archived art switcher's style (24px pixel icons). Shown while the pointer is over the pane, fading out shortly
  * after it leaves; hidden (and the tools suspended) while the home text panel is up. One tool
  * at a time, clicking it again puts it down. Reset is a one-off. Pointer devices at 800px and
  * wider only. The Dither in the same pane does the painting (events `dither:tool`, `dither:reset`).
@@ -9,8 +9,8 @@
 import { icon } from '../lib/icons';
 
 const tools = [
-  { id: 'brush', icon: 'paintbrush', label: 'Brush' },
-  { id: 'gravity', icon: 'orbit', label: 'Gravity' },
+  { id: 'brush', icon: 'brush', label: 'Brush' },
+  { id: 'gravity', icon: 'bullseye', label: 'Gravity' },
   { id: 'explode', icon: 'bomb', label: 'Explosion' },
 ];
 ---
@@ -26,11 +26,11 @@ const tools = [
         aria-pressed="false"
         aria-label={t.label}
         title={t.label}
-        set:html={icon(t.icon, 16)}
+        set:html={icon(t.icon, 24)}
       />
     ))
   }
-  <button type="button" class="tool" data-tool-reset aria-label="Reset" title="Reset" set:html={icon('rotate-ccw', 16)} />
+  <button type="button" class="tool" data-tool-reset aria-label="Reset" title="Reset" set:html={icon('refresh', 24)} />
 </div>
 
 <style>
