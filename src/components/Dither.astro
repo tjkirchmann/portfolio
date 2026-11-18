@@ -66,6 +66,7 @@ const state = encodeState(life);
 <script>
   import { createLife, decodeState, draw, classify, colours, type Life } from '../lib/dither-sim';
   import { createMetal, type Metal } from '../lib/metal';
+  import { openCarve, type Carve } from '../lib/carve';
 
   interface Inst {
     canvas: HTMLCanvasElement;
@@ -82,6 +83,14 @@ const state = encodeState(life);
     steps: number;
     ms: number;
     maxMs: number;
+    /** the hover panel's room, while it is open */
+    carve: Carve | null;
+    /** a closed room whose frame cells are still walking back in */
+    leaving: Carve | null;
+    /** css px of the grid's top-left inside the box, and per cell */
+    offX: number;
+    offY: number;
+    cellCss: number;
   }
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -104,9 +113,9 @@ const state = encodeState(life);
     if ((it.img || it.cells) && it.cols === cols && it.rows === rows) return true;
     it.cols = cols;
     it.rows = rows;
+    it.cells = new Uint8Array(cols * rows * 4);
     if (it.metal) {
       it.metal.resize(cols, rows, cellDev);
-      it.cells = new Uint8Array(cols * rows * 4);
     } else {
       it.canvas.width = cols;
       it.canvas.height = rows;
@@ -117,8 +126,36 @@ const state = encodeState(life);
     const left = Math.round((r.left + (r.width - cols * cellCss) / 2) * dpr) / dpr - r.left;
     const top = Math.round((r.top + (r.height - rows * cellCss) / 2) * dpr) / dpr - r.top;
     it.canvas.style.transform = `translate(${left}px, ${top}px)`;
+    it.offX = left;
+    it.offY = top;
+    it.cellCss = cellCss;
     if (!it.metal) it.img = it.ctx!.createImageData(cols, rows);
+    // the grid changed under an open room: re-make it in place, no walk
+    it.leaving?.commit();
+    it.leaving = null;
+    if (it.carve) {
+      it.carve.release(performance.now(), true);
+      it.carve = openCarve(it.life, cols, rows, performance.now(), true);
+      announce(it);
+    }
     return true;
+  }
+
+  /** tell the panel where its room is, in css px inside the box */
+  function announce(it: Inst) {
+    const c = it.carve;
+    const box = it.canvas.parentElement!;
+    const detail = c
+      ? {
+          open: true,
+          left: it.offX + c.rect.x0 * it.cellCss,
+          top: it.offY + c.rect.y0 * it.cellCss,
+          width: (c.rect.x1 - c.rect.x0) * it.cellCss,
+          height: (c.rect.y1 - c.rect.y0) * it.cellCss,
+          settleAt: c.settleAt,
+        }
+      : { open: false };
+    box.dispatchEvent(new CustomEvent('dither:room', { bubbles: true, detail }));
   }
 
   // the light's clock: real time while live, frozen (band mid-pane) under reduced motion
@@ -129,8 +166,27 @@ const state = encodeState(life);
     let empty: number;
     if (it.metal) {
       empty = classify(it.life, it.cols, it.rows, it.cells!);
+      it.leaving?.paint(it.cells!, performance.now());
+      it.carve?.paint(it.cells!, performance.now());
       it.metal.upload(it.cells!);
       it.metal.draw(lightTime());
+    } else if (it.carve || it.leaving) {
+      // flat fallback with a room: classify, paint the room, then colour by the same palette
+      empty = classify(it.life, it.cols, it.rows, it.cells!);
+      it.leaving?.paint(it.cells!, performance.now());
+      it.carve?.paint(it.cells!, performance.now());
+      const c = it.cells!, out = it.img!.data;
+      for (let i = 0; i < c.length; i += 4) {
+        const v = c[i];
+        if (!v) {
+          out[i] = 10; out[i + 1] = 12; out[i + 2] = 11;
+        } else {
+          const k = ((c[i + 1] / 127) | 0) * 3 + (v > 200 ? 0 : v > 120 ? 1 : 2);
+          out[i] = it.pal[k * 3]; out[i + 1] = it.pal[k * 3 + 1]; out[i + 2] = it.pal[k * 3 + 2];
+        }
+        out[i + 3] = 255;
+      }
+      it.ctx!.putImageData(it.img!, 0, 0);
     } else {
       empty = draw(it.life, it.cols, it.rows, it.pal, it.img!.data);
       it.ctx!.putImageData(it.img!, 0, 0);
@@ -152,6 +208,43 @@ const state = encodeState(life);
     if (!raf && insts.some((it) => it.metal && running(it))) raf = requestAnimationFrame(frame);
   }
 
+  // while cells are walking, redraw every frame (the Life step stays at its own rate)
+  let walkRaf = 0;
+  function walkFrame() {
+    walkRaf = 0;
+    const now = performance.now();
+    let more = false;
+    for (const it of insts) {
+      if (!it.carve && !it.leaving) continue;
+      if (it.leaving?.done(now)) {
+        it.leaving.commit();
+        it.leaving = null;
+      }
+      render(it);
+      if (it.leaving || it.carve?.walking(now)) more = true;
+    }
+    if (more) walkRaf = requestAnimationFrame(walkFrame);
+  }
+
+  function setRoom(it: Inst, open: boolean) {
+    if (open === !!it.carve) return;
+    const now = performance.now();
+    if (open) {
+      if (!it.cols && !layout(it)) return;
+      // back before the old frame finished walking in: land it now, then make the new room
+      it.leaving?.commit();
+      it.leaving = null;
+      it.carve = openCarve(it.life, it.cols, it.rows, now, reduce.matches);
+    } else {
+      it.carve!.release(now, reduce.matches);
+      if (!reduce.matches) it.leaving = it.carve;
+      it.carve = null;
+    }
+    announce(it);
+    render(it);
+    if ((it.leaving || it.carve?.walking(now)) && !walkRaf) walkRaf = requestAnimationFrame(walkFrame);
+  }
+
   const running = (it: Inst) =>
     it.inView &&
     !document.hidden &&
@@ -166,6 +259,7 @@ const state = encodeState(life);
       any = true;
       const t0 = performance.now();
       it.life.step();
+      it.carve?.hold();
       render(it);
       const dt = performance.now() - t0;
       it.steps++;
@@ -199,6 +293,8 @@ const state = encodeState(life);
 
   function teardown() {
     clearInterval(timer);
+    cancelAnimationFrame(walkRaf);
+    walkRaf = 0;
     cancelAnimationFrame(raf);
     raf = 0;
     timerRate = 0;
@@ -247,6 +343,11 @@ const state = encodeState(life);
         steps: 0,
         ms: 0,
         maxMs: 0,
+        carve: null,
+        leaving: null,
+        offX: 0,
+        offY: 0,
+        cellCss: 6,
       };
       insts.push(it);
       layout(it);
@@ -272,6 +373,11 @@ const state = encodeState(life);
     schedule();
   });
   reduce.addEventListener('change', schedule);
+  // the home hover panel asks the field in its pane to make (or give back) a room
+  document.addEventListener('dither:carve', (e) => {
+    const { pane, open } = (e as CustomEvent<{ pane: Element; open: boolean }>).detail;
+    for (const it of insts) if (pane.contains(it.canvas)) setRoom(it, open);
+  });
   document.addEventListener('astro:before-swap', teardown);
   document.addEventListener('astro:page-load', init);
 </script>

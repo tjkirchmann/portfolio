@@ -9,7 +9,8 @@ const blog = defineCollection({
     .object({
       title: z.string().min(1),
       date: z.coerce.date(),
-      art: artField,
+      /** archived: posts show only the life simulation; kept for reuse */
+      art: artField.optional(),
       draft: z.boolean().optional().default(false),
       summary: z.string().optional(),
     })

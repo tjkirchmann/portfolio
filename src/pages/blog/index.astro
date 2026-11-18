@@ -1,13 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Split from '../../components/Split.astro';
-import ArtSet from '../../components/ArtSet.astro';
 import Dither from '../../components/Dither.astro';
 import BackLink from '../../components/BackLink.astro';
 import PostList from '../../components/PostList.astro';
 import { getPosts } from '../../lib/posts';
 import { loadSite } from '../../lib/site';
-import { firstPiece } from '../../lib/art-set';
 
 const site = loadSite();
 const posts = await getPosts();
@@ -16,10 +14,7 @@ const posts = await getPosts();
 <Base title={`Blog · ${site.name}`}>
   <Split mirror lock="scroll" label="Animation">
     <BackLink slot="art-top" href="/" label="Home" />
-    <Fragment slot="art">
-      <Dither intensity={0.7} />
-      <ArtSet art={firstPiece(site.art)} />
-    </Fragment>
+    <Dither slot="art" />
 
     <header class="page-head">
       <h1 class="page-title">Blog</h1>

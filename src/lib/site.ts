@@ -22,6 +22,8 @@ const step = z
           ctx.addIssue({ code: 'custom', message: `unknown icon "${v}" (use a lucide icon name, see https://lucide.dev/icons)` });
       }),
     href: z.string().optional(),
+    /** markdown, shown in the home hover panel (or inline on narrow screens) */
+    body: z.string().nullish().transform((v) => v ?? ''),
   })
   .strict();
 
@@ -29,8 +31,9 @@ const schema = z
   .object({
     name: z.string(),
     role: z.string(),
-    art: artField.default('_placeholder'),
-    projects: z.array(step),
+    /** archived: the ball art no longer shows on the site; kept for /blocks and reuse */
+    art: artField.optional(),
+    experiences: z.array(step),
     companies: z.array(step),
     links: z.array(link),
   })

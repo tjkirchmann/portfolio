@@ -34,6 +34,6 @@ const yamlTitle = JSON.stringify(title);
 mkdirSync(dir, { recursive: true });
 writeFileSync(
   file,
-  `---\ntitle: ${yamlTitle}\ndate: ${today}\nart: _placeholder\n---\n\n`,
+  `---\ntitle: ${yamlTitle}\ndate: ${today}\n---\n\n`,
 );
 console.log(`Created ${relative(process.cwd(), file)}`);

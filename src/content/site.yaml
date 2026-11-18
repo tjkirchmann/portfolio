@@ -1,51 +1,56 @@
 # Home page content. Edit freely; the build validates the shape.
 # Icons are lucide names: https://lucide.dev/icons (default: circle-dot)
-name: Your Name
-role: Your role
-art:
-  - none: true
-    icon: grid-3-x-3
-    label: Life
-  - slug: waveball
-    icon: globe
-    label: Wave ball
-  - slug: spikeball
-    icon: asterisk
-    label: Spike ball
-  - slug: spikeball-life
-    icon: sparkles
-    label: Spike ball, life
-    backdrop: false
-  - slug: waveball-life
-    icon: waves
-    label: Wave ball, life
-    backdrop: false
+# Multi-line body (markdown, blank line between paragraphs): `body: |` then indented lines below.
+name: Ty Kirchmann
+role: Operator & Technical Generalist
 
-projects:
-  - title: Project one
+experiences:
+  - title: Scaling an Ops Team
     year: 2026
-    icon: box
-    href: /blog/first-post/
-  - title: Project two
+    icon: users
+    body: ""
+  - title: Facilitating an Acquisition
     year: 2025
-    icon: layers
-  - title: Project three
+    icon: handshake
+    body: ""
+  - title: Digital Marketing
+    year: 2025
+    icon: megaphone
+    body: ""
+  - title: Internal Tooling and Analytics
     year: 2024
-    icon: shapes
+    icon: wrench
+    body: ""
+  - title: Network Intelligence
+    year: 2024
+    icon: network
+    body: ""
+  - title: Game Engine Analytics
+    year: 2023
+    icon: gamepad-2
+    body: ""
 
 companies:
-  - title: Company one
-    subtitle: Role
-    year: 2024 – now
-    icon: building-2
-  - title: Company two
-    subtitle: Role
-    year: 2021 – 2024
-    icon: briefcase
-  - title: Company three
-    subtitle: Role
-    year: 2018 – 2021
-    icon: landmark
+  - title: Finch Legal
+    subtitle: Strategy and operations
+    year: 2026
+    icon: scale
+    body: ""
+  - title: Parrot (acquired by Filevine)
+    subtitle: Strategy and operations, data
+    year: 2024 – 2025
+    icon: bird
+    body: ""
+  - title: UPS
+    subtitle: Data analytics and data science
+    year: 2022 – 2024
+    icon: package
+    body: ""
+  - title: Sports Interactive
+    subtitle: Freelance
+    year: 2023
+    icon: trophy
+    body: ""
 
 links:
   - label: Blog

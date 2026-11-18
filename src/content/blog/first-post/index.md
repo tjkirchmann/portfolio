@@ -1,7 +1,6 @@
 ---
 title: First post
 date: 2026-11-10
-art: spikeball
 summary: A sample post.
 ---
 

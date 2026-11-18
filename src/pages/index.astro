@@ -1,8 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import Split from '../components/Split.astro';
-import ArtSet from '../components/ArtSet.astro';
 import Dither from '../components/Dither.astro';
+import RoomPanel from '../components/RoomPanel.astro';
 import Timeline from '../components/Timeline.astro';
 import LinkRow from '../components/LinkRow.astro';
 import { loadSite } from '../lib/site';
@@ -12,8 +12,8 @@ const site = loadSite();
 
 <Base title={site.name} description={`${site.name}, ${site.role}`}>
   <Split lock="fit" label="Animation">
-    <Dither slot="art" intensity={0.7} />
-    <ArtSet slot="art" art={site.art} />
+    <Dither slot="art" />
+    <RoomPanel slot="art" />
 
     <header class="page-head home-head">
       <h1 class="page-title">{site.name}</h1>
@@ -21,11 +21,11 @@ const site = loadSite();
     </header>
 
     <div class="home-timelines" data-home-timelines>
-      <div class="home-half" data-half="projects">
-        <Timeline label="Projects" items={site.projects} />
+      <div class="home-half" data-half="experiences">
+        <Timeline label="Experiences" items={site.experiences} panel />
       </div>
       <div class="home-half" data-half="companies">
-        <Timeline label="Companies" items={site.companies} />
+        <Timeline label="Companies" items={site.companies} panel />
       </div>
     </div>
 

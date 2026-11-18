@@ -4,7 +4,24 @@
 - **Branch:** `ai-feat/site`
 - **Head commit:** 0b1d872 (code, tests and screenshots for round 3; this report is committed right after it)
 - **Pushed to origin:** yes
-- **Round:** 8 (Amendment 8: AC-39, AC-40). Round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+- **Round:** 9 (Amendment 9: AC-41 to AC-46). Round 8: AC-39, AC-40; round 7: AC-36 to AC-38; round 6: AC-35; Round 5: AC-34; round 4: AC-32/33; round 3: AC-28 to AC-31; round 2: AC-19 to AC-27.
+
+## Round 9 (Amendment 9, no test run by request)
+
+- **AC-41:** the timeline's current/first-step metallic ring is gone. Every node has the faint emerald ring. The hovered or open item's title turns emerald, as a link title already did on hover.
+- **AC-42 to AC-44:**
+  - `RoomPanel` sits in the home art pane. Timeline items in `panel` mode are buttons (or links when they have an `href`), with the body rendered from markdown at build by `satteri`, now a direct dependency.
+  - The panel copies the header and body from the item's own markup.
+  - `src/lib/carve.ts` makes the room. Every live or trail cell inside a centred 64% x 64% rectangle walks out on its own jittered lattice path. The walks use ease-out timing: the cells move off at once and slow as they line up. All of them arrive by 500ms.
+  - The cells settle into a 1-2 cell frame. Most land on the inner ring and some on the outer, and the frame is topped up by cells pulled in from 3-8 cells outside it, so a few gaps remain.
+  - Frame cells are drawn with the metal shader but are not Life neighbours, so the outside runs as normal. The inside is cleared after every step.
+  - The text fades in at `settleAt`. On close it fades out over 100ms, then the frame is released.
+  - Release deviation: if the frame was handed to Life whole, it burst into a thick mass. Instead the frame cells walk back in (450ms) to a few seed spots and land there as small soups, and life grows back from them within about a second.
+  - Below 800px, a tap expands the body under the item, one at a time. Escape and the 250ms grace work as specified. The panel keeps the room open while the pointer is over it.
+- **AC-45:** home, the blog index and posts render only `Dither` at full strength. They have no `ArtSet`, menu or `/art/` requests (checked). `art` is optional in `site.yaml` and in post frontmatter, and is removed from the sample posts and from the `new-post` scaffold. `/blocks` keeps the switcher, with the archived list inlined in `blocks.astro`.
+- **AC-46:** `site.yaml` holds the owner's content, with `experiences` replacing `projects` and every `body` empty.
+- **Checked:** Playwright (Chromium, SwiftShader WebGL) at 1440x900, with canvas frames captured during the walk: the inside of the room is 0% lit while it is held. Also checked: swapping between items, rapid hover in and out, Tab focus, Escape, and the inline body at 390px. `pnpm build` passes and the pages serve.
+- **Not checked:** real GPU, Safari or Firefox, touch on a real phone, and a resize while the room is open (it re-makes the room instantly, without a walk). The stale tests in `tests/` (Projects label, `art` in posts, current ring) were left as they are.
 
 ## Life-only view and green icons (no test run by request)
 

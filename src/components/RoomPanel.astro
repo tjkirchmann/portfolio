@@ -1,0 +1,260 @@
+---
+/**
+ * Text panel inside the life simulation, for Timeline items in `panel` mode (wide screens
+ * only). Hovering or focusing an item asks the Dither in the same pane for a room: its cells
+ * walk out and frame a centred rectangle, then the item's header and body fade in there.
+ * Moving between items swaps the text; leaving the lists closes it after a short grace (not
+ * while the pointer is over the panel). Escape closes it. Not a modal, never takes focus.
+ * The text is copied from the Timeline's own markup, so there is one source per item.
+ */
+---
+
+<div class="room" data-room aria-live="polite">
+  <div class="room-inner" data-room-inner>
+    <div class="room-head">
+      <p class="room-title" data-room-title></p>
+      <p class="room-meta"><span data-room-sub></span><span data-room-year></span></p>
+    </div>
+    <div class="room-body prose prose-chafer" data-room-body></div>
+  </div>
+</div>
+
+<style>
+  .room {
+    position: absolute;
+    z-index: 1;
+    display: none;
+    pointer-events: none;
+  }
+  .room[data-placed] {
+    display: block;
+  }
+  .room[data-placed][data-open] {
+    pointer-events: auto;
+  }
+  .room-inner {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--ink) 16%, var(--bg)) transparent;
+    padding: clamp(1rem, 6%, 2.25rem);
+    opacity: 0;
+    transition: opacity 200ms var(--ease);
+  }
+  .room[data-show] .room-inner {
+    opacity: 1;
+  }
+  /* fading out is quicker, and done before the frame lets go */
+  .room:not([data-show]) .room-inner {
+    transition-duration: 100ms;
+  }
+  .room[data-swap] .room-inner {
+    opacity: 0;
+    transition-duration: 110ms;
+  }
+  .room-head {
+    margin-bottom: var(--space-4);
+  }
+  .room-title {
+    font-size: var(--text-lg, 1.25rem);
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .room-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .room-meta span:empty {
+    display: none;
+  }
+  .room-body:empty {
+    display: none;
+  }
+  @media (max-width: 799.98px) {
+    .room {
+      display: none !important;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .room-inner {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const GRACE = 250;
+  const OUT = 110;
+  const wide = window.matchMedia('(min-width: 800px)');
+
+  let ac: AbortController | undefined;
+
+  function setup() {
+    ac?.abort();
+    ac = new AbortController();
+    const signal = ac.signal;
+    const room = document.querySelector<HTMLElement>('[data-room]');
+    const items = Array.from(document.querySelectorAll<HTMLElement>('[data-tl-item]'));
+    if (!room || !items.length) return;
+    const pane = room.closest<HTMLElement>('[data-split-art]') ?? room.parentElement!;
+    const zone = items[0].closest<HTMLElement>('[data-home-timelines]') ?? items[0].parentElement!.parentElement!;
+    const $ = (k: string) => room.querySelector<HTMLElement>(`[data-room-${k}]`)!;
+    const inner = $('inner');
+
+    let open = false; // the panel wants to be up
+    let held = false; // the field has a room (made, or still letting go)
+    let key: string | null = null; // item whose text is in the panel
+    let settleAt = 0;
+    let closeT = 0, showT = 0, swapT = 0, releaseT = 0;
+    let overRoom = false;
+
+    const carve = (want: boolean) => document.dispatchEvent(new CustomEvent('dither:carve', { detail: { pane, open: want } }));
+
+    function mark(li: HTMLElement | null) {
+      for (const it of items) {
+        const on = it === li;
+        it.toggleAttribute('data-open', on);
+        if (wide.matches) it.querySelector('[data-tl-open]')?.setAttribute('aria-expanded', String(on));
+      }
+    }
+
+    function fill(li: HTMLElement) {
+      key = li.dataset.tlItem!;
+      $('title').textContent = li.querySelector('.tl-title')?.textContent?.trim() ?? '';
+      $('sub').textContent = li.querySelector('.tl-sub')?.textContent?.trim() ?? '';
+      $('year').textContent = li.querySelector('.tl-year')?.textContent?.trim() ?? '';
+      const more = li.querySelector('[data-tl-more] .prose');
+      $('body').innerHTML = more ? more.innerHTML : '';
+      inner.scrollTop = 0;
+    }
+
+    function show(li: HTMLElement) {
+      if (!wide.matches) return;
+      clearTimeout(closeT);
+      clearTimeout(releaseT);
+      mark(li);
+      if (!open) {
+        open = true;
+        room.setAttribute('data-open', '');
+        fill(li);
+        if (held) {
+          // back before the frame was let go: the room is still there
+          showT = window.setTimeout(() => open && room.setAttribute('data-show', ''), Math.max(0, settleAt - performance.now()));
+        } else {
+          held = true;
+          carve(true);
+        }
+        return;
+      }
+      if (li.dataset.tlItem === key) return;
+      if (!room.hasAttribute('data-show')) return fill(li); // still walking: it shows on arrival
+      // quick fade, swap, fade back
+      clearTimeout(swapT);
+      room.setAttribute('data-swap', '');
+      swapT = window.setTimeout(() => {
+        fill(li);
+        room.removeAttribute('data-swap');
+      }, OUT);
+    }
+
+    function close() {
+      if (!open) return;
+      open = false;
+      key = null;
+      clearTimeout(showT);
+      clearTimeout(swapT);
+      mark(null);
+      room.removeAttribute('data-open');
+      room.removeAttribute('data-swap');
+      const wasShown = room.hasAttribute('data-show');
+      room.removeAttribute('data-show');
+      // let the text fade before the frame lets go, so text never sits on moving cells
+      releaseT = window.setTimeout(() => {
+        held = false;
+        carve(false);
+      }, wasShown ? OUT : 0);
+    }
+
+    function later() {
+      clearTimeout(closeT);
+      closeT = window.setTimeout(() => {
+        if (!overRoom) close();
+      }, GRACE);
+    }
+
+    pane.addEventListener('dither:room', (e) => {
+      const d = (e as CustomEvent).detail as { open: boolean; left: number; top: number; width: number; height: number; settleAt: number };
+      if (!d.open) {
+        room.removeAttribute('data-placed');
+        return;
+      }
+      // the box the field sits in shares the panel's containing block
+      Object.assign(room.style, { left: `${d.left}px`, top: `${d.top}px`, width: `${d.width}px`, height: `${d.height}px` });
+      room.setAttribute('data-placed', '');
+      settleAt = d.settleAt;
+      clearTimeout(showT);
+      showT = window.setTimeout(() => {
+        if (open) room.setAttribute('data-show', '');
+      }, Math.max(0, settleAt - performance.now()));
+    });
+
+    for (const li of items) {
+      li.addEventListener('pointerenter', (e) => {
+        if ((e as PointerEvent).pointerType !== 'touch') show(li);
+      });
+      li.addEventListener('focusin', () => show(li));
+      // narrow screens: a tap opens the body under the item, one at a time
+      li.querySelector('[data-tl-open]')?.addEventListener('click', () => {
+        if (wide.matches) return show(li);
+        const more = li.querySelector<HTMLElement>('[data-tl-more]');
+        if (!more) return;
+        const opening = more.hidden;
+        for (const it of items) {
+          const m = it.querySelector<HTMLElement>('[data-tl-more]');
+          const on = opening && it === li;
+          if (m) m.hidden = !on;
+          it.toggleAttribute('data-open', on);
+          it.querySelector('[data-tl-open]')?.setAttribute('aria-expanded', String(on));
+        }
+      });
+    }
+    zone.addEventListener('pointerleave', later);
+    zone.addEventListener('focusout', (e) => {
+      const to = (e as FocusEvent).relatedTarget as Node | null;
+      if (!to || (!zone.contains(to) && !room.contains(to))) later();
+    });
+    room.addEventListener('pointerenter', () => {
+      overRoom = true;
+      clearTimeout(closeT);
+    });
+    room.addEventListener('pointerleave', () => {
+      overRoom = false;
+      later();
+    });
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Escape' && open) close();
+      },
+      { signal },
+    );
+    wide.addEventListener('change', () => {
+      close();
+      for (const it of items) {
+        const m = it.querySelector<HTMLElement>('[data-tl-more]');
+        if (m) m.hidden = true;
+        it.removeAttribute('data-open');
+        it.querySelector('[data-tl-open]')?.setAttribute('aria-expanded', 'false');
+      }
+    }, { signal });
+  }
+
+  document.addEventListener('astro:page-load', setup);
+</script>

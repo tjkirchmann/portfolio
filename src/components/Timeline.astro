@@ -1,10 +1,16 @@
 ---
 /**
  * Vertical stepped timeline: icon node on a rail, title (optional link and subtitle), year at
- * the far right. The first step can be marked current. When it sits in a box shorter than its
- * content, the list scrolls inside itself with a soft fade at the clipped edge.
+ * the far right. Every node is the same; nothing is marked current. When it sits in a box
+ * shorter than its content, the list scrolls inside itself with a soft fade at the clipped edge.
+ *
+ * `panel`: each item can carry a markdown `body`. Items become buttons; on wide screens a
+ * RoomPanel in the art pane shows the hovered or focused item, below 800px a tap expands the
+ * body inline under the item.
  */
 import { icon } from '../lib/icons';
+import { markdownToHtml } from 'satteri';
+import Prose from './Prose.astro';
 
 interface Item {
   title: string;
@@ -12,20 +18,23 @@ interface Item {
   year: string | number;
   icon?: string;
   href?: string;
+  /** markdown, used in panel mode */
+  body?: string;
 }
 interface Props {
   label: string;
   items: Item[];
-  /** mark the first (newest) step as current */
-  current?: boolean;
+  /** items open a body: the home hover panel (wide) or inline (narrow) */
+  panel?: boolean;
   /** heading id; defaults to one made from the label */
   id?: string;
   class?: string;
 }
-const { label, items, current = true, class: className } = Astro.props;
+const { label, items, panel = false, class: className } = Astro.props;
 const { id: idProp } = Astro.props as { id?: string };
 const id = idProp ?? `tl-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 const external = (href: string) => /^https?:/.test(href);
+const bodyHtml = (b?: string) => (b && b.trim() ? markdownToHtml(b).html : '');
 ---
 
 <section class:list={['tl', className]} aria-labelledby={id}>
@@ -33,22 +42,37 @@ const external = (href: string) => /^https?:/.test(href);
   <div class="tl-scroll" data-tl-scroll tabindex="0" aria-labelledby={id}>
     <ol class="tl-list">
       {
-        items.map((it, i) => (
-          <li class="tl-step" data-current={current && i === 0 ? '' : undefined}>
-            <span class="tl-node" set:html={icon(it.icon)} />
-            <div class="tl-body">
-              {it.href ? (
-                <a class="tl-title" href={it.href} {...(external(it.href) ? { rel: 'noopener' } : {})}>
-                  {it.title}
-                </a>
-              ) : (
-                <span class="tl-title">{it.title}</span>
+        items.map((it, i) => {
+          const key = `${id}-${i}`;
+          const html = panel ? bodyHtml(it.body) : '';
+          return (
+            <li class="tl-step" data-tl-item={panel ? key : undefined} data-has-body={html ? '' : undefined}>
+              <span class="tl-node" set:html={icon(it.icon)} />
+              <div class="tl-body">
+                {it.href ? (
+                  <a class="tl-title" href={it.href} data-tl-open={panel ? '' : undefined} {...(external(it.href) ? { rel: 'noopener' } : {})}>
+                    {it.title}
+                  </a>
+                ) : panel ? (
+                  <button type="button" class="tl-title tl-btn" data-tl-open aria-expanded="false" aria-controls={html ? `${key}-more` : undefined}>
+                    {it.title}
+                  </button>
+                ) : (
+                  <span class="tl-title">{it.title}</span>
+                )}
+                {it.subtitle && <span class="tl-sub">{it.subtitle}</span>}
+              </div>
+              <span class="tl-year">{it.year}</span>
+              {html && (
+                <div class="tl-more" id={`${key}-more`} data-tl-more hidden>
+                  <Prose>
+                    <Fragment set:html={html} />
+                  </Prose>
+                </div>
               )}
-              {it.subtitle && <span class="tl-sub">{it.subtitle}</span>}
-            </div>
-            <span class="tl-year">{it.year}</span>
-          </li>
-        ))
+            </li>
+          );
+        })
       }
     </ol>
   </div>
@@ -123,35 +147,11 @@ const external = (href: string) => /^https?:/.test(href);
     place-items: center;
     color: var(--emerald);
     background: var(--bg);
-    /* faint emerald ring; the current step gets the brighter metallic one */
+    /* faint emerald ring, the same on every node */
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--emerald) 38%, var(--bg));
   }
   .tl-node :global(svg) {
     display: block;
-  }
-  /* current step: the same metal as the markdown accents, as a 1px ring */
-  .tl-step[data-current] .tl-node {
-    color: var(--emerald);
-    box-shadow: none;
-    border: 1px solid transparent;
-    background:
-      linear-gradient(var(--bg), var(--bg)) padding-box,
-      var(--metal) border-box;
-    background-size: auto, var(--metal-size);
-    background-repeat: no-repeat;
-    background-attachment: scroll, fixed;
-    background-position: 0 0, 45% 0;
-    animation: tl-sheen 16s steps(160, end) var(--sheen-delay) infinite;
-  }
-  @keyframes tl-sheen {
-    from { background-position: 0 0, 100% 0; }
-    to { background-position: 0 0, 0% 0; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .tl-step[data-current] .tl-node { animation: none; }
-  }
-  @media (forced-colors: active) {
-    .tl-step[data-current] .tl-node { background: none; border-color: CanvasText; }
   }
   .tl-body {
     display: flex;
@@ -170,8 +170,39 @@ const external = (href: string) => /^https?:/.test(href);
   a.tl-title:hover {
     color: var(--emerald);
   }
-  a.tl-title:focus-visible {
+  a.tl-title:focus-visible,
+  .tl-btn:focus-visible {
     outline-offset: 2px;
+  }
+  .tl-btn {
+    display: block;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: default;
+  }
+  /* the item whose text is showing, in the panel or inline */
+  .tl-step[data-open] .tl-title {
+    color: var(--emerald);
+  }
+  .tl-step[data-has-body] .tl-btn {
+    cursor: pointer;
+  }
+  .tl-more {
+    grid-column: 2 / -1;
+    padding-top: var(--space-2);
+  }
+  .tl-more :global(.prose) {
+    font-size: var(--text-sm);
+  }
+  @media (min-width: 800px) {
+    /* wide screens show the body in the art pane instead */
+    .tl-more {
+      display: none !important;
+    }
   }
   .tl-sub {
     color: var(--ink-3);

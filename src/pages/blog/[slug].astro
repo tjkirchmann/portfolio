@@ -2,7 +2,6 @@
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Split from '../../components/Split.astro';
-import ArtSet from '../../components/ArtSet.astro';
 import Dither from '../../components/Dither.astro';
 import BackLink from '../../components/BackLink.astro';
 import Prose from '../../components/Prose.astro';
@@ -22,10 +21,7 @@ const site = loadSite();
 <Base title={`${post.data.title} · ${site.name}`} description={post.data.summary}>
   <Split mirror lock="scroll" label="Animation">
     <BackLink slot="art-top" href="/blog/" label="Blog" />
-    <Fragment slot="art">
-      <Dither intensity={0.7} />
-      <ArtSet art={post.data.art} />
-    </Fragment>
+    <Dither slot="art" />
 
     <article>
       <header class="page-head post-head">

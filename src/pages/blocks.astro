@@ -13,9 +13,17 @@ import Prose from '../components/Prose.astro';
 import { Content as Sample } from '../blocks/sample.md';
 import { getPosts } from '../lib/posts';
 import { loadSite } from '../lib/site';
-import { artList } from '../lib/art-set';
+import { artList, type ArtField } from '../lib/art-set';
 
 const site = loadSite();
+// Archived: the ball pieces and their switcher no longer appear on the site. They live here.
+const archivedArt: ArtField = site.art ?? [
+  { none: true, icon: 'grid-3-x-3', label: 'Life' },
+  { slug: 'waveball', icon: 'globe', label: 'Wave ball' },
+  { slug: 'spikeball', icon: 'asterisk', label: 'Spike ball' },
+  { slug: 'spikeball-life', icon: 'sparkles', label: 'Spike ball, life', backdrop: false },
+  { slug: 'waveball-life', icon: 'waves', label: 'Wave ball, life', backdrop: false },
+];
 const posts = await getPosts();
 const palette = ['bg', 'ink', 'emerald', 'teal', 'deep'];
 const entries = [
@@ -34,7 +42,7 @@ const many = Array.from({ length: 12 }, (_, i) => ({
     <BackLink slot="art-top" href="/" label="Home" />
     <Fragment slot="art">
       <Dither />
-      <ArtSet art={[...artList(site.art), { slug: '_placeholder-stacked', icon: 'circle', label: 'Opaque placeholder', backdrop: true }]} />
+      <ArtSet art={[...artList(archivedArt), { slug: '_placeholder-stacked', icon: 'circle', label: 'Opaque placeholder', backdrop: true }]} />
     </Fragment>
 
     <header class="page-head">

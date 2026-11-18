@@ -1,7 +1,6 @@
 ---
 title: Second post
 date: 2026-10-02
-art: spikeball
 ---
 
 Another sample post. It shows the remaining markdown elements.
