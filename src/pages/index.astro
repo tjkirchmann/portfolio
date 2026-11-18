@@ -45,13 +45,13 @@ const tourSteps = [
       </div>
     </div>
 
-    <MobileScreens steps={tourSteps} />
-
     <footer class="home-foot">
       <LinkRow links={site.links} />
       {site.skills && <SkillsLink groups={site.skills} />}
     </footer>
   </Split>
+  {/* outside the panes, so the phone screens cover the whole page */}
+  <MobileScreens steps={tourSteps} />
 </Base>
 
 <style>

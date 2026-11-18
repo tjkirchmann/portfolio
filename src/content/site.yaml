@@ -175,6 +175,7 @@ about:
 links:
   - label: Blog
     href: /blog/
+    icon: article
     hint: My blog, I guess?
   - label: GitHub
     href: https://github.com/tjkirchmann

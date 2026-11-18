@@ -2,10 +2,10 @@
 /**
  * Phones only (below 800px): two full-screen, no-scroll screens over the home page.
  *
- * Tour: shown on arrival. There is no hover on a phone, so it explains each item of the bottom
- * row in turn (what it is and the line a desktop visitor would see on hover), then drops the
- * visitor onto the page as it is. "Skip" is there but quiet. It is remembered once seen or
- * skipped; add `?tour` to the address to see it again.
+ * Tour: shown on every arrival. There is no hover on a phone, so it explains each item of the
+ * bottom row in turn (what it is and the line a desktop visitor would see on hover). It runs on
+ * a timer with no buttons to press, then dissolves into the page as it is. "Skip" is there
+ * but quiet.
  *
  * Skills: opened by the skills icon (URL hash `#skills`, so the phone's back button closes it).
  * The list from site.yaml with its meters, and each skill's note shown in turn in a bubble at
@@ -52,11 +52,8 @@ const { steps } = Astro.props;
     }
   </div>
   <p class="mtour-where">They sit along the bottom of the page.</p>
-  <div class="mtour-foot">
-    <button type="button" class="mtour-next" data-mtour-next>Next</button>
-    <div class="mtour-pips" aria-hidden="true">
-      {steps.map((_, i) => <span class="mtour-pip" data-mtour-pip={i} />)}
-    </div>
+  <div class="mtour-pips" aria-hidden="true">
+    {steps.map((_, i) => <span class="mtour-pip" data-mtour-pip={i} />)}
   </div>
 </div>
 
@@ -92,6 +89,15 @@ const { steps } = Astro.props;
       padding: calc(env(safe-area-inset-top, 0px) + var(--space-4)) var(--space-5) calc(env(safe-area-inset-bottom, 0px) + var(--space-5));
       background: var(--bg);
       overflow: hidden;
+    }
+    /* the tour ends by dissolving into the page under it, the way the art does on scroll */
+    .mtour:not([hidden]) {
+      transition: opacity 700ms var(--ease), filter 700ms var(--ease);
+    }
+    .mtour[data-out] {
+      opacity: 0;
+      filter: blur(14px);
+      pointer-events: none;
     }
 
     /* ---- tour ---- */
@@ -169,29 +175,10 @@ const { steps } = Astro.props;
       color: var(--ink-3);
       font-size: var(--text-xs);
     }
-    .mtour-foot {
-      display: grid;
-      justify-items: center;
-      gap: var(--space-4);
-      width: 100%;
-      margin-top: var(--space-6);
-    }
-    .mtour-next {
-      width: 100%;
-      max-width: 20rem;
-      padding: var(--space-3) var(--space-5);
-      border: 0;
-      border-radius: 999px;
-      background: color-mix(in oklab, var(--emerald) 18%, var(--bg));
-      box-shadow: 0 0 0 1px color-mix(in oklab, var(--emerald) 45%, transparent);
-      color: var(--emerald);
-      font: inherit;
-      font-size: var(--text-base);
-      font-weight: 600;
-    }
     .mtour-pips {
       display: flex;
       gap: 6px;
+      margin-top: var(--space-6);
     }
     .mtour-pip {
       width: 6px;
@@ -291,11 +278,13 @@ const { steps } = Astro.props;
 
 <script>
   const narrow = window.matchMedia('(max-width: 799.98px)');
-  const TOUR_KEY = 'tour:v1';
+  const STEP_MS = 2400; // each tour step
+  const DISSOLVE_MS = 700;
   const NOTE_MS = 3200;
   let noteT = 0;
   let ac: AbortController | undefined;
-  let tourOffered = false; // once per document, even when forced with ?tour
+  let tourOffered = false; // once per page load, not again on in-page navigation
+  let tourT = 0;
 
   const pop = (el: HTMLElement) => {
     el.removeAttribute('data-pop');
@@ -310,42 +299,31 @@ const { steps } = Astro.props;
     const steps = Array.from(tour.querySelectorAll<HTMLElement>('[data-mtour-step]'));
     const items = Array.from(tour.querySelectorAll<HTMLElement>('[data-mtour-item]'));
     const pips = Array.from(tour.querySelectorAll<HTMLElement>('[data-mtour-pip]'));
-    const next = tour.querySelector<HTMLElement>('[data-mtour-next]')!;
     let i = 0;
 
-    const seen = () => {
-      try {
-        return localStorage.getItem(TOUR_KEY) === '1';
-      } catch {
-        return false;
-      }
-    };
-    const remember = () => {
-      try {
-        localStorage.setItem(TOUR_KEY, '1');
-      } catch {
-        /* private mode: it shows again next visit */
-      }
-    };
     function show(n: number) {
       i = n;
       steps.forEach((s, k) => (s.hidden = k !== n));
       items.forEach((s, k) => s.toggleAttribute('data-on', k === n));
       pips.forEach((s, k) => s.toggleAttribute('data-on', k <= n));
-      next.textContent = n === steps.length - 1 ? 'Got it' : 'Next';
       const bubble = steps[n]?.querySelector<HTMLElement>('.mtour-bubble');
       if (bubble) pop(bubble);
+      clearTimeout(tourT);
+      tourT = window.setTimeout(() => (i >= steps.length - 1 ? close() : show(i + 1)), STEP_MS);
     }
     function close() {
-      remember();
-      tour.hidden = true;
+      clearTimeout(tourT);
+      if (tour.hidden || tour.hasAttribute('data-out')) return;
       lock(false);
+      tour.setAttribute('data-out', '');
+      window.setTimeout(() => {
+        tour.hidden = true;
+        tour.removeAttribute('data-out');
+      }, DISSOLVE_MS);
     }
-    next.addEventListener('click', () => (i >= steps.length - 1 ? close() : show(i + 1)), { signal });
     tour.querySelector('[data-mtour-skip]')!.addEventListener('click', close, { signal });
 
-    const forced = new URLSearchParams(location.search).has('tour');
-    if (!tourOffered && narrow.matches && steps.length && !location.hash && (forced || !seen())) {
+    if (!tourOffered && narrow.matches && steps.length && !location.hash) {
       tourOffered = true;
       tour.hidden = false;
       lock(true);
@@ -411,6 +389,7 @@ const { steps } = Astro.props;
     ac?.abort();
     ac = new AbortController();
     clearTimeout(noteT);
+    clearTimeout(tourT);
     lock(false);
     setupSkills(ac.signal);
     setupTour(ac.signal);
