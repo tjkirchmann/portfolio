@@ -418,3 +418,81 @@ unchanged.
   will add it to `site.yaml` once it is rendered. To build and see this now, make yourself
   a small throwaway stacked clip (any moving solid shape) outside `public/art/`, or in
   `public/art/_placeholder-stacked/`, and show it over the simulation on `/blocks`.
+
+## Amendment 9 (2026-11-17, from the owner)
+
+Light process: build and serve only, no test suite. Where this conflicts with earlier
+text, this wins.
+
+### Icons and circles
+
+The owner's words: "all icons/circles should be the same, no indicator of a head or
+current. take the more dull of the circle kinds and use that broadly."
+
+- **AC-41:** every icon circle on the site is identical: the faint emerald ring currently
+  used on non-current timeline steps. No brighter or metallic ring on the first or current
+  step, no "current" state anywhere. Icons inside stay emerald, all the same strength.
+
+### Hover panel in the life simulation
+
+The owner's words: "When i hover a project or a company, I should have a text section open
+up in the game of life. The game of life should vacate a central area and form a border
+(with a randomized walk towards the border completing in 500 ms). There should be a header
+that repeats the item hovered and then a text body i can fill out. the text area should be
+inscribed in the overall game of life area."
+
+- **AC-42 the panel.** Hovering (or keyboard-focusing) a timeline item on the home page
+  opens a text panel inside the art pane: a rectangle centred in the life simulation and
+  inscribed in it with a generous margin on all sides (about 60-70% of the pane's width
+  and height, snapped to the cell grid). It shows a header repeating the item's title
+  (and the subtitle and year, smaller, when the item has them) and a body of text from
+  that item's new `body` field in `site.yaml` (multi-paragraph, markdown allowed, rendered
+  with the same `Prose` styles). Empty `body` shows the header only. Long bodies scroll
+  inside the panel.
+- **AC-43 the simulation makes room.** When the panel opens, every live or trailing cell
+  inside the rectangle leaves it by a randomised walk toward the rectangle's edge: each
+  cell takes its own jittered path and timing, biased outward, and all have arrived within
+  500ms. On arrival they settle into a border around the rectangle: a frame of cells one
+  to two cells thick, complete enough to read as a border, irregular enough to read as
+  made of life (it may be topped up with cells drawn in from just outside if too few were
+  inside). While the panel is open the inside of the rectangle is pure `--bg`, no cell may
+  be born or drift into it, the border holds, and the simulation carries on as normal
+  outside. The border cells get the same metallic shading as the rest. The text fades in as
+  the walk finishes (it must not sit on top of moving cells). Under reduced motion the
+  area clears and the border appears without the walk.
+- **AC-44 behaviour.** Moving from one item to another keeps the panel and border and
+  swaps the text with a quick fade; no re-walk. Leaving the lists closes it after a short
+  grace (about 250ms, and not while the pointer is over the panel itself, so the text can
+  be selected or scrolled): the border cells are released back into the simulation as
+  ordinary live cells and life grows back in. The panel is not a modal and never traps
+  focus; Escape closes it. Below 800px, where the art pane is above the lists and
+  dissolves on scroll, do not use the pane: a tap on an item expands its body inline under
+  the item, one open at a time.
+- **AC-45 ball art archived.** The home page shows only the life simulation: remove the
+  art switcher from the page and stop loading any ball piece. Blog index and posts also
+  show only the life simulation (make `art` optional in post frontmatter and drop it from
+  the two sample posts). Keep everything in the repo for reuse: `ArtSet`, `Art`, the
+  stacked-alpha player, `public/art/*`, the schema support for `art:` lists. Nothing
+  reachable on the site should load them. Keep `/blocks` showing them, as the place they
+  still live, unless that is awkward, in which case move those sections to the bottom
+  under a plain "Archived" label.
+
+### Home page content
+
+- **AC-46:** set `src/content/site.yaml` to the owner's real structure below. The first
+  list's label is renamed from "Projects" to "Experiences" (rename the yaml key to
+  `experiences` too). Every `body` is left empty for the owner, with a one-line yaml
+  comment at the top showing how to write a multi-line body. Pick a plain fitting lucide
+  icon per item. Remove the sample `href` on the first item. With six items the top half
+  will overflow at some sizes: make sure the inner scroll and fade from AC-25 look right.
+  Update the page title and anything else that used the placeholder name.
+
+  Name: Ty Kirchmann. Role: Operator & Technical Generalist.
+
+  Experiences: Scaling an Ops Team, 2026. Facilitating an Acquisition, 2025. Digital
+  Marketing, 2025. Internal Tooling and Analytics, 2024. Network Intelligence, 2024. Game
+  Engine Analytics, 2023.
+
+  Companies: Finch Legal, subtitle "Strategy and operations", 2026. Parrot (acquired by
+  Filevine), subtitle "Strategy and operations, data", 2024 – 2025. UPS, subtitle "Data
+  analytics and data science", 2022 – 2024. Sports Interactive, subtitle "Freelance", 2023.
