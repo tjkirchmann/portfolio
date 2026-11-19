@@ -162,7 +162,7 @@ skills:
 about:
   title: Conway's Game of Life
   body: |
-    This is Conway's Game of Life. Every square is one cell on a grid. Each step, a live cell with two or three live neighbours survives, an empty cell with exactly three becomes alive, and everything else dies. Nothing else is scripted: the gliders, blinkers and still lifes come out of those rules.
+    This is Conway's Game of Life, one of my favorite little algorithms. Here's how it works; every square is one cell on a grid. Each step, a live cell with two or three live neighbours survives, an empty cell with exactly three becomes alive, and everything else dies. Nothing else is scripted: the gliders, blinkers and still lifes come out of those rules.
 
     The grid steps about ten times a second and wraps at its edges. When a cell dies it leaves a trail that thins out through an ordered dither pattern, which is where the halftone texture comes from. When activity drops, a few small long-lived seed patterns are planted to keep it going.
 
@@ -176,7 +176,7 @@ links:
   - label: Blog
     href: /blog/
     icon: article
-    hint: Some commentary coming soon...
+    hint: Working on getting more thoughts in the wild...
   - label: GitHub
     href: https://github.com/tjkirchmann
     icon: github
